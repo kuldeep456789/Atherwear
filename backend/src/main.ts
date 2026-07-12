@@ -1,14 +1,34 @@
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
-import { loadEnvFile } from 'node:process';
+import { NestFactory } from '@nestjs/core';
+import { ValidationPipe } from '@nestjs/common';
+import { AppModule } from './app.module';
 
-const envPath = join(process.cwd(), '.env');
+export async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
 
-if (existsSync(envPath)) {
-  loadEnvFile(envPath);
+  // Enable CORS for frontend (Vercel) to communicate with backend (Render)
+  app.enableCors({
+    origin: [
+      'http://localhost:5173', // local dev - adjust port if different
+      'https://atherwear-59b5-bohrliv9v.vercel.app', // deployed Vercel frontend
+    ],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  });
+
+  // Global validation pipe (recommended, remove if you don't use DTOs/class-validator)
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+    }),
+  );
+
+  // Optional: set a global prefix like /api
+  app.setGlobalPrefix('api');
+
+  const port = process.env.PORT || 3000;
+  await app.listen(port, '0.0.0.0');
+
+  console.log(`🚀 Server running on port ${port}`);
 }
-
-// Dynamic import (unlike a top-level `import`) isn't hoisted above the
-// loadEnvFile() call above, so AppModule and everything it pulls in only
-// gets required once process.env is populated from .env.
-void import('./bootstrap.js').then((mod) => mod.bootstrap());
