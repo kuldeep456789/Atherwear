@@ -116,7 +116,8 @@ const HomePage = () => {
     <div className="w-full bg-[hsl(var(--background))] text-[hsl(var(--foreground))] font-sans uppercase">
       {/* ───────── HERO ───────── */}
       <section className="relative min-h-[calc(100vh-130px)] overflow-hidden bg-black text-white border-b-2 border-black">
-        {heroImages.map((img, idx) => (
+        {/* {heroImages.map((img, idx) => ( */}
+        {heroImages.map((img: string, idx: number) => (
           <img
             key={idx}
             src={img}
@@ -163,7 +164,9 @@ const HomePage = () => {
           </div>
         </div>
         <div className="absolute bottom-8 left-6 sm:left-10 lg:left-16 z-20 flex gap-2">
-          {heroImages.map((_, idx) => (
+          {/* {heroImages.map((_, idx) => ( */}
+          {heroImages.map((_: string, idx: number) => (
+
             <button
               key={idx}
               onClick={() => setCurrentHeroIdx(idx)}
