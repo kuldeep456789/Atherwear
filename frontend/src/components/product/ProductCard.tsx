@@ -10,7 +10,7 @@ import { formatUSD } from '../../lib/currency';
 import DOMPurify from 'dompurify';
 
 const PLACEHOLDER_IMAGE =
-  'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="500" viewBox="0 0 400 500"><rect width="100%" height="100%" fill="%23f4f4f5"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="24" font-weight="900" fill="%23a1a1aa" letter-spacing="4">AETHERWEAR</text></svg>';
+  'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="500" viewBox="0 0 400 500"><rect width="100%" height="100%" fill="%23f4f4f5"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="24" font-weight="900" fill="%23a1a1aa" letter-spacing="4">VASTRA</text></svg>';
 
 
 interface ProductCardProps {
@@ -44,7 +44,7 @@ const ProductCard = ({ product, keyword }: ProductCardProps) => {
 
   const productImages = getProductImages(product);
   // Brand placeholder image (inline SVG via data URI)
-  // const placeholderImage = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="500" viewBox="0 0 400 500"><rect width="100%" height="100%" fill="%23f4f4f5"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="24" font-weight="900" fill="%23a1a1aa" letter-spacing="4">AETHERWEAR</text></svg>';
+  // const placeholderImage = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="500" viewBox="0 0 400 500"><rect width="100%" height="100%" fill="%23f4f4f5"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="24" font-weight="900" fill="%23a1a1aa" letter-spacing="4">VASTRA</text></svg>';
 
   const primaryImage = getFirstProductImage(product) || PLACEHOLDER_IMAGE;
   const secondaryImage = productImages[1] || primaryImage;
@@ -86,7 +86,7 @@ const ProductCard = ({ product, keyword }: ProductCardProps) => {
           {imageFailed ? (
             <div className="flex h-full w-full flex-col items-center justify-center bg-white dark:bg-black px-8 text-center">
               <span className="mb-3 text-[11px] font-black uppercase tracking-[0.24em] text-zinc-400 dark:text-zinc-500">
-                Aetherwear
+                VASTRA
               </span>
               <span className="line-clamp-3 text-xl font-black leading-tight text-black dark:text-white">
                 {product.title || product.name}

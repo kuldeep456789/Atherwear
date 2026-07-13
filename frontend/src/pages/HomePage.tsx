@@ -11,7 +11,7 @@ import ProductCard from '../components/product/ProductCard';
 import { getFirstProductImage } from '../lib/product';
 import { formatUSD } from '../lib/currency';
 
-const placeholderImage = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="500" viewBox="0 0 400 500"><rect width="100%" height="100%" fill="%23f4f4f5"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="24" font-weight="900" fill="%23a1a1aa" letter-spacing="4">AETHERWEAR</text></svg>';
+const placeholderImage = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="500" viewBox="0 0 400 500"><rect width="100%" height="100%" fill="%23f4f4f5"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="24" font-weight="900" fill="%23a1a1aa" letter-spacing="4">VASTRA</text></svg>';
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -111,7 +111,7 @@ const HomePage = () => {
             ) : (
               <img
                 src={img}
-                alt="Aetherwear streetwear collection"
+                alt="VASTRA fashion collection"
                 loading={idx === 0 ? 'eager' : 'lazy'}
                 onError={() => setHeroFailedImgs(prev => new Set(prev).add(idx))}
                 className="h-full w-full object-cover object-center"
@@ -123,13 +123,13 @@ const HomePage = () => {
         <div className="relative z-10 flex min-h-[calc(100vh-130px)] w-full max-w-[1920px] mx-auto px-6 sm:px-10 lg:px-16 py-16 items-end">
           <div className="w-full flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8 pb-10">
             <div className="max-w-3xl">
-              <p className="text-sm sm:text-base font-black tracking-[0.3em] text-red-500 mb-4">NEW SEASON DROP</p>
+              <p className="text-sm sm:text-base font-black tracking-[0.3em] text-[#C9A227] mb-4">PREMIUM MINIMAL FASHION</p>
               <h1 className="text-[2.5rem] min-[375px]:text-5xl sm:text-7xl lg:text-[6rem] font-black leading-[0.85] tracking-tighter uppercase">
-                <span className="block sm:hidden whitespace-nowrap">AETHER WEAR</span>
-                <span className="hidden sm:block">AETHER<br />WEAR</span>
+                <span className="block sm:hidden whitespace-nowrap">VASTRA</span>
+                <span className="hidden sm:block">VASTRA</span>
               </h1>
               <p className="mt-4 sm:mt-6 text-sm sm:text-base text-zinc-400 max-w-lg normal-case tracking-normal font-medium leading-relaxed">
-                Premium streetwear engineered for the modern rebel. Limited drops, infinite attitude.
+                Premium minimal fashion for the modern wardrobe. Timeless design, effortless style.
               </p>
               <div className="mt-8 sm:mt-10 flex flex-row gap-3 sm:gap-0 w-full sm:w-auto">
                 <Link to="/men" className="group/btn flex-1 sm:flex-initial justify-center inline-flex items-center gap-3 bg-white px-6 py-5 sm:px-14 sm:py-7 text-sm sm:text-lg font-black tracking-widest text-black transition-all duration-300 hover:bg-red-600 hover:text-white border-2 border-white relative overflow-hidden shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0">
@@ -204,26 +204,14 @@ const HomePage = () => {
                 <p className="text-xs sm:text-sm font-black tracking-[0.25em] text-zinc-500 mb-2">FRESH DROPS</p>
                 <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-none">NEW ARRIVALS</h2>
               </div>
-              <Link
-                to="/new-arrivals"
-                className="hidden sm:inline-flex items-center gap-2 text-xs sm:text-sm font-black tracking-widest hover:underline underline-offset-4 transition-all group"
-              >
-                VIEW ALL <ArrowRight size={16} strokeWidth={2.5} className="group-hover:translate-x-1 transition-transform" />
-              </Link>
+
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 border-t-2 border-l-2 border-black dark:border-white">
               {newArrivals.slice(0, 8).map((product: any) => (
                 <ProductCard key={product.pid || product._id} product={product} />
               ))}
             </div>
-            <div className="mt-8 text-center sm:hidden">
-              <Link
-                to="/new-arrivals"
-                className="inline-flex items-center gap-2 px-8 py-4 border-2 border-black dark:border-white text-xs font-black tracking-widest hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))] transition-colors"
-              >
-                VIEW ALL NEW ARRIVALS <ArrowRight size={14} strokeWidth={2.5} />
-              </Link>
-            </div>
+
           </div>
         </section>
       )}

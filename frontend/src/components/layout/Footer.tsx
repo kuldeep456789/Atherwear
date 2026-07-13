@@ -45,9 +45,9 @@ const Footer = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         {/* Brand */}
         <div className="p-8 sm:p-12 md:p-14 border-b-2 sm:border-b-0 sm:border-r-2 border-white">
-          <h3 className="text-2xl sm:text-3xl font-black tracking-tighter mb-4 leading-none">AETHERWEAR</h3>
+          <h3 className="text-2xl sm:text-3xl font-black tracking-tighter mb-4 leading-none">VASTRA</h3>
           <p className="text-sm text-zinc-500 font-medium normal-case tracking-normal leading-relaxed mb-6">
-            Premium streetwear crafted for those who dare to stand out. Limited drops, infinite style.
+            Premium minimal fashion for the modern wardrobe. Timeless design, effortless style.
           </p>
           {/* <div className="flex flex-wrap gap-3">
             {['Instagram', 'YouTube', 'X / Twitter', 'Facebook'].map((label) => (
@@ -71,11 +71,8 @@ const Footer = () => {
           <h4 className="text-sm font-black tracking-widest mb-6 text-zinc-400">SHOP</h4>
           <ul className="space-y-4">
             {[
-              { to: '/new-arrivals', label: 'New Arrivals' },
               { to: '/men', label: 'Men' },
               { to: '/women', label: 'Women' },
-              { to: '/collections/accessories', label: 'Accessories' },
-              { to: '/sale', label: 'Sale', accent: true },
             ].map(({ to, label, accent }) => (
               <li key={to}>
                 <Link
@@ -169,7 +166,7 @@ const Footer = () => {
       {/* Bottom bar */}
       {/* <div className="border-t-2 border-white bg-zinc-900">
         <div className="flex flex-col sm:flex-row justify-between items-center px-8 sm:px-12 md:px-14 py-6 text-xs text-zinc-500 tracking-widest font-bold gap-3">
-          <span>&copy; {new Date().getFullYear()} AETHERWEAR. ALL RIGHTS RESERVED.</span>
+          <span>&copy; {new Date().getFullYear()} VASTRA. ALL RIGHTS RESERVED.</span>
           <div className="flex gap-6">
             <Link to="/privacy" className="hover:text-white transition-colors">PRIVACY</Link>
             <Link to="/terms" className="hover:text-white transition-colors">TERMS</Link>

@@ -94,7 +94,7 @@ const PlaceOrderPage = () => {
         key: razorpayRes.keyId,
         amount: razorpayRes.gatewayOrder.amount,
         currency: razorpayRes.gatewayOrder.currency || 'INR',
-        name: 'AETHERWEAR',
+        name: 'VASTRA',
         description: `Order #${orderId}`,
         order_id: razorpayRes.gatewayOrder.id,
 

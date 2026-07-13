@@ -323,7 +323,7 @@ const ProductDetailsPage = () => {
           <div className="p-8 sm:p-12 space-y-6">
             {collabTag && (
               <span className="text-[10px] font-black text-zinc-500 tracking-widest">
-                AETHERWEAR × {collabTag}
+                VASTRA × {collabTag}
               </span>
             )}
 

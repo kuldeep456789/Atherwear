@@ -16,36 +16,18 @@ const ProductListPage = () => {
 
   const [page, setPage] = useState(1);
   const [collectionType, setCollectionType] = useState<'Men' | 'Women' | undefined>(undefined);
-  const [isAccessories, setIsAccessories] = useState(false);
-  const [isSale, setIsSale] = useState(false);
   const [sortBy, setSortBy] = useState('Popularity');
   const [activeTab, setActiveTab] = useState('ALL');
 
   useEffect(() => {
     if (location.pathname.includes('/men')) {
       setCollectionType('Men');
-      setIsAccessories(false);
-      setIsSale(false);
       setActiveTab('MEN');
     } else if (location.pathname.includes('/women')) {
       setCollectionType('Women');
-      setIsAccessories(false);
-      setIsSale(false);
       setActiveTab('WOMEN');
-    } else if (location.pathname.includes('/accessories')) {
-      setCollectionType(undefined);
-      setIsAccessories(true);
-      setIsSale(false);
-      setActiveTab('ACCESSORIES');
-    } else if (location.pathname.includes('/sale')) {
-      setCollectionType(undefined);
-      setIsAccessories(false);
-      setIsSale(true);
-      setActiveTab('ALL');
     } else {
       setCollectionType(undefined);
-      setIsAccessories(false);
-      setIsSale(false);
       setActiveTab('ALL');
     }
     setPage(1);
@@ -53,10 +35,7 @@ const ProductListPage = () => {
 
   const { data: categoriesData } = useGetCategoriesQuery(undefined);
   const categories = Array.isArray(categoriesData) ? categoriesData : [];
-  const accessoryCategoryNames = ['Bewakoof Sneakers', 'Sliders', 'Clogs', 'Caps', 'Backpacks', 'Sling bags', 'Duffel bags'];
-  const visibleCatalogCategories = isAccessories
-    ? categories.filter((c: any) => accessoryCategoryNames.includes(c.name))
-    : categories;
+  const visibleCatalogCategories = categories;
 
   const activeCategoryId =
     categoryParam ? visibleCatalogCategories.find((c: any) => c.name === categoryParam)?._id : undefined;
@@ -72,19 +51,6 @@ const ProductListPage = () => {
   );
 
   let filteredProducts = productsData?.products || [];
-
-  if (isAccessories) {
-    const accessoryCatIds = visibleCatalogCategories.map((c: any) => c._id);
-    filteredProducts = filteredProducts.filter(
-      (p: any) => p.tags?.includes('Accessories') || accessoryCatIds.includes(p.category)
-    );
-  }
-
-  if (isSale) {
-    filteredProducts = filteredProducts.filter(
-      (p: any) => p.discountPrice && p.discountPrice < p.price
-    );
-  }
 
   // Tab filtering
   if (activeTab === 'MEN') {
@@ -108,15 +74,11 @@ const ProductListPage = () => {
 
   const pageTitle = keyword
     ? `Search: "${keyword}"`
-    : isAccessories
-    ? 'Accessories'
-    : isSale
-    ? 'Sale'
     : collectionType
     ? `${collectionType} Collections`
     : 'Our Shop';
 
-  const tabs = ['MEN', 'WOMEN', 'ACCESSORIES'];
+  const tabs = ['MEN', 'WOMEN'];
 
   return (
     <div className="bg-[hsl(var(--background))] min-h-screen text-[hsl(var(--foreground))] uppercase">
@@ -140,26 +102,6 @@ const ProductListPage = () => {
           </h1>
         </div>
       </div>
-
-      {/* Accessories hero banner */}
-      {isAccessories && (
-        <div className="w-full border-b-2 border-black dark:border-white bg-black">
-          <div className="max-w-[1920px] mx-auto relative h-[200px] sm:h-[320px] lg:h-[400px] overflow-hidden">
-            <div className="w-full h-full bg-zinc-900 opacity-70 hover:opacity-90 transition-opacity duration-700" />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent flex items-center">
-              <div className="px-6 sm:px-10 lg:px-16">
-                <p className="text-white/60 text-xs sm:text-sm font-bold tracking-[0.3em] uppercase mb-2 sm:mb-3">Finish the look</p>
-                <h2 className="text-white text-3xl sm:text-5xl lg:text-6xl font-black uppercase tracking-tight leading-none">
-                  Accessories
-                </h2>
-                <p className="text-white/80 text-sm sm:text-base mt-3 sm:mt-4 max-w-md font-medium">
-                  Bags, sneakers, caps & more — the details that define your style.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Filter tabs bar (Sticky at top) */}
       <div className="w-full border-b-2 border-black dark:border-white flex items-center justify-between sticky top-[130px] bg-[hsl(var(--card))] z-20">

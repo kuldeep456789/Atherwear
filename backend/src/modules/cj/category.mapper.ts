@@ -19,21 +19,6 @@ export const WOMEN_ALLOWED = [
   "co-ords",
 ];
 
-export const ACCESSORIES_ALLOWED = [
-  "caps",
-  "Hats & caps",
-  // "wallets",
-  // "card holders",
-  // "sunglasses",
-  "belts",
-  "belts & cummerbunds",
-  // "crossbody bags",
-  // "shoulder bags",
-  // "handbags",
-  // "backpacks",
-  // "travel bags"
-];
-
 export const BLOCKED = [
   "pet",
   "bird",
@@ -41,7 +26,6 @@ export const BLOCKED = [
   "cat",
   "kitchen",
   "storage",
-  "watch accessories",
   "watch",
   "home",
   "furniture",
@@ -184,15 +168,14 @@ export function isCategoryAllowed(categoryName: string): boolean {
     return false;
   }
 
-  // Only allow clothing/accessories high-level categories
-  if (name.includes("mensclothing") || name.includes("womensclothing") || name.includes("fashionaccessories") || name.includes("apparel")) {
+  // Only allow clothing high-level categories
+  if (name.includes("mensclothing") || name.includes("womensclothing") || name.includes("apparel")) {
     return true;
   }
 
   return (
     MEN_ALLOWED.some(cat => name.includes(normalizeCategoryText(cat))) ||
-    WOMEN_ALLOWED.some(cat => name.includes(normalizeCategoryText(cat))) ||
-    ACCESSORIES_ALLOWED.some(cat => name.includes(normalizeCategoryText(cat)))
+    WOMEN_ALLOWED.some(cat => name.includes(normalizeCategoryText(cat)))
   );
 }
 
@@ -232,14 +215,6 @@ export function isProductAllowed(product: any): { allowed: boolean; gender: stri
     else if (searchText.includes('top') || searchText.includes('shirt') || searchText.includes('coord')) subcategoryName = 'Tops & Shirts';
     else if (searchText.includes('jacket') || searchText.includes('suit')) subcategoryName = 'Jackets & Suits';
     else if (searchText.includes('jean') || searchText.includes('pant')) subcategoryName = 'Bottoms';
-  } else if (matchesAny(ACCESSORIES_ALLOWED) || searchText.includes('accessory') || searchText.includes('bag') || searchText.includes('wallet') || searchText.includes('belt') || searchText.includes('sunglass') || searchText.includes('cap')) {
-    collectionType = 'Accessories';
-    if (searchText.includes('bag') || searchText.includes('backpack') || searchText.includes('handbag')) subcategoryName = 'Bags';
-    else if (searchText.includes('wallet')) subcategoryName = 'Wallets';
-    else if (searchText.includes('sunglass')) subcategoryName = 'Sunglasses';
-    else if (searchText.includes('belt')) subcategoryName = 'Belts';
-    else if (searchText.includes('cap') || searchText.includes('hat') || searchText.includes('beanie')) subcategoryName = 'Headwear';
-    else subcategoryName = 'Accessories';
   } else {
     // If it doesn't match our whitelists, reject it
     return { allowed: false, gender: '', subcategoryName: '', collectionType: '' };

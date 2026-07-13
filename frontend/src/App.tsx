@@ -44,9 +44,7 @@ function App() {
             <Route path="/women" element={<ProductListPage />} />
             <Route path="/accessories" element={<ProductListPage />} />
             <Route path="/search" element={<ProductListPage />} />
-            <Route path="/new-arrivals" element={<ProductListPage />} />
             <Route path="/trending" element={<ProductListPage />} />
-            <Route path="/sale" element={<ProductListPage />} />
             <Route path="/product/:id" element={<ProductDetailsPage />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/wishlist" element={<WishlistPage />} />

@@ -76,7 +76,7 @@ const OrderSuccessPage = () => {
           </div>
           <h1 className="text-4xl sm:text-6xl font-black tracking-tighter mb-4 text-[hsl(var(--foreground))]">ORDER PLACED</h1>
           <p className="text-zinc-500 dark:text-zinc-400 text-sm max-w-lg mx-auto normal-case tracking-normal leading-relaxed">
-            Thank you for shopping with Aetherwear.
+            Thank you for shopping with VASTRA.
           </p>
           <div className="mt-8 flex flex-col items-center gap-2">
             <span className="text-[10px] font-black text-zinc-500 tracking-widest">ORDER REFERENCE</span>

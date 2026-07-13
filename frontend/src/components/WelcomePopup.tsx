@@ -5,7 +5,7 @@ import type { RootState } from '../store/store';
 import { X, Sparkles, ArrowRight, Shield, Truck, RefreshCw } from 'lucide-react';
 import { formatUSD } from '../lib/currency';
 
-const LS_KEY = 'aether_welcome_seen';
+const LS_KEY = 'vastra_welcome_seen';
 
 const WelcomePopup = () => {
   const navigate = useNavigate();
@@ -57,10 +57,10 @@ const WelcomePopup = () => {
             Welcome to
           </h2>
           <h2 className="text-3xl font-black tracking-tight text-zinc-900 dark:text-white leading-tight mb-3">
-            AETHERWEAR
+            VASTRA
           </h2>
           <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-xs mx-auto leading-relaxed">
-            Premium streetwear built around confident fits, graphic energy, and everyday comfort.
+            Premium minimal fashion crafted for those who value timeless design and effortless style.
           </p>
 
           {/* Divider */}

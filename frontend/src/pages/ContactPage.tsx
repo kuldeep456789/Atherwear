@@ -63,7 +63,7 @@ const ContactPage = () => {
               <div>
                 <p className="text-sm font-black tracking-widest mb-1">ADDRESS</p>
                 <p className="text-sm text-zinc-500 font-medium normal-case">
-                  AETHERWEAR HQ<br />
+                  VASTRA HQ<br />
                   Banglore, Karnatak 560052<br />
                   India
                 </p>

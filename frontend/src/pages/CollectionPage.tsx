@@ -29,18 +29,6 @@ const matchesCollection = (name: string, gender: string, group = '') => {
     return /\b(women|women's|female)\b/i.test(normalized);
   }
 
-  if (gender === 'accessories') {
-    return (
-      normalized.includes('accessor') ||
-      normalized.includes('bag') ||
-      normalized.includes('shoe') ||
-      normalized.includes('wallet') ||
-      normalized.includes('belt') ||
-      normalized.includes('cap') ||
-      normalized.includes('sunglass')
-    );
-  }
-
   return true;
 };
 

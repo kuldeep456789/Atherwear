@@ -33,7 +33,7 @@ const faqData = [
   },
   {
     q: 'Are your products authentic?',
-    a: 'Absolutely. Every product on AETHERWEAR is sourced directly from verified manufacturers. We guarantee 100% authentic quality.',
+    a: 'Absolutely. Every product on VASTRA is sourced directly from verified manufacturers. We guarantee 100% authentic quality.',
   },
 ];
 
