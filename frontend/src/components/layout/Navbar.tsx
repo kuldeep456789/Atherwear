@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingBag, Heart, UserRound, X, Search, Menu, Package, MapPin, Settings, LogOut, Clock, TrendingUp, Loader2 } from 'lucide-react';
+import { ShoppingBag, Heart, UserRound, X, Search, Menu, Package, MapPin, Settings, LogOut, Clock, TrendingUp, Loader2, HelpCircle } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { RootState } from '../../store/store';
@@ -29,7 +29,6 @@ const MAX_RECENT = 5;
 const navItems = [
   { to: '/collections/men', label: 'Men' },
   { to: '/collections/women', label: 'Women' },
-  { to: '/accessories', label: 'Accessories' },
 ];
 
 const extraLinks = [
@@ -59,6 +58,7 @@ const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [miniCartOpen, setMiniCartOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [placeholderIdx, setPlaceholderIdx] = useState(0);
   const [selectedSuggestionIdx, setSelectedSuggestionIdx] = useState(-1);
@@ -73,6 +73,7 @@ const Navbar = () => {
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
   const suggestionListRef = useRef<any[]>([]);
   const doSearchRef = useRef<(q: string) => void>();
+  const profileRef = useRef<HTMLDivElement>(null);
 
   // Scroll shadow
   useEffect(() => {
@@ -99,6 +100,18 @@ const Navbar = () => {
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
+
+  // Close profile dropdown on outside click
+  useEffect(() => {
+    if (!profileOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setProfileOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [profileOpen]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -395,33 +408,120 @@ const Navbar = () => {
               )}
             </Link>
 
-            {/* Account */}
-            {userInfo ? (
-              <div className="relative hidden sm:group">
-                <button className="flex items-center justify-center w-10 h-10 hover:bg-zinc-100 rounded-full transition-colors text-sm font-medium tracking-wide cursor-pointer">
-                  <UserRound className="h-5 w-5" strokeWidth={1.5} />
-                </button>
-                <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-xl shadow-xl border border-zinc-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-20 overflow-hidden">
-                  <div className="px-4 py-3 border-b border-zinc-100">
-                    <p className="text-xs font-medium text-zinc-500 truncate">{userInfo.email || userDisplayName}</p>
-                  </div>
-                  {extraLinks.map(({ to, label, icon: Icon }) => (
-                    <Link key={to} to={to} className="flex items-center gap-3 px-4 py-2.5 text-sm text-zinc-700 hover:bg-zinc-50 hover:text-black transition-colors">
-                      <Icon className="h-4 w-4 text-zinc-400" strokeWidth={1.5} />
-                      {label}
-                    </Link>
-                  ))}
-                  <button onClick={() => dispatch(logout())} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors border-t border-zinc-100 cursor-pointer">
-                    <LogOut className="h-4 w-4" strokeWidth={1.5} />
-                    Logout
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <Link to="/login" className="hidden sm:flex items-center justify-center w-10 h-10 hover:bg-zinc-100 rounded-full transition-colors">
-                <UserRound className="h-5 w-5" strokeWidth={1.5} />
-              </Link>
-            )}
+            {/* Profile */}
+            <div className="relative hidden sm:block" ref={profileRef}>
+              <button
+                onClick={() => setProfileOpen(!profileOpen)}
+                className="relative flex items-center justify-center w-10 h-10 rounded-full transition-all duration-200 cursor-pointer hover:shadow-lg hover:shadow-[#C9A227]/20 hover:scale-105 hover:-translate-y-0.5 group"
+                style={{ backgroundColor: userInfo ? '#111111' : 'transparent' }}
+                aria-label="Profile"
+              >
+                {userInfo ? (
+                  <span className="text-xs font-bold text-white uppercase tracking-wide select-none">
+                    {(userInfo.firstName?.[0] || userInfo.email?.[0] || 'U').toUpperCase()}
+                    {(userInfo.lastName?.[0] || '')}
+                  </span>
+                ) : (
+                  <UserRound className="h-5 w-5 text-zinc-700 group-hover:text-[#C9A227] transition-colors duration-200" strokeWidth={1.5} />
+                )}
+                <span className="absolute inset-0 rounded-full ring-1 ring-transparent group-hover:ring-[#C9A227]/40 transition-all duration-300" />
+              </button>
+
+              <AnimatePresence>
+                {profileOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -12, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -12, scale: 0.95 }}
+                    transition={{ duration: 0.25, ease: 'easeOut' }}
+                    className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-zinc-200 overflow-hidden z-50"
+                    style={{ transformOrigin: 'top right' }}
+                  >
+                    {userInfo ? (
+                      <>
+                        <div className="px-5 py-4 bg-gradient-to-br from-zinc-50 to-white border-b border-zinc-100">
+                          <p className="text-sm font-semibold text-zinc-800">
+                            Hello, {userInfo.firstName || userDisplayName} 👋
+                          </p>
+                          <p className="text-xs text-zinc-500 mt-0.5 truncate">{userInfo.email}</p>
+                        </div>
+                        <div className="py-1">
+                          {[
+                            { to: '/account?tab=profile', label: 'My Profile', icon: UserRound },
+                            { to: '/account', label: 'My Orders', icon: Package },
+                            { to: '/account?tab=wishlist', label: 'Wishlist', icon: Heart },
+                            { to: '/account?tab=addresses', label: 'Saved Addresses', icon: MapPin },
+                            { to: '/account?tab=settings', label: 'Settings', icon: Settings },
+                          ].map(({ to, label, icon: Icon }) => (
+                            <Link
+                              key={to}
+                              to={to}
+                              onClick={() => setProfileOpen(false)}
+                              className="flex items-center gap-3 mx-2 my-0.5 px-3 py-2.5 text-sm text-zinc-700 hover:bg-zinc-100 hover:text-black rounded-xl transition-all duration-200 group/item"
+                            >
+                              <Icon className="h-4 w-4 text-zinc-400 group-hover/item:text-[#C9A227] transition-colors duration-200" strokeWidth={1.5} />
+                              {label}
+                            </Link>
+                          ))}
+                        </div>
+                        <div className="border-t border-zinc-100 py-1">
+                          <button
+                            onClick={() => { dispatch(logout()); setProfileOpen(false); }}
+                            className="w-full flex items-center gap-3 mx-2 my-0.5 px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200 cursor-pointer"
+                          >
+                            <LogOut className="h-4 w-4" strokeWidth={1.5} />
+                            Logout
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="px-5 py-5 text-center border-b border-zinc-100">
+                          <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-zinc-100 flex items-center justify-center">
+                            <UserRound className="h-6 w-6 text-zinc-500" strokeWidth={1.5} />
+                          </div>
+                          <h3 className="text-base font-semibold text-zinc-800">Welcome to VASTRA</h3>
+                          <p className="text-xs text-zinc-500 mt-1">Discover premium minimal fashion.</p>
+                        </div>
+                        <div className="px-4 py-4 space-y-2">
+                          <Link
+                            to="/login"
+                            onClick={() => setProfileOpen(false)}
+                            className="block w-full text-center bg-[#111111] text-white rounded-xl py-3 text-sm font-semibold tracking-wide hover:bg-zinc-800 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
+                          >
+                            Login
+                          </Link>
+                          <Link
+                            to="/register"
+                            onClick={() => setProfileOpen(false)}
+                            className="block w-full text-center bg-white text-zinc-800 border-2 border-zinc-200 rounded-xl py-3 text-sm font-semibold tracking-wide hover:border-zinc-400 hover:bg-zinc-50 transition-all duration-200"
+                          >
+                            Sign Up
+                          </Link>
+                        </div>
+                        <div className="border-t border-zinc-100 py-1">
+                          {[
+                            { to: '/account?tab=wishlist', label: 'Wishlist', icon: Heart },
+                            { to: '/track-order', label: 'Track Order', icon: Package },
+                            { to: '/faq', label: 'Help Center', icon: HelpCircle },
+                          ].map(({ to, label, icon: Icon }) => (
+                            <Link
+                              key={to}
+                              to={to}
+                              onClick={() => setProfileOpen(false)}
+                              className="flex items-center gap-3 mx-2 my-0.5 px-3 py-2.5 text-sm text-zinc-700 hover:bg-zinc-100 hover:text-black rounded-xl transition-all duration-200"
+                            >
+                              <Icon className="h-4 w-4 text-zinc-400" strokeWidth={1.5} />
+                              {label}
+                            </Link>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
             {/* Cart */}
             <button
@@ -441,8 +541,54 @@ const Navbar = () => {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="lg:hidden bg-white border-t border-zinc-200 shadow-lg">
-            <div className="px-4 py-4 space-y-1">
+          <div className="lg:hidden bg-white border-t border-zinc-200 shadow-lg max-h-[calc(100vh-80px)] overflow-y-auto">
+            <div className="px-4 py-5 space-y-1">
+              {/* Profile section at top */}
+              {userInfo ? (
+                <div className="mb-4 p-4 bg-zinc-50 rounded-2xl">
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-full bg-[#111111] flex items-center justify-center text-sm font-bold text-white uppercase shrink-0">
+                      {(userInfo.firstName?.[0] || userInfo.email?.[0] || 'U').toUpperCase()}
+                      {(userInfo.lastName?.[0] || '')}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-zinc-800 truncate">{userInfo.firstName || userDisplayName}</p>
+                      <p className="text-xs text-zinc-500 truncate">{userInfo.email}</p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="mb-4 p-4 bg-zinc-50 rounded-2xl">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-11 h-11 rounded-full bg-zinc-200 flex items-center justify-center">
+                      <UserRound className="h-5 w-5 text-zinc-500" strokeWidth={1.5} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-zinc-800">Welcome to VASTRA</p>
+                      <p className="text-xs text-zinc-500">Sign in for exclusive access</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Link
+                      to="/login"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex-1 text-center bg-[#111111] text-white rounded-xl py-2.5 text-sm font-semibold"
+                    >
+                      Login
+                    </Link>
+                    <Link
+                      to="/register"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex-1 text-center bg-white text-zinc-800 border-2 border-zinc-200 rounded-xl py-2.5 text-sm font-semibold"
+                    >
+                      Sign Up
+                    </Link>
+                  </div>
+                </div>
+              )}
+
+              {/* Nav links */}
+              <p className="px-3 py-2 text-[10px] font-semibold tracking-widest text-zinc-400 uppercase">Shop</p>
               {navItems.map((item) => (
                 <Link
                   key={item.to}
@@ -453,10 +599,20 @@ const Navbar = () => {
                   {item.label}
                 </Link>
               ))}
-              <hr className="my-2 border-zinc-100" />
+
+              <hr className="my-3 border-zinc-100" />
+
+              {/* Account links */}
+              <p className="px-3 py-2 text-[10px] font-semibold tracking-widest text-zinc-400 uppercase">Account</p>
               {userInfo ? (
                 <>
-                  {extraLinks.map(({ to, label, icon: Icon }) => (
+                  {[
+                    { to: '/account?tab=profile', label: 'My Profile', icon: UserRound },
+                    { to: '/account', label: 'My Orders', icon: Package },
+                    { to: '/account?tab=wishlist', label: 'Wishlist', icon: Heart },
+                    { to: '/account?tab=addresses', label: 'Saved Addresses', icon: MapPin },
+                    { to: '/account?tab=settings', label: 'Settings', icon: Settings },
+                  ].map(({ to, label, icon: Icon }) => (
                     <Link
                       key={to}
                       to={to}
@@ -476,13 +632,23 @@ const Navbar = () => {
                   </button>
                 </>
               ) : (
-                <Link
-                  to="/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block px-4 py-3 text-sm font-medium text-zinc-700 hover:bg-zinc-50 rounded-lg transition-colors"
-                >
-                  Login / Register
-                </Link>
+                <>
+                  {[
+                    { to: '/account?tab=wishlist', label: 'Wishlist', icon: Heart },
+                    { to: '/track-order', label: 'Track Order', icon: Package },
+                    { to: '/faq', label: 'Help Center', icon: HelpCircle },
+                  ].map(({ to, label, icon: Icon }) => (
+                    <Link
+                      key={to}
+                      to={to}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 text-sm text-zinc-700 hover:bg-zinc-50 rounded-lg transition-colors"
+                    >
+                      <Icon className="h-4 w-4 text-zinc-400" strokeWidth={1.5} />
+                      {label}
+                    </Link>
+                  ))}
+                </>
               )}
             </div>
           </div>
