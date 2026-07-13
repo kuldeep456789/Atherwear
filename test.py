@@ -1,19 +1,8 @@
-"""
-Quick check: does your CJdropshipping API key work for fetching products?
-
-CJdropshipping's API is a two-step flow:
-  1. Exchange your email + API key for an access token
-  2. Use that token (as header 'CJ-Access-Token') to call the product list endpoint
-
-Fill in EMAIL and API_KEY below, then run:
-    python check_cj_api.py
-"""
 
 import requests
 
 EMAIL = "kuldeeppraj2002@gmail.com"      # the email tied to your CJdropshipping account
 API_KEY = "CJ5598020@api@feeccd0983384376a0434de9c75a7880"         # the API key from CJdropshipping dashboard
-
 BASE_URL = "https://developers.cjdropshipping.com/api2.0/v1"
 
 

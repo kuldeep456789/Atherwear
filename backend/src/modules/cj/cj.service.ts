@@ -317,9 +317,7 @@ export class CjService {
   private normalizeProductResponse(response: any) {
     const products = this.extractList(response)
       .map((product: any) => this.normalizeProduct(product))
-      .filter(Boolean)
-      // Only keep products that have at least one real image URL
-      .filter((p: any) => Array.isArray(p.images) && p.images.some((img: string) => img && img.startsWith('http')));
+      .filter(Boolean);
 
     return {
       ...response,

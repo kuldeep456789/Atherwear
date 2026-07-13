@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { JwtService } from '@nestjs/jwt';
 import { createHmac } from 'crypto';
@@ -11,7 +11,8 @@ import { VerifyPaymentDto } from './dto/verify-payment.dto';
 
 @Injectable()
 export class PaymentsService {
-  private readonly razorpay: Razorpay;
+  private readonly logger = new Logger(PaymentsService.name);
+  private readonly razorpay?: Razorpay;
   private readonly minGatewayAmountPaise = 100;
 
   constructor(
@@ -19,10 +20,19 @@ export class PaymentsService {
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
   ) {
-    this.razorpay = new Razorpay({
-      key_id: process.env.RAZORPAY_KEY_ID ?? '',
-      key_secret: process.env.RAZORPAY_KEY_SECRET ?? '',
-    });
+    const keyId = process.env.RAZORPAY_KEY_ID?.trim();
+    const keySecret = process.env.RAZORPAY_KEY_SECRET?.trim();
+
+    if (keyId && keySecret) {
+      this.razorpay = new Razorpay({
+        key_id: keyId,
+        key_secret: keySecret,
+      });
+    } else {
+      this.logger.warn(
+        'Razorpay credentials are missing or invalid. Online payment endpoints will be disabled.',
+      );
+    }
   }
 
   async createPaymentOrder(token: string, dto: CreatePaymentOrderDto) {
@@ -48,6 +58,10 @@ export class PaymentsService {
       );
     }
 
+    if (!this.razorpay) {
+      throw new BadRequestException('Razorpay is not configured on this server');
+    }
+
     const gatewayOrder = (await this.razorpay.orders.create({
       amount: amountPaise,
       currency: 'INR',
@@ -62,7 +76,7 @@ export class PaymentsService {
     return {
       order,
       gatewayOrder,
-      keyId: process.env.RAZORPAY_KEY_ID ?? '',
+      keyId: process.env.RAZORPAY_KEY_ID?.trim() ?? '',
     };
   }
 

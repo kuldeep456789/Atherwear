@@ -34,6 +34,7 @@ export type ProductLike = {
 };
 
 const IMAGE_KEYS = ['images', 'imageList', 'imgList'] as const;
+const isUsableImage = (value: string) => Boolean(value) && !value.startsWith('data:image');
 
 const pickImageFromArray = (
   value?: Array<string | { url?: string; image?: string; src?: string } | null>,
@@ -91,7 +92,7 @@ export const getProductImages = (product: ProductLike): string[] => {
     ...variantImages,
   ].filter((item): item is string => Boolean(item));
 
-  return [...new Set(images)];
+  return [...new Set(images)].filter(isUsableImage);
 };
 
 export const getProductId = (product: ProductLike): string =>

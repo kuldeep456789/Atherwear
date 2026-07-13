@@ -1,12 +1,20 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ChevronDown, ChevronRight, ChevronUp, SlidersHorizontal, X } from 'lucide-react';
-import { useGetProductsQuery } from '../store/slices/productApiSlice';
+import { useGetProductsByCategoryQuery, useGetProductsQuery } from '../store/slices/productApiSlice';
 import { useGetCategoriesQuery } from '../store/slices/categoryApiSlice';
 import ProductCard from '../components/product/ProductCard';
-import { getProductId } from '../lib/product';
 
-const toSlug = (value: string) => value.toLowerCase().replace(/\s+/g, '-');
+const normalizeSlug = (value: string) =>
+  value
+    .toLowerCase()
+    .trim()
+    .replace(/['"]/g, '')
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+const toSlug = (value: string) => normalizeSlug(value);
 const fromSlug = (value: string) => value.replace(/-/g, ' ');
 
 const COLLECTION_SUBCATEGORIES: Record<string, string[]> = {
@@ -15,8 +23,8 @@ const COLLECTION_SUBCATEGORIES: Record<string, string[]> = {
   accessories: ['Caps', 'Wallets', 'Sunglasses', 'Belts', 'Bags'],
 };
 
-const matchesCollection = (name: string, gender: string) => {
-  const normalized = name.toLowerCase();
+const matchesCollection = (name: string, gender: string, group = '') => {
+  const normalized = `${name} ${group}`.toLowerCase();
 
   if (gender === 'men') {
     return /\b(men|men's|male)\b/i.test(normalized);
@@ -80,23 +88,42 @@ const CollectionPage = () => {
 
   const { data: categoriesData = [], isLoading: categoriesLoading } = useGetCategoriesQuery(undefined);
   const collectionTabs = Array.isArray(categoriesData)
-    ? categoriesData.filter((category: any) => matchesCollection(String(category?.name || ''), normalizedGender))
+    ? categoriesData.filter((category: any) =>
+        matchesCollection(
+          String(category?.name || ''),
+          normalizedGender,
+          String(category?.group || ''),
+        ),
+      )
     : [];
 
-  const productQuery = {
-    ...(normalizedGender ? { gender: normalizedGender } : {}),
-    ...(normalizedSubcategory
-      ? { subcategoryName: fromSlug(normalizedSubcategory) }
-      : normalizedGender === 'accessories'
-        ? { subcategoryName: 'caps' } // Default to caps to avoid massive accessories fetch
-        : {}),
-    ...(selectedSizes.length > 0 ? { sizes: selectedSizes.join(',') } : {}),
-    ...(selectedColors.length > 0 ? { colors: selectedColors.join(',') } : {}),
-    pageNum: 1,
-    pageSize: 50,
-  };
+  const activeCategory = normalizedSubcategory
+    ? collectionTabs.find((category: any) => normalizeSlug(String(category?.name || '')) === normalizeSlug(fromSlug(normalizedSubcategory)))
+    : undefined;
 
-  const { data, isLoading, error } = useGetProductsQuery(productQuery);
+  const categoryId = activeCategory?._id;
+
+  const { data: categoryProductsData, isLoading: categoryLoading, error: categoryError } = useGetProductsByCategoryQuery(
+    categoryId ? { categoryId, pageNum: 1, pageSize: 80 } : (undefined as any),
+    { skip: !categoryId } as any,
+  );
+
+  const { data: genderProductsData, isLoading: genderLoading, error: genderError } = useGetProductsQuery(
+    !categoryId
+      ? {
+          ...(normalizedGender ? { gender: normalizedGender } : {}),
+          ...(selectedSizes.length > 0 ? { sizes: selectedSizes.join(',') } : {}),
+          ...(selectedColors.length > 0 ? { colors: selectedColors.join(',') } : {}),
+          pageNum: 1,
+          pageSize: 80,
+        }
+      : (undefined as any),
+    { skip: !!categoryId } as any,
+  );
+
+  const data = categoryId ? categoryProductsData : genderProductsData;
+  const isLoading = categoryId ? categoryLoading : genderLoading;
+  const error = categoryId ? categoryError : genderError;
 
   const handleSizeToggle = (size: string) => {
     setSelectedSizes((prev) => prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size]);
@@ -146,11 +173,13 @@ const CollectionPage = () => {
   const availableSizes = Array.from(new Set(productsFromResponse.flatMap((p: any) => p.sizes || []))).filter(Boolean) as string[];
   const availableColors = Array.from(new Set(productsFromResponse.flatMap((p: any) => p.colors || []))).filter(Boolean) as string[];
 
-  const pageTitle = subcategory
-    ? `${fromSlug(subcategory)}`
-    : gender
-      ? `ALL ${gender}`
-      : 'COLLECTION';
+  const pageTitle = activeCategory?.name
+    ? `${activeCategory.name}`
+    : subcategory
+      ? `${fromSlug(subcategory)}`
+      : gender
+        ? `${gender} COLLECTIONS`
+        : 'COLLECTIONS';
 
   const filterSidebar = (
     <div className="bg-[hsl(var(--card))] text-[hsl(var(--foreground))]">
@@ -160,7 +189,7 @@ const CollectionPage = () => {
       {normalizedGender && COLLECTION_SUBCATEGORIES[normalizedGender] && (
         <div className="border-b-2 border-black dark:border-white pb-6 mb-6">
           <h3 className="font-black text-sm mb-4 text-[hsl(var(--foreground))] uppercase tracking-widest">
-            {normalizedGender === 'accessories' ? 'Shop By' : `${normalizedGender} Collection`}
+            {normalizedGender === 'accessories' ? 'Shop By' : `${normalizedGender} Collections`}
           </h3>
           <div className="flex flex-col">
             <Link
@@ -170,7 +199,7 @@ const CollectionPage = () => {
                   : 'hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))]'
                 }`}
             >
-              All {normalizedGender === 'accessories' ? 'Accessories' : normalizedGender}
+              All {normalizedGender === 'accessories' ? 'Accessories' : `${normalizedGender} Collections`}
             </Link>
             {COLLECTION_SUBCATEGORIES[normalizedGender].map((sub) => {
               const slug = toSlug(sub);
@@ -278,7 +307,7 @@ const CollectionPage = () => {
           <ChevronRight size={10} strokeWidth={3} />
           {gender && (
             <>
-              <Link to={`/collections/${gender}`} className="hover:text-[hsl(var(--foreground))] transition-colors">{gender}</Link>
+              <Link to={`/collections/${gender}`} className="hover:text-[hsl(var(--foreground))] transition-colors">{gender.toUpperCase()} COLLECTIONS</Link>
               <ChevronRight size={10} strokeWidth={3} />
             </>
           )}
@@ -313,7 +342,7 @@ const CollectionPage = () => {
           ) : (
             collectionTabs.map((tab: any) => {
               const tabSlug = toSlug(String(tab.name || ''));
-              const isActive = normalizedSubcategory === tabSlug;
+              const isActive = normalizeSlug(normalizedSubcategory) === tabSlug;
 
               return (
                 <Link
@@ -350,7 +379,7 @@ const CollectionPage = () => {
 
         <div className="flex-1 w-full">
           {isLoading ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-3 border-l-2 border-black dark:border-white">
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 border-l-2 border-black dark:border-white">
               {[...Array(9)].map((_, i) => (
                 <div key={i} className="border-b-2 border-r-2 border-black dark:border-white p-0">
                   <div className="aspect-[4/5] bg-zinc-200 dark:bg-zinc-800 animate-pulse" />
@@ -375,9 +404,9 @@ const CollectionPage = () => {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-3 border-l-2 border-black dark:border-white border-t-0">
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 border-l-2 border-black dark:border-white border-t-0">
                 {sortedProducts.map((product: any) => (
-                  <ProductCard key={getProductId(product) || product.name} product={product} />
+                  <ProductCard key={product.pid || product._id || product.id || product.name} product={product} />
                 ))}
               </div>
             </>

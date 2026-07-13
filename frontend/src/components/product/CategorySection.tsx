@@ -33,7 +33,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({ categoryId, categoryN
   }, []);
 
   const { data, isLoading, error } = useGetProductsByCategoryQuery(
-    { categoryId, pageNum: 1, pageSize: 10 },
+    { categoryId, pageNum: 1, pageSize: 20 },
     { skip: !isVisible }, // Don't fire the API call until visible
   );
 
@@ -47,7 +47,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({ categoryId, categoryN
           <h2 className="text-4xl sm:text-6xl font-black tracking-tighter uppercase">{categoryName}</h2>
           {isLoading && (
             <div className="mt-8 flex gap-0 overflow-x-hidden">
-              {[1, 2, 3, 4].map((i) => (
+              {[1, 2, 3, 4, 5, 6].map((i) => (
                 <div
                   key={i}
                   className="min-w-[280px] aspect-[3/4] bg-zinc-100 dark:bg-zinc-900 animate-pulse border-r-2 border-black dark:border-white"
@@ -71,10 +71,10 @@ const CategorySection: React.FC<CategorySectionProps> = ({ categoryId, categoryN
       <div className="px-6 sm:px-10 py-10 flex items-end justify-between gap-4 border-b-2 border-black dark:border-white">
         <h2 className="text-4xl sm:text-6xl font-black tracking-tighter uppercase">{categoryName}</h2>
         <Link
-          to={`/collection/${categoryId}`}
+          to={`/men?category=${encodeURIComponent(categoryName)}`}
           className="hidden sm:inline-flex items-center gap-2 text-xs font-black tracking-widest hover:text-red-600 transition-colors"
         >
-          VIEW ALL <ArrowRight size={16} strokeWidth={2.5} />
+          VIEW ALL PRODUCTS <ArrowRight size={16} strokeWidth={2.5} />
         </Link>
       </div>
 

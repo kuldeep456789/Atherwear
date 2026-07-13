@@ -93,7 +93,7 @@ const ProductListPage = () => {
       ...(activeCategoryId ? { categoryId: activeCategoryId } : {}),
       ...(keyword ? { q: keyword } : {}),
       pageNum: page,
-      pageSize: 50,
+      pageSize: 80,
     }
   );
 
@@ -148,7 +148,7 @@ const ProductListPage = () => {
   const sizeOptions = ['XS', 'S', 'M', 'L', 'XL'];
   const visibleCategories = showAllCategories
     ? visibleCatalogCategories
-    : visibleCatalogCategories.slice(0, 5);
+    : visibleCatalogCategories.slice(0, 8);
   const visibleSizes = sizeOptions;
 
   const pageTitle = keyword
@@ -158,7 +158,7 @@ const ProductListPage = () => {
     : isSale
     ? 'Sale'
     : collectionType
-    ? `${collectionType} Collection`
+    ? `${collectionType} Collections`
     : 'Our Shop';
 
   const tabs = ['ALL', 'MEN', 'WOMEN', 'ACCESSORIES'];
@@ -335,7 +335,7 @@ const ProductListPage = () => {
         <div className="flex-1 w-full">
           {/* Loading */}
           {isLoading ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-3 border-t-2 border-l-2 border-black dark:border-white">
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 border-t-2 border-l-2 border-black dark:border-white">
               {[...Array(9)].map((_, i) => (
                 <div key={i} className="border-r-2 border-b-2 border-black dark:border-white p-0">
                   <div className="aspect-[4/5] shimmer" />
@@ -369,9 +369,13 @@ const ProductListPage = () => {
           ) : (
             <>
               {/* BORDER-COLLAPSE GRID */}
-              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-3 border-t-2 border-l-2 border-black dark:border-white">
-                {sortedProducts.map((product: any) => (
-                  <ProductCard key={product._id} product={product} keyword={keyword} />
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 border-t-2 border-l-2 border-black dark:border-white">
+                {sortedProducts.map((product: any, index: number) => (
+                  <ProductCard
+                    key={product.pid || product._id || product.id || `${product.title || product.name || 'product'}-${index}`}
+                    product={product}
+                    keyword={keyword}
+                  />
                 ))}
               </div>
 

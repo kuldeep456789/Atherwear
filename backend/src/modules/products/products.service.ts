@@ -80,67 +80,24 @@ export class ProductsService {
 
     let product: Record<string, any>;
 
-    // A cached product with sparse images (< 2) was stored from a list fetch.
-    // We must bypass the cache and re-fetch from CJ detail API in this case.
-    const cachedHasSparseImages =
-      cached &&
-      (!Array.isArray(cached.images) || cached.images.filter(Boolean).length < 2);
-
-    if (cached && !cachedHasSparseImages) {
+    if (cached) {
       console.log(`[Product] Cache HIT ${cacheKey}`);
       product = cached;
     } else {
-      if (cachedHasSparseImages) {
-        console.log(`[Product] Cache HIT but sparse images — re-fetching from CJ ${cacheKey}`);
-      } else {
-        console.log(`[Product] Cache MISS ${cacheKey}`);
-      }
+      console.log(`[Product] Cache MISS ${cacheKey}`);
 
       product = await this.runSingleFlight(cacheKey, async () => {
-        const mongoProduct = await this.productModel.findOne({ pid: id }).lean().exec();
-
-        // If Mongo has full images, serve it directly
-        if (mongoProduct && Array.isArray(mongoProduct.images) && mongoProduct.images.filter(Boolean).length >= 2) {
-          console.log(`[Product] Mongo HIT with ${mongoProduct.images.length} images ${id}`);
-          return mongoProduct;
-        }
-
         console.log(`[Product] Fetching detail from CJ API ${id}`);
-        let cjProduct: any = null;
-        try {
-          cjProduct = await this.cjService.getProductById(id);
-        } catch (error: any) {
-          console.warn(`[Product] CJ API error for ${id}: ${error.message}`);
-        }
-
-        if (!cjProduct && !mongoProduct) {
-          throw new NotFoundException('Product not found in DB or CJ API');
-        }
-
-        if (!cjProduct && mongoProduct) {
-          return mongoProduct;
-        }
-
-        // Merge: if mongo has data, merge CJ detail images on top
-        const merged = mongoProduct
-          ? {
-              ...mongoProduct,
-              images: this.mergeImages(mongoProduct.images ?? [], cjProduct.images ?? []),
-              variants: cjProduct.variants?.length ? cjProduct.variants : mongoProduct.variants,
-              colors: cjProduct.colors?.length ? cjProduct.colors : mongoProduct.colors,
-              sizes: cjProduct.sizes?.length ? cjProduct.sizes : mongoProduct.sizes,
-              description: cjProduct.description || mongoProduct.description,
-            }
-          : cjProduct;
+        const cjProduct = await this.cjService.getProductById(id);
 
         // Persist the enriched product back to MongoDB
         await this.productModel.updateOne(
           { pid: id },
-          { $set: this.normalizeProductForStorage(merged) },
+          { $set: this.normalizeProductForStorage(cjProduct) },
           { upsert: true },
         );
 
-        return merged;
+        return cjProduct;
       });
 
       await this.redisService.setJson(cacheKey, product, this.productTtlSeconds);
@@ -265,73 +222,22 @@ export class ProductsService {
   }
 
   private async getProductsFromMongoOrCj(query: ProductQuery) {
-    const mongoQuery: Record<string, any> = {};
-
-    if (query.categoryId) {
-      mongoQuery.categoryId = query.categoryId;
-    }
-
-    if (query.collectionType) {
-      mongoQuery.collectionType = new RegExp(`^${this.escapeRegex(query.collectionType.trim())}$`, 'i');
-    }
-
-    if (query.subcategoryName) {
-      mongoQuery.subcategoryName = new RegExp(this.escapeRegex(query.subcategoryName.trim()), 'i');
-    }
-
-    if (query.gender) {
-      mongoQuery.gender = new RegExp(`^${this.escapeRegex(query.gender.trim())}$`, 'i');
-    }
-    if (query.q) {
-      const searchRegex = new RegExp(this.escapeRegex(query.q.trim()), 'i');
-      mongoQuery.$or = [
-        { title: searchRegex },
-        { categoryName: searchRegex },
-        { subcategoryName: searchRegex },
-        { description: searchRegex },
-        { tags: searchRegex },
-      ];
-    }
-
-    if (query.colors) {
-      const colors = query.colors.split(',').map((c) => new RegExp(`^${this.escapeRegex(c.trim())}$`, 'i'));
-      mongoQuery.colors = { $in: colors };
-    }
-
-    if (query.sizes) {
-      const sizes = query.sizes.split(',').map((s) => new RegExp(`^${this.escapeRegex(s.trim())}$`, 'i'));
-      mongoQuery.sizes = { $in: sizes };
-    }
-
-    // minPrice, maxPrice, and minRating are now handled on the frontend.
-    // We intentionally do NOT apply them in the backend query to avoid cache key proliferation.
-
-    // Apply sort: newest = createdAt desc, price_asc/desc, default = no sort
-    const mongoSort: Record<string, 1 | -1> = {};
-    if (query.sort === 'newest') mongoSort['createdAt'] = -1;
-    else if (query.sort === 'price_asc') mongoSort['price'] = 1;
-    else if (query.sort === 'price_desc') mongoSort['price'] = -1;
-
-    let cachedProducts: any[] = await this.productModel.find(mongoQuery).sort(mongoSort).lean().exec();
-
-    if (cachedProducts.length > 0) {
-      return {
-        products: cachedProducts,
-        source: 'mongo',
-      };
-    }
-
     const cjProducts = query.categoryId
       ? await this.cjService.getProductsByCategory(query.categoryId, query.pid, query)
       : await this.cjService.getProducts(query);
 
     const normalizedProducts = Array.isArray(cjProducts?.products) ? cjProducts.products : [];
-    const filteredProducts = query.collectionType
+    const filteredByCollection = query.collectionType
       ? normalizedProducts.filter((product: Record<string, any>) =>
         String(product.collectionType ?? '').trim().toLowerCase() ===
         query.collectionType!.trim().toLowerCase(),
       )
       : normalizedProducts;
+    const filteredProducts = query.subcategoryName
+      ? filteredByCollection.filter((product: Record<string, any>) =>
+        this.matchesRequestedSubcategory(product, query.subcategoryName!),
+      )
+      : filteredByCollection;
 
     if (filteredProducts.length > 0) {
       const operations = filteredProducts
@@ -420,6 +326,47 @@ export class ProductsService {
 
   private escapeRegex(value: string) {
     return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  private matchesRequestedSubcategory(product: Record<string, any>, requestedSubcategory: string) {
+    const normalizedRequest = requestedSubcategory.trim().toLowerCase();
+    const text = [
+      product?.subcategoryName,
+      product?.categoryName,
+      product?.title,
+      product?.name,
+      product?.description,
+      ...(Array.isArray(product?.tags) ? product.tags : []),
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+
+    if (!text) {
+      return false;
+    }
+
+    const rules: Record<string, string[]> = {
+      sunglasses: ['sunglass', 'sunglasses', 'shade', 'eyewear', 'eyeglass'],
+      caps: ['cap', 'caps', 'hat', 'beanie'],
+      wallets: ['wallet'],
+      belts: ['belt'],
+      bags: ['bag', 'backpack', 'handbag', 'sling'],
+      jackets: ['jacket', 'hoodie', 'outerwear'],
+      hoodies: ['hoodie', 'sweatshirt'],
+      shirts: ['shirt', 'tee', 'tshirt', 't-shirt'],
+      jeans: ['jean', 'denim', 'pant'],
+      cargo: ['cargo'],
+      shorts: ['short'],
+      dresses: ['dress', 'skirt'],
+      tops: ['top', 'blouse', 'shirt'],
+      'co-ords': ['coord', 'co-ord', 'set', 'matching set'],
+      oversized: ['oversized', 'loose fit', 'relaxed fit'],
+      polo: ['polo'],
+    };
+
+    const tokens = rules[normalizedRequest] ?? [normalizedRequest];
+    return tokens.some((token) => text.includes(token));
   }
 
   private runSingleFlight<T>(key: string, factory: () => Promise<T>): Promise<T> {

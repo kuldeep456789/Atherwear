@@ -8,6 +8,8 @@ import { getColorHex } from '../../utils/colorMap';
 import { getFirstProductImage, getProductId, getProductImages } from '../../lib/product';
 import DOMPurify from 'dompurify';
 
+const PLACEHOLDER_IMAGE =
+  'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="500" viewBox="0 0 400 500"><rect width="100%" height="100%" fill="%23f4f4f5"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="24" font-weight="900" fill="%23a1a1aa" letter-spacing="4">AETHERWEAR</text></svg>';
 
 
 interface ProductCardProps {
@@ -43,12 +45,8 @@ const ProductCard = ({ product, keyword }: ProductCardProps) => {
   // Brand placeholder image (inline SVG via data URI)
   // const placeholderImage = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="500" viewBox="0 0 400 500"><rect width="100%" height="100%" fill="%23f4f4f5"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="24" font-weight="900" fill="%23a1a1aa" letter-spacing="4">AETHERWEAR</text></svg>';
 
-  const primaryImage = getFirstProductImage(product) || '';
+  const primaryImage = getFirstProductImage(product) || PLACEHOLDER_IMAGE;
   const secondaryImage = productImages[1] || primaryImage;
-
-  // Hide products that have no real images — treat as out-of-stock
-  const hasRealImage = primaryImage && !primaryImage.startsWith('data:image');
-  if (!hasRealImage) return null;
 
   const uniqueColors = product.colors || (product.variants
     ? Array.from(new Set(product.variants.map((v) => v.color)))
@@ -97,7 +95,11 @@ const ProductCard = ({ product, keyword }: ProductCardProps) => {
             <img
               src={isHovered ? secondaryImage : primaryImage}
               alt={product.name}
-              onError={() => setImageFailed(true)}
+              onError={() => {
+                if (primaryImage !== PLACEHOLDER_IMAGE) {
+                  setImageFailed(true);
+                }
+              }}
               className="object-cover object-center w-full h-full transition-transform duration-500 ease-out group-hover:scale-105 dark:mix-blend-multiply"
             />
           )}

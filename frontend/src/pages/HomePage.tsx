@@ -23,28 +23,28 @@ const HomePage = () => {
   const { data: newArrivalsData, isLoading: newArrivalsLoading } = useGetProductsQuery({
     sort: 'newest',
     pageNum: 1,
-    pageSize: 8,
+    pageSize: 12,
   });
   const { data: menData, isLoading: menLoading } = useGetProductsQuery({
     gender: 'men',
     pageNum: 1,
-    pageSize: 4,
+    pageSize: 8,
   });
   const { data: womenData, isLoading: womenLoading } = useGetProductsQuery({
     gender: 'women',
     pageNum: 1,
-    pageSize: 4,
+    pageSize: 8,
   });
   const { data: saleData } = useGetProductsQuery({
     sort: 'price_asc',
     pageNum: 1,
-    pageSize: 4,
+    pageSize: 8,
   });
 
-  const newArrivals = Array.isArray(newArrivalsData?.products) ? newArrivalsData.products.slice(0, 8) : [];
-  const menProducts = Array.isArray(menData?.products) ? menData.products.slice(0, 4) : [];
-  const womenProducts = Array.isArray(womenData?.products) ? womenData.products.slice(0, 4) : [];
-  const saleProducts = Array.isArray(saleData?.products) ? saleData.products.slice(0, 4) : [];
+  const newArrivals = Array.isArray(newArrivalsData?.products) ? newArrivalsData.products : [];
+  const menProducts = Array.isArray(menData?.products) ? menData.products : [];
+  const womenProducts = Array.isArray(womenData?.products) ? womenData.products : [];
+  const saleProducts = Array.isArray(saleData?.products) ? saleData.products : [];
 
   // For hero slideshow, use new arrivals images
   const heroImages = useMemo(() => {

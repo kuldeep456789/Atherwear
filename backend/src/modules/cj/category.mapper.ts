@@ -59,24 +59,27 @@ export const BLOCKED = [
   "jewelry"
 ];
 
+const normalizeCategoryText = (value: string) =>
+  value.toLowerCase().replace(/[\s_-]+/g, '');
+
 export function isCategoryAllowed(categoryName: string): boolean {
   if (!categoryName) return false;
   
-  const name = categoryName.toLowerCase();
+  const name = normalizeCategoryText(categoryName);
   
-  if (BLOCKED.some(word => name.includes(word))) {
+  if (BLOCKED.some(word => name.includes(normalizeCategoryText(word)))) {
     return false;
   }
 
   // Explicitly allow high-level categories that might contain our whitelist items
-  if (name.includes("men's clothing") || name.includes("women's clothing") || name.includes("fashion accessories") || name.includes("apparel") || name.includes("bags") || name.includes("shoes & bags")) {
+  if (name.includes("mensclothing") || name.includes("womensclothing") || name.includes("fashionaccessories") || name.includes("apparel") || name.includes("bags") || name.includes("shoesbags")) {
     return true;
   }
 
   return (
-    MEN_ALLOWED.some(cat => name.includes(cat)) ||
-    WOMEN_ALLOWED.some(cat => name.includes(cat)) ||
-    ACCESSORIES_ALLOWED.some(cat => name.includes(cat))
+    MEN_ALLOWED.some(cat => name.includes(normalizeCategoryText(cat))) ||
+    WOMEN_ALLOWED.some(cat => name.includes(normalizeCategoryText(cat))) ||
+    ACCESSORIES_ALLOWED.some(cat => name.includes(normalizeCategoryText(cat)))
   );
 }
 
@@ -84,16 +87,16 @@ export function isProductAllowed(product: any): { allowed: boolean; gender: stri
   const name = String(product?.productNameEn ?? product?.productName ?? product?.nameEn ?? product?.name ?? '').toLowerCase();
   const categoryName = String(product?.categoryName ?? product?.categoryThirdName ?? product?.categorySecondName ?? product?.categoryFirstName ?? '').toLowerCase();
   const description = String(product?.description ?? '').toLowerCase();
-  const searchText = `${name} ${categoryName} ${description}`;
+  const searchText = normalizeCategoryText(`${name} ${categoryName} ${description}`);
 
   // 1. Check for blocked keywords
-  if (BLOCKED.some(word => searchText.includes(word) || categoryName.includes(word))) {
+  if (BLOCKED.some(word => searchText.includes(normalizeCategoryText(word)) || normalizeCategoryText(categoryName).includes(normalizeCategoryText(word)))) {
     return { allowed: false, gender: '', subcategoryName: '', collectionType: '' };
   }
 
   // 2. We only accept if it matches our strict clothing/accessories whitelist
   const matchesAny = (allowedList: string[]) => {
-    return allowedList.some(cat => categoryName.includes(cat) || name.includes(cat));
+    return allowedList.some(cat => searchText.includes(normalizeCategoryText(cat)) || normalizeCategoryText(categoryName).includes(normalizeCategoryText(cat)));
   };
 
   let collectionType = '';
@@ -103,7 +106,7 @@ export function isProductAllowed(product: any): { allowed: boolean; gender: stri
   if (matchesAny(MEN_ALLOWED) || (searchText.includes('men') && !searchText.includes('women'))) {
     collectionType = 'Men';
     gender = 'Men';
-    if (searchText.includes('shirt') || searchText.includes('t-shirt') || searchText.includes('tee')) subcategoryName = 'T-Shirts & Shirts';
+    if (searchText.includes('shirt') || searchText.includes('tshirt') || searchText.includes('tee')) subcategoryName = 'T-Shirts & Shirts';
     else if (searchText.includes('jacket') || searchText.includes('hoodie')) subcategoryName = 'Jackets & Hoodies';
     else if (searchText.includes('jean') || searchText.includes('cargo') || searchText.includes('pant')) subcategoryName = 'Bottoms';
     else if (searchText.includes('short')) subcategoryName = 'Shorts';
@@ -111,7 +114,7 @@ export function isProductAllowed(product: any): { allowed: boolean; gender: stri
     collectionType = 'Women';
     gender = 'Women';
     if (searchText.includes('dress') || searchText.includes('skirt')) subcategoryName = 'Dresses & Skirts';
-    else if (searchText.includes('top') || searchText.includes('shirt') || searchText.includes('co-ord')) subcategoryName = 'Tops & Shirts';
+    else if (searchText.includes('top') || searchText.includes('shirt') || searchText.includes('coord')) subcategoryName = 'Tops & Shirts';
     else if (searchText.includes('jacket') || searchText.includes('suit')) subcategoryName = 'Jackets & Suits';
     else if (searchText.includes('jean') || searchText.includes('pant')) subcategoryName = 'Bottoms';
   } else if (matchesAny(ACCESSORIES_ALLOWED) || searchText.includes('accessory') || searchText.includes('bag') || searchText.includes('wallet') || searchText.includes('belt') || searchText.includes('sunglass') || searchText.includes('cap')) {

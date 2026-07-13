@@ -12,6 +12,15 @@ import { getColorHex } from '../utils/colorMap';
 import { getProductImages, getProductId } from '../lib/product';
 import DOMPurify from 'dompurify';
 
+const normalizeSlug = (value: string) =>
+  value
+    .toLowerCase()
+    .trim()
+    .replace(/['"]/g, '')
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
 // Mock review data generator seeded per product
 const MOCK_REVIEWS = [
   { user: 'Rahul M.', rating: 5, comment: 'Amazing quality! The fabric is super soft and the fit is perfect. Got so many compliments.', date: '2 days ago', helpful: 24 },
@@ -214,14 +223,14 @@ const ProductDetailsPage = () => {
           {product.gender && (
             <>
               <Link to={`/collections/${product.gender}`} className="hover:text-[hsl(var(--foreground))] transition-colors">
-                {product.gender}
+                {String(product.gender).toUpperCase()} COLLECTIONS
               </Link>
               <ChevronRight size={10} strokeWidth={3} />
             </>
           )}
           {product.subcategory && (
             <>
-              <Link to={`/collections/${product.gender}/${product.subcategory}`} className="hover:text-[hsl(var(--foreground))] transition-colors">
+              <Link to={`/collections/${product.gender}/${normalizeSlug(String(product.subcategory))}`} className="hover:text-[hsl(var(--foreground))] transition-colors">
                 {product.subcategory}
               </Link>
               <ChevronRight size={10} strokeWidth={3} />

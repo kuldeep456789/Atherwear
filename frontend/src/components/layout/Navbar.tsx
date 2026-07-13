@@ -112,8 +112,7 @@ const Navbar = () => {
         { label: 'Shirts', to: '/collections/women/shirts' },
         { label: 'Jeans', to: '/collections/women/jeans' },
         { label: 'Jackets', to: '/collections/women/jackets' },
-        // 'Co-ords' has no matching CJ category — see CollectionPage.tsx CATEGORY_TABS.
-        // { label: 'Co-ords', to: '/collections/women/coords' },
+        { label: 'Co-ords', to: '/collections/women/co-ords' },
       ]
     },
     {
@@ -122,8 +121,7 @@ const Navbar = () => {
       dropdown: [
         { label: 'Caps', to: '/collections/accessories/caps' },
         { label: 'Wallets', to: '/collections/accessories/wallets' },
-        // 'Sunglasses' has no matching CJ category — see CollectionPage.tsx CATEGORY_TABS.
-        // { label: 'Sunglasses', to: '/collections/accessories/sunglasses' },
+        { label: 'Sunglasses', to: '/collections/accessories/sunglasses' },
         { label: 'Belts', to: '/collections/accessories/belts' },
         { label: 'Bags', to: '/collections/accessories/bags' },
       ]
