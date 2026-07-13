@@ -54,7 +54,7 @@ export class PaymentsService {
     const amountPaise = Math.round(Number(order.totalAmount) * 100);
     if (!Number.isFinite(amountPaise) || amountPaise < this.minGatewayAmountPaise) {
       throw new BadRequestException(
-        'Order total must be at least ₹1 before online payment can be created',
+        'Order total must be at least $0.01 before online payment can be created',
       );
     }
 

@@ -25,7 +25,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({ categoryId, categoryN
           observer.disconnect();
         }
       },
-      { rootMargin: '200px' }, // Start loading 200px before it appears
+      { rootMargin: '200px' },
     );
 
     observer.observe(el);

@@ -45,12 +45,12 @@ const initialState: CartState = {
     : '',
 };
 
-// Shipping tiers:
-// ₹0      → Free (empty cart)
-// < ₹499  → ₹150 (standard)
-// < ₹999  → ₹99
-// < ₹5000 → ₹49
-// >= ₹5000 → Free
+// Shipping tiers (INR converted to USD in display):
+// $0      → Free (empty cart)
+// < $6.01  → $1.81 (standard)
+// < $12.04 → $1.19
+// < $60.24 → $0.59
+// >= $60.24 → Free
 const calcShipping = (itemsPrice: number, couponDiscount: number): number => {
   if (itemsPrice === 0) return 0;
   const discountedTotal = itemsPrice - couponDiscount;
@@ -70,12 +70,12 @@ export const COUPONS: Record<string, { discount: (price: number) => number; min:
   FREE100: {
     discount: () => 100,
     min: 1000,
-    desc: 'Flat ₹100 OFF on orders above ₹1,000',
+    desc: 'Flat $1.20 OFF on orders above $12.05',
   },
   SUPER500: {
     discount: () => 500,
     min: 4000,
-    desc: 'Flat ₹500 OFF on orders above ₹4,000',
+    desc: 'Flat $6.02 OFF on orders above $48.19',
   },
   NEWUSER: {
     discount: (p) => Math.round(p * 0.15),

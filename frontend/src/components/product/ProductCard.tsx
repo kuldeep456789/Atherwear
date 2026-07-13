@@ -6,6 +6,7 @@ import { toggleWishlist } from '../../store/slices/wishlistSlice';
 import type { RootState } from '../../store/store';
 import { getColorHex } from '../../utils/colorMap';
 import { getFirstProductImage, getProductId, getProductImages } from '../../lib/product';
+import { formatUSD } from '../../lib/currency';
 import DOMPurify from 'dompurify';
 
 const PLACEHOLDER_IMAGE =
@@ -203,12 +204,12 @@ const ProductCard = ({ product, keyword }: ProductCardProps) => {
         <div className="flex items-center gap-2 mt-1 font-mono">
           {product.discountPrice && product.discountPrice < product.price ? (
             <>
-              <span className="text-lg font-black text-[hsl(var(--foreground))]">₹{product.discountPrice}</span>
-              <span className="text-sm text-zinc-400 line-through">₹{product.price}</span>
+              <span className="text-lg font-black text-[hsl(var(--foreground))]">{formatUSD(product.discountPrice)}</span>
+              <span className="text-sm text-zinc-400 line-through">{formatUSD(product.price)}</span>
               <span className="text-xs font-black text-red-600">-{discountPercentage}%</span>
             </>
           ) : (
-            <span className="text-lg font-black text-[hsl(var(--foreground))]">₹{product.price}</span>
+            <span className="text-lg font-black text-[hsl(var(--foreground))]">{formatUSD(product.price)}</span>
           )}
         </div>
       </div>

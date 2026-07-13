@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Heart, ShoppingBag, Trash2 } from 'lucide-react';
+import { formatUSD } from '../lib/currency';
 import type { RootState } from '../store/store';
 import { toggleWishlist } from '../store/slices/wishlistSlice';
 import { addToCart } from '../store/slices/cartSlice';
@@ -70,7 +71,7 @@ const WishlistPage = () => {
                       </h3>
                     </Link>
                     <p className="text-sm font-black mt-1 text-zinc-900 dark:text-white">
-                      ₹{item.discountPrice || item.price}
+                      {formatUSD(item.discountPrice || item.price)}
                     </p>
                   </div>
                   <div className="flex gap-2 mt-2">

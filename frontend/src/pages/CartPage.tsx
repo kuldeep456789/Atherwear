@@ -20,6 +20,7 @@ import {
   Minus,
   Tag
 } from 'lucide-react';
+import { formatUSD } from '../lib/currency';
 
 const CartPage = () => {
   const navigate = useNavigate();
@@ -86,12 +87,12 @@ const CartPage = () => {
       return;
     }
     if (itemsPrice < couponDef.min) {
-      setCouponMsg({ text: `Min. cart value of ₹${couponDef.min} required for ${cleanCode}.`, isError: true });
+      setCouponMsg({ text: `Min. cart value of ${formatUSD(couponDef.min)} required for ${cleanCode}.`, isError: true });
       return;
     }
     dispatch(applyCoupon(cleanCode));
     const savings = couponDef.discount(itemsPrice);
-    setCouponMsg({ text: `"${cleanCode}" applied! You save ₹${savings}.`, isError: false });
+    setCouponMsg({ text: `"${cleanCode}" applied! You save ${formatUSD(savings)}.`, isError: false });
   };
 
   const handleRemoveCoupon = () => {
@@ -110,9 +111,9 @@ const CartPage = () => {
     const discounted = itemsPrice - cart.couponDiscount;
     if (discounted === 0) return { msg: '', pct: 0, free: false };
     if (discounted >= 5000) return { msg: '🎉 FREE shipping unlocked!', pct: 100, free: true };
-    if (discounted >= 999) return { msg: `Add ₹${5000 - discounted} more for FREE shipping`, pct: (discounted / 5000) * 100, free: false };
-    if (discounted >= 499) return { msg: `Add ₹${999 - discounted} more to drop shipping to ₹49`, pct: (discounted / 999) * 100, free: false };
-    return { msg: `Add ₹${499 - discounted} more to drop shipping to ₹99`, pct: (discounted / 499) * 100, free: false };
+    if (discounted >= 999) return { msg: `Add ${formatUSD(5000 - discounted)} more for FREE shipping`, pct: (discounted / 5000) * 100, free: false };
+    if (discounted >= 499) return { msg: `Add ${formatUSD(999 - discounted)} more to drop shipping to ${formatUSD(49)}`, pct: (discounted / 999) * 100, free: false };
+    return { msg: `Add ${formatUSD(499 - discounted)} more to drop shipping to ${formatUSD(99)}`, pct: (discounted / 499) * 100, free: false };
   };
   const shippingStatus = getShippingNext();
 
@@ -190,7 +191,7 @@ const CartPage = () => {
                           Color: {item.variant.color} &nbsp;|&nbsp; Size: {item.variant.size}
                         </p>
                       </div>
-                      <p className="font-extrabold text-lg text-zinc-950 dark:text-white">₹{item.price}</p>
+                      <p className="font-extrabold text-lg text-zinc-950 dark:text-white">{formatUSD(item.price)}</p>
                     </div>
 
                     {/* Stepper controls & actions */}
@@ -253,7 +254,7 @@ const CartPage = () => {
               {totalSavings > 0 && (
                 <div className="flex items-center gap-2 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900/30 rounded p-3 mb-4">
                   <Tag className="h-4 w-4 text-green-600 flex-shrink-0" />
-                  <span className="text-sm font-bold text-green-700 dark:text-green-400">You're saving ₹{totalSavings} on this order!</span>
+                  <span className="text-sm font-bold text-green-700 dark:text-green-400">You're saving {formatUSD(totalSavings)} on this order!</span>
                 </div>
               )}
 
@@ -302,7 +303,7 @@ const CartPage = () => {
                             {coupon.code}
                           </span>
                           {!isEligible && (
-                            <span className="text-[10px] text-zinc-400">Min: ₹{coupon.min}</span>
+                            <span className="text-[10px] text-zinc-400">Min: {formatUSD(coupon.min)}</span>
                           )}
                         </div>
                         <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1.5 font-medium">{coupon.desc}</p>
@@ -337,13 +338,13 @@ const CartPage = () => {
               <div className="space-y-4 mb-6 text-sm">
                 <div className="flex justify-between">
                   <span className="text-zinc-500 dark:text-zinc-400 font-medium">Total MRP</span>
-                  <span className="font-semibold text-zinc-950 dark:text-white">₹{itemsPrice}</span>
+                  <span className="font-semibold text-zinc-950 dark:text-white">{formatUSD(itemsPrice)}</span>
                 </div>
                 
                 {cart.couponDiscount > 0 && (
                   <div className="flex justify-between text-green-600 dark:text-green-400 font-medium">
                     <span>Coupon Discount ({cart.appliedCoupon})</span>
-                    <span className="font-bold">-₹{cart.couponDiscount}</span>
+                    <span className="font-bold">-{formatUSD(cart.couponDiscount)}</span>
                   </div>
                 )}
 
@@ -352,23 +353,23 @@ const CartPage = () => {
                   <span className="font-semibold text-zinc-950 dark:text-white">
                     {shippingPrice === 0 ? (
                       <span className="text-green-600 dark:text-green-400 font-bold flex items-center gap-1.5">
-                        <span className="line-through text-zinc-400 text-xs font-normal">₹100</span> FREE
+                        <span className="line-through text-zinc-400 text-xs font-normal">{formatUSD(100)}</span> FREE
                       </span>
                     ) : (
-                      `₹${shippingPrice}`
+                      formatUSD(shippingPrice)
                     )}
                   </span>
                 </div>
                 
                 <div className="flex justify-between">
                   <span className="text-zinc-500 dark:text-zinc-400 font-medium">GST / Tax (18%)</span>
-                  <span className="font-semibold text-zinc-950 dark:text-white">₹{taxPrice}</span>
+                  <span className="font-semibold text-zinc-950 dark:text-white">{formatUSD(taxPrice)}</span>
                 </div>
               </div>
               
               <div className="flex justify-between border-t border-zinc-200 dark:border-zinc-900 pt-4 mb-6">
                 <span className="text-base font-bold">Total Amount</span>
-                <span className="text-lg font-black text-zinc-950 dark:text-white">₹{totalPrice}</span>
+                <span className="text-lg font-black text-zinc-950 dark:text-white">{formatUSD(totalPrice)}</span>
               </div>
 
               <button 

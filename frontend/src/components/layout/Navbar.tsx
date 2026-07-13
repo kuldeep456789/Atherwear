@@ -5,7 +5,7 @@ import MiniCart from './MiniCart';
 
 // Promotional messages for the ticker (module scope)
 const PROMO_MESSAGES = [
-  'FREE SHIPPING ON ALL ORDERS ABOVE ₹399',
+  `FREE SHIPPING ON ALL ORDERS ABOVE ${formatUSD(399)}`,
   'BUY 3 AND SAVE MORE ON EVERYDAY PICKS',
   'NEW ACCESSORIES DROP LIVE NOW',
 ];
@@ -14,6 +14,7 @@ import type { RootState } from '../../store/store';
 import { logout } from '../../store/slices/authSlice';
 import { useGetProductsQuery } from '../../store/slices/productApiSlice';
 import { getProductId } from '../../lib/product';
+import { formatUSD } from '../../lib/currency';
 
 const Navbar = () => {
   const navigate = useNavigate();

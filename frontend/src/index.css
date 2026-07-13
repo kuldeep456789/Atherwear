@@ -166,6 +166,12 @@
 ::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground)); }
 
+/* ── Image quality ── */
+img {
+  image-rendering: auto;
+  -ms-interpolation-mode: bicubic;
+}
+
 /* ── Product Description (CJ HTML) ── */
 .product-description {
   max-width: 100%;

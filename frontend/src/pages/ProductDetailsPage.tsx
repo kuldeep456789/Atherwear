@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useGetProductDetailsQuery, useGetRelatedProductsQuery, useCreateReviewMutation } from '../store/slices/productApiSlice';
 import { addToCart } from '../store/slices/cartSlice';
@@ -10,6 +10,7 @@ import { ShoppingBag, Heart, ShieldCheck, Truck, RotateCcw, Star, Check, Chevron
 import ProductCard from '../components/product/ProductCard';
 import { getColorHex } from '../utils/colorMap';
 import { getProductImages, getProductId } from '../lib/product';
+import { formatUSD } from '../lib/currency';
 import DOMPurify from 'dompurify';
 
 const normalizeSlug = (value: string) =>
@@ -34,6 +35,7 @@ const MOCK_REVIEWS = [
 const ProductDetailsPage = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { data: product, isLoading, error } = useGetProductDetailsQuery(id);
   const [createReview, { isLoading: isReviewLoading }] = useCreateReviewMutation();
   const userInfo = useSelector((state: RootState) => state.auth.userInfo);
@@ -144,6 +146,25 @@ const ProductDetailsPage = () => {
     );
     setIsAdded(true);
     setTimeout(() => setIsAdded(false), 2000);
+  };
+
+  const handleBuyNow = () => {
+    if (!selectedSize || !selectedColor) {
+      setErrorMsg('Please select a size and color');
+      setTimeout(() => setErrorMsg(''), 3000);
+      return;
+    }
+    dispatch(
+      addToCart({
+        _id: productId,
+        name: product.name,
+        price: product.discountPrice || product.price,
+        image: getProductImages(product)[0] || '',
+        qty: 1,
+        variant: { color: selectedColor, size: selectedSize },
+      })
+    );
+    navigate('/cart');
   };
 
   const displayImages = [...getProductImages(product)];
@@ -314,14 +335,14 @@ const ProductDetailsPage = () => {
             <div className="flex items-baseline gap-3 py-5 border-y-2 border-black dark:border-white font-mono">
               {product.discountPrice ? (
                 <>
-                  <span className="text-3xl font-black">₹{product.discountPrice}</span>
-                  <span className="text-lg text-zinc-400 line-through">₹{product.price}</span>
+                  <span className="text-3xl font-black">{formatUSD(product.discountPrice)}</span>
+                  <span className="text-lg text-zinc-400 line-through">{formatUSD(product.price)}</span>
                   <span className="text-sm font-black text-red-600 bg-red-50 dark:bg-red-950/30 px-3 py-1 border-2 border-red-600">
                     -{discountPct}%
                   </span>
                 </>
               ) : (
-                <span className="text-3xl font-black">₹{product.price}</span>
+                <span className="text-3xl font-black">{formatUSD(product.price)}</span>
               )}
             </div>
 
@@ -384,16 +405,22 @@ const ProductDetailsPage = () => {
             {/* Actions */}
             <div className="flex gap-0 pt-2">
               <button
+                onClick={handleBuyNow}
+                className="flex-1 py-5 text-xs font-black tracking-widest transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer border-2 border-black dark:border-white bg-[hsl(var(--foreground))] text-[hsl(var(--background))] hover:bg-red-600 hover:text-white hover:border-red-600"
+              >
+                BUY NOW
+              </button>
+              <button
                 onClick={handleAddToCart}
-                className={`flex-1 py-5 text-xs font-black tracking-widest transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer border-2 border-black dark:border-white ${isAdded
+                className={`flex-1 py-5 text-xs font-black tracking-widest transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer border-2 border-l-0 border-black dark:border-white ${isAdded
                   ? 'bg-green-600 text-white border-green-600'
-                  : 'bg-[hsl(var(--foreground))] text-[hsl(var(--background))] hover:bg-red-600 hover:text-white hover:border-red-600'
+                  : 'bg-[hsl(var(--card))] text-[hsl(var(--foreground))] hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))]'
                   }`}
               >
                 {isAdded ? (
-                  <><Check className="w-4 h-4" strokeWidth={3} /> ADDED TO BAG</>
+                  <><Check className="w-4 h-4" strokeWidth={3} /> ADDED</>
                 ) : (
-                  <><ShoppingBag className="w-4 h-4" strokeWidth={2.5} /> ADD TO BAG</>
+                  <><ShoppingBag className="w-4 h-4" strokeWidth={2.5} /> ADD TO CART</>
                 )}
               </button>
               <button
@@ -615,26 +642,34 @@ const ProductDetailsPage = () => {
       </div>
 
       {/* Sticky Mobile Add to Bag Bar */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[hsl(var(--card))] border-t-2 border-black dark:border-white p-4 flex items-center justify-between gap-4 backdrop-blur-md">
-        <div className="min-w-0">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[hsl(var(--card))] border-t-2 border-black dark:border-white p-4 backdrop-blur-md">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="min-w-0 flex-1">
             <p className="text-[10px] font-black text-zinc-500 tracking-widest truncate">{productName || 'Product'}</p>
-          <p className="text-sm font-black tracking-wider text-[hsl(var(--foreground))]">
-            ₹{product.discountPrice || product.price}
-          </p>
+            <p className="text-sm font-black tracking-wider text-[hsl(var(--foreground))]">
+              {formatUSD(product.discountPrice || product.price)}
+            </p>
+          </div>
+          <button
+            onClick={handleBuyNow}
+            className="flex-1 px-4 py-3.5 text-xs font-black tracking-widest transition-all duration-300 cursor-pointer border-2 border-black dark:border-white bg-[hsl(var(--foreground))] text-[hsl(var(--background))] hover:bg-red-600 hover:text-white hover:border-red-600"
+          >
+            BUY NOW
+          </button>
+          <button
+            onClick={handleAddToCart}
+            className={`flex-1 px-4 py-3.5 text-xs font-black tracking-widest transition-all duration-300 flex items-center justify-center gap-1.5 cursor-pointer border-2 border-black dark:border-white ${isAdded
+              ? 'bg-green-600 text-white border-green-600'
+              : 'bg-[hsl(var(--card))] text-[hsl(var(--foreground))] hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))]'
+              }`}
+          >
+            {isAdded ? (
+              <><Check className="w-3.5 h-3.5" strokeWidth={3} /> ADDED</>
+            ) : (
+              <><ShoppingBag className="w-3.5 h-3.5" strokeWidth={2.5} /> ADD TO CART</>
+            )}
+          </button>
         </div>
-        <button
-          onClick={handleAddToCart}
-          className={`px-6 py-3.5 text-xs font-black tracking-widest transition-all duration-300 flex items-center gap-2 cursor-pointer border-2 border-black dark:border-white ${isAdded
-            ? 'bg-green-600 text-white border-green-600'
-            : 'bg-[hsl(var(--foreground))] text-[hsl(var(--background))] hover:bg-red-600 hover:text-white hover:border-red-600'
-            }`}
-        >
-          {isAdded ? (
-            <><Check className="w-3.5 h-3.5" strokeWidth={3} /> ADDED</>
-          ) : (
-            <><ShoppingBag className="w-3.5 h-3.5" strokeWidth={2.5} /> ADD TO BAG</>
-          )}
-        </button>
       </div>
 
       {/* Size Guide Drawer */}

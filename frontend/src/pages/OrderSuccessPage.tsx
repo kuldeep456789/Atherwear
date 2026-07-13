@@ -2,6 +2,7 @@ import { Link, useParams } from 'react-router-dom';
 import { useGetOrderDetailsQuery } from '../store/slices/orderApiSlice';
 import { useGetProductDetailsQuery } from '../store/slices/productApiSlice';
 import { CheckCircle, Clock, CreditCard, Package } from 'lucide-react';
+import { formatUSD } from '../lib/currency';
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   pending: { label: 'Payment Pending', className: 'bg-orange-50 text-orange-700 border-orange-600 dark:bg-orange-950/20 dark:text-orange-400 dark:border-orange-500' },
@@ -28,7 +29,7 @@ const OrderItemRow = ({ productId, quantity }: { productId: string; quantity: nu
         </Link>
       </div>
       <div className="text-right shrink-0">
-        <p className="font-black text-base md:text-lg text-[hsl(var(--foreground))]">₹{price}</p>
+        <p className="font-black text-base md:text-lg text-[hsl(var(--foreground))]">{formatUSD(price)}</p>
         <p className="text-[10px] text-zinc-500 dark:text-zinc-400 font-bold tracking-widest mt-1">QTY: {quantity}</p>
       </div>
     </div>
@@ -135,7 +136,7 @@ const OrderSuccessPage = () => {
           </div>
           <div className="p-6 md:p-8 bg-zinc-50 dark:bg-zinc-900/50 border-t-2 border-black dark:border-white flex flex-col md:flex-row justify-between items-center gap-4">
             <span className="font-black uppercase tracking-widest text-sm text-zinc-500">GRAND TOTAL</span>
-            <span className="text-3xl md:text-4xl font-black text-orange-600 dark:text-orange-500 font-mono tracking-tighter">₹{order.totalAmount}</span>
+            <span className="text-3xl md:text-4xl font-black text-orange-600 dark:text-orange-500 font-mono tracking-tighter">{formatUSD(order.totalAmount)}</span>
           </div>
         </div>
 

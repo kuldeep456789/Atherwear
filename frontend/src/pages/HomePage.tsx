@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, BadgePercent, ShieldCheck, Flame, Truck, X, Eye, EyeOff, Mail, Lock, Sparkles } from 'lucide-react';
+import { ArrowRight, BadgePercent, ShieldCheck, Truck, X, Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '../store/store';
 import { setCredentials } from '../store/slices/authSlice';
@@ -9,6 +9,7 @@ import { useLoginMutation } from '../store/slices/userApiSlice';
 import { useGetProductsQuery } from '../store/slices/productApiSlice';
 import ProductCard from '../components/product/ProductCard';
 import { getFirstProductImage } from '../lib/product';
+import { formatUSD } from '../lib/currency';
 
 const placeholderImage = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="500" viewBox="0 0 400 500"><rect width="100%" height="100%" fill="%23f4f4f5"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="24" font-weight="900" fill="%23a1a1aa" letter-spacing="4">AETHERWEAR</text></svg>';
 
@@ -20,20 +21,10 @@ const HomePage = () => {
   const [login, { isLoading: loginLoading }] = useLoginMutation();
 
   // Dynamic section queries
-  const { data: newArrivalsData, isLoading: newArrivalsLoading } = useGetProductsQuery({
+  const { data: newArrivalsData } = useGetProductsQuery({
     sort: 'newest',
     pageNum: 1,
     pageSize: 12,
-  });
-  const { data: menData, isLoading: menLoading } = useGetProductsQuery({
-    gender: 'men',
-    pageNum: 1,
-    pageSize: 8,
-  });
-  const { data: womenData, isLoading: womenLoading } = useGetProductsQuery({
-    gender: 'women',
-    pageNum: 1,
-    pageSize: 8,
   });
   const { data: saleData } = useGetProductsQuery({
     sort: 'price_asc',
@@ -42,8 +33,6 @@ const HomePage = () => {
   });
 
   const newArrivals = Array.isArray(newArrivalsData?.products) ? newArrivalsData.products : [];
-  const menProducts = Array.isArray(menData?.products) ? menData.products : [];
-  const womenProducts = Array.isArray(womenData?.products) ? womenData.products : [];
   const saleProducts = Array.isArray(saleData?.products) ? saleData.products : [];
 
   // For hero slideshow, use new arrivals images
@@ -53,10 +42,9 @@ const HomePage = () => {
   }, [newArrivals]);
 
   const dynamicImg1 = heroImages[1 % heroImages.length] || placeholderImage;
-  const dynamicImg2 = heroImages[2 % heroImages.length] || placeholderImage;
-  const dynamicImg3 = heroImages[3 % heroImages.length] || placeholderImage;
 
   const [currentHeroIdx, setCurrentHeroIdx] = useState(0);
+  const [heroFailedImgs, setHeroFailedImgs] = useState<Set<number>>(new Set());
   const [showLoginPopup, setShowLoginPopup] = useState(false);
   const [countdown, setCountdown] = useState(10);
 
@@ -118,17 +106,29 @@ const HomePage = () => {
       <section className="relative min-h-[calc(100vh-130px)] overflow-hidden bg-black text-white border-b-2 border-black">
         {/* {heroImages.map((img, idx) => ( */}
         {heroImages.map((img: string, idx: number) => (
-          <img
+          <div
             key={idx}
-            src={img}
-            alt="Aetherwear streetwear collection"
-            className={`absolute inset-0 h-full w-full object-cover transition-all duration-1000 ease-in-out transform ${idx === currentHeroIdx
-              ? 'opacity-70 scale-100'
+            className={`absolute inset-0 h-full w-full transition-all duration-1000 ease-in-out transform ${idx === currentHeroIdx
+              ? 'opacity-80 scale-100'
               : 'opacity-0 scale-105 pointer-events-none'
               }`}
-          />
+          >
+            {heroFailedImgs.has(idx) ? (
+              <div className="h-full w-full bg-zinc-900 flex items-center justify-center">
+                <span className="text-white/20 text-6xl font-black tracking-[0.3em]">AW</span>
+              </div>
+            ) : (
+              <img
+                src={img}
+                alt="Aetherwear streetwear collection"
+                loading={idx === 0 ? 'eager' : 'lazy'}
+                onError={() => setHeroFailedImgs(prev => new Set(prev).add(idx))}
+                className="h-full w-full object-cover object-center"
+              />
+            )}
+          </div>
         ))}
-        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/60 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/50 to-transparent" />
         <div className="relative z-10 flex min-h-[calc(100vh-130px)] w-full max-w-[1920px] mx-auto px-6 sm:px-10 lg:px-16 py-16 items-end">
           <div className="w-full flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8 pb-10">
             <div className="max-w-3xl">
@@ -180,15 +180,15 @@ const HomePage = () => {
           ))}
         </div>
       </section>
-      <section className="border-b-2 border-black dark:border-white">
+      <section className="border-b-2 border-black dark:border-white bg-[hsl(var(--card))]">
         <div className="flex flex-col md:flex-row">
           {[
-            { icon: Truck, title: 'FREE SHIPPING', copy: 'On orders above ₹399' },
+            { icon: Truck, title: 'FREE SHIPPING', copy: `On orders above ${formatUSD(399)}` },
             { icon: ShieldCheck, title: 'ORIGINAL QUALITY', copy: 'Checked fabrics & finishing' },
             { icon: BadgePercent, title: 'BUNDLE PRICING', copy: 'Buy 3 and save more' },
           ].map(({ icon: Icon, title, copy }, idx) => (
-            <div key={title} className={`flex-1 flex items-center gap-4 p-6 sm:p-8 ${idx < 2 ? 'border-b-2 md:border-b-0 md:border-r-2 border-black dark:border-white' : ''}`}>
-              <span className="inline-flex h-12 w-12 items-center justify-center border-2 border-black dark:border-white">
+            <div key={title} className={`group flex-1 flex items-center gap-4 p-6 sm:p-8 transition-all duration-300 hover:bg-[hsl(var(--foreground))]/5 ${idx < 2 ? 'border-b-2 md:border-b-0 md:border-r-2 border-black dark:border-white' : ''}`}>
+              <span className="inline-flex h-12 w-12 items-center justify-center border-2 border-black dark:border-white group-hover:bg-[hsl(var(--foreground))] group-hover:text-[hsl(var(--background))] transition-all duration-300">
                 <Icon size={20} strokeWidth={2} />
               </span>
               <div>
@@ -200,103 +200,24 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* ───────── NEW ARRIVALS ───────── */}
-      {!newArrivalsLoading && newArrivals.length > 0 && (
-        <section className="border-b-2 border-black dark:border-white">
-          <div className="px-6 sm:px-10 py-10 flex items-end justify-between gap-4 border-b-2 border-black dark:border-white">
-            <div>
-              <div className="mb-2 flex items-center gap-2">
-                <Sparkles className="h-4 w-4 fill-current" />
-                <span className="text-xs font-black tracking-widest text-zinc-500">JUST DROPPED</span>
-              </div>
-              <h2 className="text-4xl sm:text-6xl font-black tracking-tighter">NEW ARRIVALS</h2>
-            </div>
-            <Link to="/collections/men" className="hidden sm:inline-flex items-center gap-2 text-xs font-black tracking-widest hover:text-red-600 transition-colors">
-              VIEW ALL <ArrowRight size={16} strokeWidth={2.5} />
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 border-t-2 border-l-2 border-black dark:border-white">
-            {newArrivals.map((product: any) => (
-              <ProductCard key={product.pid || product._id} product={product} />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* ───────── FEATURED IMAGES ───────── */}
-      <section className="border-b-2 border-black dark:border-white">
-        <div className="grid md:grid-cols-2">
-          <div className="border-b-2 md:border-b-0 md:border-r-2 border-black dark:border-white overflow-hidden">
-            <img src={dynamicImg1} alt="Featured Collection 1" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
-          </div>
-          <div className="overflow-hidden">
-            <img src={dynamicImg2} alt="Featured Collection 2" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
-          </div>
-        </div>
-      </section>
-
-      {/* ───────── MEN'S PICKS ───────── */}
-      {!menLoading && menProducts.length > 0 && (
-        <section className="border-b-2 border-black dark:border-white">
-          <div className="px-6 sm:px-10 py-10 flex items-end justify-between gap-4 border-b-2 border-black dark:border-white">
-            <div>
-              <div className="mb-2 flex items-center gap-2">
-                <Flame className="h-4 w-4" />
-                <span className="text-xs font-black tracking-widest text-zinc-500">FOR HIM</span>
-              </div>
-              <h2 className="text-4xl sm:text-6xl font-black tracking-tighter">MEN'S PICKS</h2>
-            </div>
-            <Link to="/collections/men" className="hidden sm:inline-flex items-center gap-2 text-xs font-black tracking-widest hover:text-red-600 transition-colors">
-              SHOP MEN <ArrowRight size={16} strokeWidth={2.5} />
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 border-t-2 border-l-2 border-black dark:border-white">
-            {menProducts.map((product: any) => (
-              <ProductCard key={product.pid || product._id} product={product} />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* ───────── WOMEN'S PICKS ───────── */}
-      {!womenLoading && womenProducts.length > 0 && (
-        <section className="border-b-2 border-black dark:border-white">
-          <div className="px-6 sm:px-10 py-10 flex items-end justify-between gap-4 border-b-2 border-black dark:border-white">
-            <div>
-              <div className="mb-2 flex items-center gap-2">
-                <Sparkles className="h-4 w-4" />
-                <span className="text-xs font-black tracking-widest text-zinc-500">FOR HER</span>
-              </div>
-              <h2 className="text-4xl sm:text-6xl font-black tracking-tighter">WOMEN'S PICKS</h2>
-            </div>
-            <Link to="/collections/women" className="hidden sm:inline-flex items-center gap-2 text-xs font-black tracking-widest hover:text-red-600 transition-colors">
-              SHOP WOMEN <ArrowRight size={16} strokeWidth={2.5} />
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 border-t-2 border-l-2 border-black dark:border-white">
-            {womenProducts.map((product: any) => (
-              <ProductCard key={product.pid || product._id} product={product} />
-            ))}
-          </div>
-        </section>
-      )}
-
       {/* ───────── SALE CTA + STYLE BOXES ───────── */}
       <section className="border-b-2 border-black dark:border-white">
         <div className="grid lg:grid-cols-2">
           {/* Sale box */}
-          <div className="bg-black text-white p-10 sm:p-14 flex flex-col justify-center border-b-2 lg:border-b-0 lg:border-r-2 border-black dark:border-white relative overflow-hidden">
-            <img src={dynamicImg1} alt="Sale" className="absolute right-0 top-0 h-full w-1/2 object-cover opacity-20" />
+          <div className="group/sale bg-black text-white p-10 sm:p-14 flex flex-col justify-center border-b-2 lg:border-b-0 lg:border-r-2 border-black dark:border-white relative overflow-hidden">
+            <img src={dynamicImg1} alt="Sale" className="absolute right-0 top-0 h-full w-1/2 object-cover opacity-20 group-hover/sale:opacity-30 transition-opacity duration-500" />
             <div className="relative z-10">
               <span className="text-xs font-black tracking-widest text-red-500">LIMITED OFFER</span>
               <h2 className="mt-4 text-5xl sm:text-7xl font-black leading-[0.85] tracking-tighter">
-                BUY 3<br />FOR ₹1199
+                BUY 3<br />FOR {formatUSD(1199)}
               </h2>
               <p className="mt-6 max-w-lg text-sm text-zinc-400 normal-case tracking-normal leading-relaxed">
                 Build a full rotation with graphic tees, essentials, and relaxed fits.
               </p>
-              <Link to="/sale" className="mt-8 inline-flex items-center gap-2 bg-white text-black px-8 py-5 text-xs font-black tracking-widest hover:bg-red-600 hover:text-white transition-colors border-2 border-white">
-                SHOP SALE <ArrowRight size={16} strokeWidth={2.5} />
+              <Link to="/sale" className="group/btn mt-8 inline-flex items-center gap-2 bg-white text-black px-8 py-5 text-xs font-black tracking-widest hover:bg-red-600 hover:text-white transition-all duration-300 border-2 border-white relative overflow-hidden">
+                <span className="relative z-10 flex items-center gap-2">
+                  SHOP SALE <ArrowRight size={16} strokeWidth={2.5} className="transition-transform duration-300 group-hover/btn:translate-x-1" />
+                </span>
               </Link>
             </div>
           </div>
@@ -315,24 +236,6 @@ const HomePage = () => {
                 </div>
               ))
             )}
-          </div>
-        </div>
-      </section>
-
-      {/* ───────── CURATED PICKS (PRODUCT IMAGES) ───────── */}
-      <section className="border-b-2 border-black dark:border-white">
-        <div className="px-6 sm:px-10 py-10 border-b-2 border-black dark:border-white">
-          <h2 className="text-4xl sm:text-6xl font-black tracking-tighter">CURATED PICKS</h2>
-        </div>
-        <div className="grid md:grid-cols-3">
-          <div className="aspect-[3/4] overflow-hidden border-b-2 md:border-b-0 md:border-r-2 border-black dark:border-white">
-            <img src={dynamicImg1} alt="Leather Jacket" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
-          </div>
-          <div className="aspect-[3/4] overflow-hidden border-b-2 md:border-b-0 md:border-r-2 border-black dark:border-white">
-            <img src={dynamicImg2} alt="Handbag" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
-          </div>
-          <div className="aspect-[3/4] overflow-hidden">
-            <img src={dynamicImg3} alt="Men's Collection" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
           </div>
         </div>
       </section>
