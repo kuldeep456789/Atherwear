@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import axios, { AxiosRequestConfig } from 'axios';
 import { RedisService } from '../redis/redis.service';
-import { isProductAllowed, isCategoryAllowed } from './category.mapper';
+import { isProductAllowed, isCategoryAllowed, BLOCKED } from './category.mapper';
 
 const DEFAULT_SIZES = ['S', 'M', 'L', 'XL'];
 const DEFAULT_COLORS = ['Black'];
@@ -86,7 +86,7 @@ export class CjService {
           if (products.length < pageSize) break;
 
           // Safety break per category
-          if (pageNum * pageSize >= 200) { // Limit to 200 items per category to avoid rate limits
+          if (pageNum * pageSize >= 1000) { // Limit to 1000 items per category
             break;
           }
 
@@ -97,9 +97,9 @@ export class CjService {
         }
       }
 
-      // Stop overall fetching if we reach a reasonable limit to prevent endless sync
-      if (allProducts.length >= 2000) {
-        console.warn(`[CJ] Hit 2000 products safety limit for getAllProducts`);
+      // Stop overall fetching if we reach a reasonable limit
+      if (allProducts.length >= 10000) {
+        console.warn(`[CJ] Hit 10000 products safety limit for getAllProducts`);
         break;
       }
     }
@@ -123,16 +123,12 @@ export class CjService {
       throw new BadRequestException('categoryId query parameter is required');
     }
 
-    const searchParams = new URLSearchParams({ categoryId });
+    // Only forward CJ-relevant params (same filtering as buildSearch)
+    const cjQuery = this.filterCjParams(query);
+    const searchParams = new URLSearchParams({ categoryId, ...cjQuery });
 
     if (pid) {
       searchParams.set('pid', pid);
-    }
-
-    for (const [key, value] of Object.entries(query)) {
-      if (value && !searchParams.has(key)) {
-        searchParams.set(key, value);
-      }
     }
 
     const url = `/v1/product/list?${searchParams.toString()}`;
@@ -181,22 +177,23 @@ export class CjService {
     return product;
   }
 
-  private buildSearch(query: Record<string, string | undefined>) {
-    // These params are handled on the frontend — never forward to CJ API
-    const CJ_IGNORE_PARAMS = new Set(['minPrice', 'maxPrice', 'minRating', 'sort', 'colors', 'sizes', 'q', 'keyword', 'collectionType', 'pageNum', 'pageSize']);
-    const CJ_PARAM_MAP: Record<string, string> = {
-      // Map our internal names to CJ API param names if different
-    };
+  private readonly CJ_IGNORE_PARAMS = new Set(['minPrice', 'maxPrice', 'minRating', 'sort', 'colors', 'sizes', 'q', 'keyword', 'collectionType', 'gender', 'subcategoryName']);
+  private readonly CJ_PARAM_MAP: Record<string, string> = {};
 
-    const searchParams = new URLSearchParams();
-
+  private filterCjParams(query: Record<string, string | undefined>): Record<string, string> {
+    const result: Record<string, string> = {};
     for (const [key, value] of Object.entries(query)) {
-      if (value && !CJ_IGNORE_PARAMS.has(key)) {
-        const cjKey = CJ_PARAM_MAP[key] ?? key;
-        searchParams.set(cjKey, value);
+      if (value && !this.CJ_IGNORE_PARAMS.has(key)) {
+        const cjKey = this.CJ_PARAM_MAP[key] ?? key;
+        result[cjKey] = value;
       }
     }
+    return result;
+  }
 
+  private buildSearch(query: Record<string, string | undefined>) {
+    const cjParams = this.filterCjParams(query);
+    const searchParams = new URLSearchParams(cjParams);
     const search = searchParams.toString();
     return search ? `?${search}` : '';
   }
@@ -348,10 +345,16 @@ export class CjService {
   // department instead of doing an unscoped substring search across CJ's entire
   // catalog (which can otherwise match unrelated things, e.g. "Pet Bags" for a
   // storefront "Bags" tab).
+  private isBlocked(catName: string): boolean {
+    // Must match normalizeCategoryText in category.mapper.ts
+    const name = catName.toLowerCase().replace(/[\s_'&-]+/g, '');
+    return BLOCKED.some(word => name.includes(word));
+  }
+
   private flattenCategories(items: any[]): any[] {
     const results: any[] = [];
 
-    const visit = (item: any, group: string) => {
+    const visit = (item: any, group: string, depth: number) => {
       if (!item || typeof item !== 'object') {
         return;
       }
@@ -364,8 +367,14 @@ export class CjService {
         ''
       ).toLowerCase();
 
-      if (catName && !isCategoryAllowed(catName)) {
-        return; // Stop exploring this branch if it's blocked (e.g. Pet Supplies)
+      // Always prune blocked branches (e.g. Pet Supplies, Jewelry) at any depth
+      if (catName && this.isBlocked(catName)) {
+        return;
+      }
+
+      // At top level only, also prune non-allowed categories (e.g. Consumer Electronics)
+      if (depth === 0 && catName && !isCategoryAllowed(catName)) {
+        return;
       }
 
       const childArrayKey = Object.keys(item).find(
@@ -379,23 +388,26 @@ export class CjService {
 
         // Register second-level (and top-level, when it has no second-level id)
         // categories as their own selectable entries alongside their leaves.
-        if (branchId && branchName) {
+        if (branchId && branchName && isCategoryAllowed(branchName)) {
           results.push(
             this.normalizeCategory({ categoryId: branchId, categoryName: branchName }, nextGroup),
           );
         }
 
         for (const child of item[childArrayKey]) {
-          visit(child, nextGroup);
+          visit(child, nextGroup, depth + 1);
         }
         return;
       }
 
-      results.push(this.normalizeCategory(item, group));
+      // Leaf category — include only if it matches the allow list
+      if (catName && isCategoryAllowed(catName)) {
+        results.push(this.normalizeCategory(item, group));
+      }
     };
 
     for (const item of items) {
-      visit(item, '');
+      visit(item, '', 0);
     }
 
     return results;

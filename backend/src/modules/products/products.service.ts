@@ -212,7 +212,7 @@ export class ProductsService {
 
   private buildCacheKey(query: ProductQuery) {
     // Strip client-side filters from cache key — price/rating are applied on the frontend
-    const IGNORE_PARAMS = new Set(['minPrice', 'maxPrice', 'minRating']);
+    const IGNORE_PARAMS = new Set(['minPrice', 'maxPrice', 'minRating', 'pageNum', 'pageSize', 'page', 'limit']);
     const normalized = Object.entries(query)
       .filter(([key, value]) => Boolean(value) && !IGNORE_PARAMS.has(key))
       .map(([key, value]) => `${key}:${String(value).trim().toLowerCase()}`)
@@ -222,24 +222,44 @@ export class ProductsService {
   }
 
   private async getProductsFromMongoOrCj(query: ProductQuery) {
-    const cjProducts = query.categoryId
-      ? await this.cjService.getProductsByCategory(query.categoryId, query.pid, query)
-      : await this.cjService.getProducts(query);
+    let cjProducts: any;
+    let fromCache = false;
+
+    try {
+      cjProducts = query.categoryId
+        ? await this.cjService.getProductsByCategory(query.categoryId, query.pid, query)
+        : await this.cjService.getProducts(query);
+    } catch (err: any) {
+      console.warn('[Products] CJ API failed, falling back to MongoDB:', err?.message ?? err);
+      cjProducts = { products: await this.productModel.find().lean().exec() };
+      fromCache = true;
+    }
 
     const normalizedProducts = Array.isArray(cjProducts?.products) ? cjProducts.products : [];
-    const filteredByCollection = query.collectionType
+
+    // collectionType filter
+    const afterCollectionFilter = query.collectionType
       ? normalizedProducts.filter((product: Record<string, any>) =>
         String(product.collectionType ?? '').trim().toLowerCase() ===
         query.collectionType!.trim().toLowerCase(),
       )
       : normalizedProducts;
+
+    // gender filter (HomePage sends gender:'men'/'women' — match against collectionType)
+    const afterGenderFilter = query.gender
+      ? afterCollectionFilter.filter((product: Record<string, any>) =>
+        String(product.collectionType ?? product.gender ?? '').trim().toLowerCase() ===
+        query.gender!.trim().toLowerCase(),
+      )
+      : afterCollectionFilter;
+
     const filteredProducts = query.subcategoryName
-      ? filteredByCollection.filter((product: Record<string, any>) =>
+      ? afterGenderFilter.filter((product: Record<string, any>) =>
         this.matchesRequestedSubcategory(product, query.subcategoryName!),
       )
-      : filteredByCollection;
+      : afterGenderFilter;
 
-    if (filteredProducts.length > 0) {
+    if (!fromCache && filteredProducts.length > 0) {
       const operations = filteredProducts
         .filter((p: Record<string, any>) => String(p.pid ?? '').trim())
         .map((product: Record<string, any>) => ({
@@ -263,7 +283,7 @@ export class ProductsService {
     return {
       ...cjProducts,
       products: filteredProducts,
-      source: 'cj',
+      source: fromCache ? 'mongodb' : 'cj',
     };
   }
 

@@ -60,7 +60,7 @@ export const BLOCKED = [
 ];
 
 const normalizeCategoryText = (value: string) =>
-  value.toLowerCase().replace(/[\s_-]+/g, '');
+  value.toLowerCase().replace(/[\s_'&-]+/g, '');
 
 export function isCategoryAllowed(categoryName: string): boolean {
   if (!categoryName) return false;
