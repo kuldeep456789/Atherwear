@@ -108,11 +108,11 @@ const ProductCard = ({ product, keyword }: ProductCardProps) => {
 
 
         {/* Sale badge — flat rectangle */}
-        {discountPercentage > 0 && (
+        {/* {discountPercentage > 0 && (
           <span className="absolute top-0 left-0 bg-red-600 text-white text-[10px] font-black px-3 py-1.5 uppercase tracking-wider border-r-2 border-b-2 border-black dark:border-white">
             SALE
           </span>
-        )}
+        )} */}
 
         {/* Wishlist */}
         <button

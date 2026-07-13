@@ -21,19 +21,17 @@ export const WOMEN_ALLOWED = [
 
 export const ACCESSORIES_ALLOWED = [
   "caps",
-  "baseball caps",
-  "women hats & caps",
-  "men hats & caps",
-  "wallets",
-  "card holders",
-  "sunglasses",
+  "Hats & caps",
+  // "wallets",
+  // "card holders",
+  // "sunglasses",
   "belts",
   "belts & cummerbunds",
-  "crossbody bags",
-  "shoulder bags",
-  "handbags",
-  "backpacks",
-  "travel bags"
+  // "crossbody bags",
+  // "shoulder bags",
+  // "handbags",
+  // "backpacks",
+  // "travel bags"
 ];
 
 export const BLOCKED = [
@@ -166,7 +164,8 @@ export const CATEGORY_BLOCKED = [
   "seed",
   "soil",
   "fertilizer",
-  "pest control"
+  "pest control",
+  "slippers"
 ];
 
 const normalizeCategoryText = (value: string) =>
@@ -174,9 +173,9 @@ const normalizeCategoryText = (value: string) =>
 
 export function isCategoryAllowed(categoryName: string): boolean {
   if (!categoryName) return false;
-  
+
   const name = normalizeCategoryText(categoryName);
-  
+
   if (BLOCKED.some(word => name.includes(normalizeCategoryText(word)))) {
     return false;
   }
@@ -211,8 +210,6 @@ export function isProductAllowed(product: any): { allowed: boolean; gender: stri
   if (CATEGORY_BLOCKED.some(word => searchText.includes(normalizeCategoryText(word)) || normalizeCategoryText(categoryName).includes(normalizeCategoryText(word)))) {
     return { allowed: false, gender: '', subcategoryName: '', collectionType: '' };
   }
-
-  // 2. We only accept if it matches our strict clothing/accessories whitelist
   const matchesAny = (allowedList: string[]) => {
     return allowedList.some(cat => searchText.includes(normalizeCategoryText(cat)) || normalizeCategoryText(categoryName).includes(normalizeCategoryText(cat)));
   };
