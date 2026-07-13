@@ -56,7 +56,117 @@ export const BLOCKED = [
   "garden",
   "beauty",
   "luggage",
-  "jewelry"
+  "jewelry",
+  "sandal",
+  "slipper",
+  "footwear",
+  "shoe",
+  "sneaker",
+  "wrench",
+  "socket",
+  "tool",
+  "hardware",
+  "drill",
+  "screwdriver",
+  "hammer",
+  "pliers",
+  "electronic",
+  "computer",
+  "phone case",
+  "screen protector",
+  "toy",
+  "puzzle",
+  "model",
+  "gaming",
+  "headphone",
+  "earphone",
+  "speaker",
+  "cable",
+  "charger",
+  "power bank",
+  "automotive",
+  "motorcycle",
+  "bike",
+  "helmet",
+  "sporting goods",
+  "exercise",
+  "fitness",
+  "yoga",
+  "camping",
+  "outdoor",
+  "party",
+  "decoration",
+  "christmas",
+  "halloween",
+  "sticker",
+  "keychain",
+  "patch",
+  "pin",
+  "badge"
+];
+
+// Category-level blocks — also checked in isCategoryAllowed
+export const CATEGORY_BLOCKED = [
+  "shoes",
+  "footwear",
+  "sneakers",
+  "sandals",
+  "electronics",
+  "computer",
+  "phone",
+  "toy",
+  "sporting goods",
+  "automotive",
+  "home & garden",
+  "home improvement",
+  "tools",
+  "hardware",
+  "industrial",
+  "office",
+  "school supplies",
+  "pet supplies",
+  "beauty",
+  "health",
+  "personal care",
+  "baby",
+  "maternity",
+  "food",
+  "drink",
+  "grocery",
+  "music",
+  "instrument",
+  "movie",
+  "dvd",
+  "book",
+  "stationery",
+  "craft",
+  "sewing",
+  "fabric",
+  "party supplies",
+  "wedding",
+  "event",
+  "lighting",
+  "lamp",
+  "electrical",
+  "plumbing",
+  "bathroom",
+  "kitchen & dining",
+  "bedding",
+  "bath",
+  "curtain",
+  "pillow",
+  "mattress",
+  "towel",
+  "rug",
+  "mat",
+  "outdoor living",
+  "garden tools",
+  "plant",
+  "flower",
+  "seed",
+  "soil",
+  "fertilizer",
+  "pest control"
 ];
 
 const normalizeCategoryText = (value: string) =>
@@ -71,8 +181,12 @@ export function isCategoryAllowed(categoryName: string): boolean {
     return false;
   }
 
-  // Explicitly allow high-level categories that might contain our whitelist items
-  if (name.includes("mensclothing") || name.includes("womensclothing") || name.includes("fashionaccessories") || name.includes("apparel") || name.includes("bags") || name.includes("shoesbags")) {
+  if (CATEGORY_BLOCKED.some(word => name.includes(normalizeCategoryText(word)))) {
+    return false;
+  }
+
+  // Only allow clothing/accessories high-level categories
+  if (name.includes("mensclothing") || name.includes("womensclothing") || name.includes("fashionaccessories") || name.includes("apparel")) {
     return true;
   }
 
@@ -91,6 +205,10 @@ export function isProductAllowed(product: any): { allowed: boolean; gender: stri
 
   // 1. Check for blocked keywords
   if (BLOCKED.some(word => searchText.includes(normalizeCategoryText(word)) || normalizeCategoryText(categoryName).includes(normalizeCategoryText(word)))) {
+    return { allowed: false, gender: '', subcategoryName: '', collectionType: '' };
+  }
+
+  if (CATEGORY_BLOCKED.some(word => searchText.includes(normalizeCategoryText(word)) || normalizeCategoryText(categoryName).includes(normalizeCategoryText(word)))) {
     return { allowed: false, gender: '', subcategoryName: '', collectionType: '' };
   }
 

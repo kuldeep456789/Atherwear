@@ -70,6 +70,10 @@ const ProductDetailsPage = () => {
     }
   }, [product, dispatch]);
 
+  useEffect(() => {
+    setSelectedImage(0);
+  }, [selectedColor]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[hsl(var(--background))]">
@@ -167,12 +171,19 @@ const ProductDetailsPage = () => {
     navigate('/cart');
   };
 
-  const displayImages = [...getProductImages(product)];
-  console.log("Display Images:", displayImages);
-  const fallbackImage = displayImages[0] || '';
-  while (displayImages.length < 5) {
-    displayImages.push(fallbackImage);
-  }
+  const baseImages = getProductImages(product);
+
+  const colorVariantImages = selectedColor && product.variants
+    ? product.variants
+        .filter((v: any) => v.color === selectedColor)
+        .map((v: any) => v.variantImage || v.image || '')
+        .filter(Boolean)
+    : [];
+
+  const displayImages = [...new Set([
+    ...colorVariantImages,
+    ...baseImages,
+  ])];
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
@@ -406,13 +417,13 @@ const ProductDetailsPage = () => {
             <div className="flex gap-0 pt-2">
               <button
                 onClick={handleBuyNow}
-                className="flex-1 py-6 text-sm font-black tracking-widest transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer border-2 border-black dark:border-white bg-[hsl(var(--foreground))] text-[hsl(var(--background))] hover:bg-red-600 hover:text-white hover:border-red-600"
+                className="flex-1 py-8 sm:py-10 text-base sm:text-lg font-black tracking-widest transition-all duration-300 flex items-center justify-center gap-3 cursor-pointer border-2 border-black dark:border-white bg-[hsl(var(--foreground))] text-[hsl(var(--background))] hover:bg-red-600 hover:text-white hover:border-red-600"
               >
                 BUY NOW
               </button>
               <button
                 onClick={handleAddToCart}
-                className={`flex-1 py-6 text-sm font-black tracking-widest transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer border-2 border-l-0 border-black dark:border-white ${isAdded
+                className={`flex-1 py-8 sm:py-10 text-base sm:text-lg font-black tracking-widest transition-all duration-300 flex items-center justify-center gap-3 cursor-pointer border-2 border-l-0 border-black dark:border-white ${isAdded
                   ? 'bg-green-600 text-white border-green-600'
                   : 'bg-[hsl(var(--card))] text-[hsl(var(--foreground))] hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))]'
                   }`}
@@ -642,23 +653,23 @@ const ProductDetailsPage = () => {
       </div>
 
       {/* Sticky Mobile Add to Bag Bar */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[hsl(var(--card))] border-t-2 border-black dark:border-white p-4 backdrop-blur-md">
-        <div className="flex items-center gap-2 mb-2">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[hsl(var(--card))] border-t-2 border-black dark:border-white p-5 backdrop-blur-md">
+        <div className="flex items-center gap-3">
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-black text-zinc-500 tracking-widest truncate">{productName || 'Product'}</p>
-            <p className="text-sm font-black tracking-wider text-[hsl(var(--foreground))]">
+            <p className="text-xs font-black text-zinc-500 tracking-widest truncate">{productName || 'Product'}</p>
+            <p className="text-base font-black tracking-wider text-[hsl(var(--foreground))]">
               {formatUSD(product.discountPrice || product.price)}
             </p>
           </div>
           <button
             onClick={handleBuyNow}
-            className="flex-1 px-4 py-3.5 text-xs font-black tracking-widest transition-all duration-300 cursor-pointer border-2 border-black dark:border-white bg-[hsl(var(--foreground))] text-[hsl(var(--background))] hover:bg-red-600 hover:text-white hover:border-red-600"
+            className="flex-1 px-6 py-5 text-sm font-black tracking-widest transition-all duration-300 cursor-pointer border-2 border-black dark:border-white bg-[hsl(var(--foreground))] text-[hsl(var(--background))] hover:bg-red-600 hover:text-white hover:border-red-600"
           >
             BUY NOW
           </button>
           <button
             onClick={handleAddToCart}
-            className={`flex-1 px-4 py-3.5 text-xs font-black tracking-widest transition-all duration-300 flex items-center justify-center gap-1.5 cursor-pointer border-2 border-black dark:border-white ${isAdded
+            className={`flex-1 px-6 py-5 text-sm font-black tracking-widest transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer border-2 border-black dark:border-white ${isAdded
               ? 'bg-green-600 text-white border-green-600'
               : 'bg-[hsl(var(--card))] text-[hsl(var(--foreground))] hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))]'
               }`}

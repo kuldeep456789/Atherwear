@@ -164,7 +164,75 @@ export class CjService {
       throw new NotFoundException('Product not found');
     }
 
+    // Enrich with variant details (real colors, sizes, variant images) from CJ variant endpoint
+    try {
+      const enriched = await this.enrichWithVariants(product, pid);
+      return enriched;
+    } catch (err: any) {
+      console.warn(`[CJ] Variant enrichment failed for ${pid}, returning base product:`, err?.message ?? err);
+    }
+
     return product;
+  }
+
+  private async enrichWithVariants(product: any, pid: string): Promise<any> {
+    const variantUrl = `/v1/product/variant/query?pid=${pid}`;
+    console.log(`[CJ] GET ${variantUrl}`);
+    const variantResponse = await this.scheduleRequest(variantUrl, {
+      method: 'GET',
+      headers: await this.authHeaders(),
+    });
+
+    const rawVariants = Array.isArray(variantResponse?.data)
+      ? variantResponse.data
+      : Array.isArray(variantResponse)
+        ? variantResponse
+        : [];
+
+    if (rawVariants.length === 0) return product;
+
+    const colorSet = new Set<string>();
+    const sizeSet = new Set<string>();
+    const variantImages: string[] = [];
+    const enrichedVariants: any[] = [];
+
+    for (const v of rawVariants) {
+      const parsed = this.parseVariantKey(v.variantKey || '');
+      const color = parsed.color || v.variantNameEn || 'Default';
+      const size = parsed.size || 'One Size';
+
+      colorSet.add(color);
+      sizeSet.add(size);
+
+      if (v.variantImage) {
+        variantImages.push(v.variantImage);
+      }
+
+      enrichedVariants.push({
+        color,
+        size,
+        stock: v.inventories?.[0]?.totalInventory ?? (v as any).stock ?? 999,
+        variantImage: v.variantImage || '',
+        image: v.variantImage || '',
+        price: v.variantSellPrice || product.price,
+        vid: v.vid || '',
+        variantKey: v.variantKey || '',
+      });
+    }
+
+    const colors = Array.from(colorSet).filter(Boolean);
+    const sizes = Array.from(sizeSet).filter(Boolean);
+
+    // Merge variant images into product images (avoiding duplicates)
+    const mergedImages = [...new Set([...variantImages, ...(product.images || [])])];
+
+    return {
+      ...product,
+      colors: colors.length > 0 ? colors : product.colors,
+      sizes: sizes.length > 0 ? sizes : product.sizes,
+      variants: enrichedVariants.length > 0 ? enrichedVariants : product.variants,
+      images: mergedImages,
+    };
   }
 
   private readonly CJ_IGNORE_PARAMS = new Set(['minPrice', 'maxPrice', 'minRating', 'sort', 'colors', 'sizes', 'q', 'keyword', 'collectionType', 'gender', 'subcategoryName']);
@@ -462,6 +530,7 @@ export class CjService {
       ...(Array.isArray(product?.imageList) ? product.imageList : []),
       ...(Array.isArray(product?.imgList) ? product.imgList : []),
       ...(Array.isArray(product?.variantImages) ? product.variantImages : []),
+      ...(Array.isArray(product?.productImageSet) ? product.productImageSet : []),
       ...(Array.isArray(product?.extraImages) ? product.extraImages : [])
     ]
       .map((item) => {
@@ -551,6 +620,24 @@ export class CjService {
 
       reviews: [],
     };
+  }
+
+  private parseVariantKey(variantKey: string): { color: string; size: string } {
+    if (!variantKey) return { color: '', size: '' };
+
+    const parts = variantKey.split('-');
+    const sizePattern = /^(xs|s|m|l|xl|xxl|xxxl|\d{2,3})$/i;
+
+    if (parts.length >= 2 && sizePattern.test(parts[parts.length - 1])) {
+      const size = parts.pop()!;
+      return { color: parts.join('-'), size: size.toUpperCase() };
+    }
+
+    if (parts.length === 2) {
+      return { color: parts[0], size: parts[1].toUpperCase() };
+    }
+
+    return { color: variantKey, size: '' };
   }
 
   private delay(ms: number) {

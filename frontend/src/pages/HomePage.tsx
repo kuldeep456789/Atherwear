@@ -164,14 +164,14 @@ const HomePage = () => {
                 Premium streetwear engineered for the modern rebel. Limited drops, infinite attitude.
               </p>
               <div className="mt-8 sm:mt-10 flex flex-row gap-3 sm:gap-0 w-full sm:w-auto">
-                <Link to="/men" className="group/btn flex-1 sm:flex-initial justify-center inline-flex items-center gap-2 bg-white px-5 py-4 sm:px-10 sm:py-5 text-xs sm:text-sm font-black tracking-widest text-black transition-all duration-300 hover:bg-red-600 hover:text-white border-2 border-white relative overflow-hidden">
-                  <span className="relative z-10 flex items-center gap-2 whitespace-nowrap">
-                    SHOP MEN <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-300 group-hover/btn:translate-x-1" />
+                <Link to="/men" className="group/btn flex-1 sm:flex-initial justify-center inline-flex items-center gap-3 bg-white px-6 py-5 sm:px-14 sm:py-7 text-sm sm:text-lg font-black tracking-widest text-black transition-all duration-300 hover:bg-red-600 hover:text-white border-2 border-white relative overflow-hidden shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0">
+                  <span className="relative z-10 flex items-center gap-3 whitespace-nowrap">
+                    SHOP MEN <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300 group-hover/btn:translate-x-1" />
                   </span>
                 </Link>
-                <Link to="/women" className="group/btn flex-1 sm:flex-initial justify-center inline-flex items-center gap-2 px-5 py-4 sm:px-10 sm:py-5 text-xs sm:text-sm font-black tracking-widest text-white transition-all duration-300 hover:bg-white hover:text-black border-2 border-white sm:-ml-[2px] relative overflow-hidden">
-                  <span className="relative z-10 flex items-center gap-2 whitespace-nowrap">
-                    SHOP WOMEN <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-300 group-hover/btn:translate-x-1" />
+                <Link to="/women" className="group/btn flex-1 sm:flex-initial justify-center inline-flex items-center gap-3 px-6 py-5 sm:px-14 sm:py-7 text-sm sm:text-lg font-black tracking-widest text-white transition-all duration-300 hover:bg-white hover:text-black border-2 border-white sm:-ml-[2px] relative overflow-hidden shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0">
+                  <span className="relative z-10 flex items-center gap-3 whitespace-nowrap">
+                    SHOP WOMEN <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300 group-hover/btn:translate-x-1" />
                   </span>
                 </Link>
               </div>
@@ -343,76 +343,6 @@ const HomePage = () => {
           </div>
         </section>
       )}
-
-      {/* ───────── SALE CTA + STYLE BOXES ───────── */}
-      {/* <section className="border-b-2 border-black dark:border-white">
-        <div className="grid lg:grid-cols-2">
-          {/* Sale box */}
-      {/* <div className="group/sale bg-black text-white p-10 sm:p-14 lg:p-16 flex flex-col justify-center border-b-2 lg:border-b-0 lg:border-r-2 border-black dark:border-white relative overflow-hidden min-h-[420px]">
-            <img src={dynamicImg1} alt="Sale" className="absolute right-0 top-0 h-full w-1/2 object-cover opacity-20 group-hover/sale:opacity-30 transition-all duration-700 ease-out" />
-            <div className="relative z-10">
-              <span className="text-xs sm:text-sm font-black tracking-widest text-red-500">LIMITED OFFER</span>
-              <h2 className="mt-4 text-5xl sm:text-7xl lg:text-8xl font-black leading-[0.85] tracking-tighter">
-                BUY 3<br />FOR {formatUSD(1199)}
-              </h2>
-              <p className="mt-6 max-w-lg text-sm sm:text-base text-zinc-400 normal-case tracking-normal leading-relaxed">
-                Build a full rotation with graphic tees, essentials, and relaxed fits. Mix, match, and own the room.
-              </p>
-              <Link to="/sale" className="group/btn mt-8 sm:mt-10 inline-flex items-center gap-2 bg-white text-black px-8 sm:px-10 py-5 text-xs sm:text-sm font-black tracking-widest hover:bg-red-600 hover:text-white transition-all duration-300 border-2 border-white relative overflow-hidden">
-                <span className="relative z-10 flex items-center gap-2">
-                  SHOP SALE <ArrowRight size={16} strokeWidth={2.5} className="transition-transform duration-300 group-hover/btn:translate-x-1" />
-                </span>
-              </Link>
-            </div>
-          </div>
-          {/* Sale products grid */}
-      {/* <div className="grid grid-cols-2">
-            {saleProducts.length > 0 ? (
-              saleProducts.slice(0, 4).map((product: any) => (
-                <ProductCard key={product.pid || product._id} product={product} />
-              ))
-            ) : (
-              [['OVERSIZED', 'Built for easy layering'], ['GRAPHIC', 'Collab-inspired prints'], ['ESSENTIALS', 'Clean daily staples'], ['ACCESSORIES', 'Finish the look']].map(([title, copy], idx) => (
-                <div key={title} className={`p-8 sm:p-10 lg:p-12 border-black dark:border-white ${idx < 2 ? 'border-b-2' : ''} ${idx % 2 === 0 ? 'border-r-2' : ''}`}>
-                  <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tighter leading-none">{title}</h3>
-                  <p className="mt-2 text-sm text-zinc-500 normal-case tracking-normal">{copy}</p>
-                  <ArrowRight size={20} strokeWidth={2.5} className="mt-4 text-zinc-400 group-hover:translate-x-1 transition-transform" />
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      </section>  */}
-
-      {/* ───────── CATEGORIES GRID ─────────
-      <section className="border-b-2 border-black dark:border-white">
-        <div className="max-w-[1920px] mx-auto px-6 sm:px-10 lg:px-16 py-12 sm:py-16 lg:py-20">
-          <div className="text-center mb-10 sm:mb-14">
-            <p className="text-xs sm:text-sm font-black tracking-[0.25em] text-zinc-500 mb-3">EXPLORE</p>
-            <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-none">SHOP BY CATEGORY</h2>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-            {[
-              { title: 'Men', to: '/men', img: dynamicImg1 },
-              { title: 'Women', to: '/women', img: dynamicImg1 },
-              { title: 'Accessories', to: '/collections/accessories', img: dynamicImg1 },
-              { title: 'Sale', to: '/sale', img: dynamicImg1, accent: true },
-            ].map(({ title, to, accent }) => (
-              <Link
-                key={title}
-                to={to}
-                className={`group relative aspect-square overflow-hidden border-2 border-black dark:border-white flex items-center justify-center ${accent ? 'bg-red-600 hover:bg-red-700' : 'bg-zinc-900 hover:bg-zinc-800'} transition-all duration-500`}
-              >
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <span className={`relative z-10 text-xl sm:text-2xl lg:text-3xl font-black tracking-tight ${accent ? 'text-white' : 'text-white'} group-hover:scale-110 transition-transform duration-300`}>
-                  {title}
-                </span>x`
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section> */}
-
       {/* ── 10s LOGIN POPUP ── */}
       {showLoginPopup && !userInfo && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
