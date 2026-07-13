@@ -145,7 +145,7 @@ const Navbar = () => {
     <>
     <header className="sticky top-0 z-50 w-full bg-[hsl(var(--card))] text-[hsl(var(--foreground))] border-b-2 border-black dark:border-white transition-all duration-300 uppercase font-sans">
       {/* Promo strip */}
-      <div className="w-full bg-[hsl(var(--foreground))] text-[hsl(var(--background))] border-b-2 border-black dark:border-white py-2 text-center text-xs font-bold tracking-widest flex items-center justify-center gap-3 select-none overflow-hidden h-10">
+      <div className="w-full bg-[hsl(var(--foreground))] text-[hsl(var(--background))] border-b-2 border-black dark:border-white py-2.5 text-center text-sm font-bold tracking-widest flex items-center justify-center gap-3 select-none overflow-hidden h-11">
         <Truck className="h-4 w-4 shrink-0" />
         <div className="relative h-4 min-w-0 flex-1 overflow-hidden max-w-md">
             {PROMO_MESSAGES.map((message, index) => (
@@ -182,7 +182,7 @@ const Navbar = () => {
             <div key={to} className="relative h-full group">
               <Link
                 to={to}
-                className={`h-full flex items-center px-6 border-r-2 border-black dark:border-white font-bold text-sm tracking-widest group-hover:bg-[hsl(var(--foreground))] group-hover:text-[hsl(var(--background))] transition-colors ${
+                className={`h-full flex items-center px-8 border-r-2 border-black dark:border-white font-bold text-base tracking-widest group-hover:bg-[hsl(var(--foreground))] group-hover:text-[hsl(var(--background))] transition-colors ${
                   accent ? 'text-red-600 dark:text-red-400 group-hover:text-red-600' : ''
                 }`}
               >
@@ -194,7 +194,7 @@ const Navbar = () => {
                     <Link
                       key={sub.to}
                       to={sub.to}
-                      className="px-4 py-3 text-xs font-bold border-b last:border-b-0 border-black dark:border-white hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))] transition-colors"
+                      className="px-4 py-3 text-sm font-bold border-b last:border-b-0 border-black dark:border-white hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))] transition-colors"
                     >
                       {sub.label}
                     </Link>
@@ -290,19 +290,19 @@ const Navbar = () => {
           {/* Account */}
           {userInfo ? (
             <div className="relative hidden sm:flex items-center px-6 h-full border-r-2 border-black dark:border-white group">
-                <button className="font-bold text-xs tracking-widest hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))] transition-colors">
+                <button className="font-bold text-sm tracking-widest hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))] transition-colors">
                 HI, {userDisplayName.toUpperCase()} ▼
               </button>
               <div className="absolute right-0 top-full w-48 bg-[hsl(var(--card))] border-2 border-black dark:border-white shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-20">
                 {extraLinks.map(({ to, label, icon: Icon }) => (
-                  <Link key={to} to={to} className="flex items-center px-4 py-3 text-xs font-bold border-b border-black dark:border-white hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))] transition-colors">
+                  <Link key={to} to={to} className="flex items-center px-4 py-3 text-sm font-bold border-b border-black dark:border-white hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))] transition-colors">
                     <Icon className="w-4 h-4 mr-2" />
                     {label}
                   </Link>
                 ))}
                 <button
                   onClick={() => dispatch(logout())}
-                  className="w-full flex items-center px-4 py-3 text-xs font-bold text-red-600 hover:bg-red-600 hover:text-white transition-colors"
+                  className="w-full flex items-center px-4 py-3 text-sm font-bold text-red-600 hover:bg-red-600 hover:text-white transition-colors"
                 >
                   <LogOut className="w-4 h-4 mr-2" />
                   LOGOUT
@@ -364,7 +364,7 @@ const Navbar = () => {
               <Link
                 to={to}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`p-5 hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))] transition-colors ${
+                className={`p-5 text-base font-black tracking-widest hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))] transition-colors ${
                   accent ? 'text-red-600 dark:text-red-400' : ''
                 }`}
               >

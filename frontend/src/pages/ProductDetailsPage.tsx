@@ -316,7 +316,7 @@ const ProductDetailsPage = () => {
               </span>
             )}
 
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight leading-snug normal-case">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight normal-case">
               {productName || 'Product'}
             </h1>
 
@@ -335,14 +335,14 @@ const ProductDetailsPage = () => {
             <div className="flex items-baseline gap-3 py-5 border-y-2 border-black dark:border-white font-mono">
               {product.discountPrice ? (
                 <>
-                  <span className="text-3xl font-black">{formatUSD(product.discountPrice)}</span>
-                  <span className="text-lg text-zinc-400 line-through">{formatUSD(product.price)}</span>
-                  <span className="text-sm font-black text-red-600 bg-red-50 dark:bg-red-950/30 px-3 py-1 border-2 border-red-600">
+                  <span className="text-4xl font-black">{formatUSD(product.discountPrice)}</span>
+                  <span className="text-xl text-zinc-400 line-through">{formatUSD(product.price)}</span>
+                  <span className="text-base font-black text-red-600 bg-red-50 dark:bg-red-950/30 px-3 py-1 border-2 border-red-600">
                     -{discountPct}%
                   </span>
                 </>
               ) : (
-                <span className="text-3xl font-black">{formatUSD(product.price)}</span>
+                <span className="text-4xl font-black">{formatUSD(product.price)}</span>
               )}
             </div>
 
@@ -391,7 +391,7 @@ const ProductDetailsPage = () => {
                   <button
                     key={size}
                     onClick={() => setSelectedSize(size)}
-                    className={`w-14 h-14 border-2 border-black dark:border-white text-sm font-black transition-all cursor-pointer ${selectedSize === size
+                    className={`w-16 h-16 border-2 border-black dark:border-white text-base font-black transition-all cursor-pointer ${selectedSize === size
                       ? 'bg-[hsl(var(--foreground))] text-[hsl(var(--background))]'
                       : 'bg-[hsl(var(--card))] text-[hsl(var(--foreground))] hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))]'
                       }`}
@@ -406,13 +406,13 @@ const ProductDetailsPage = () => {
             <div className="flex gap-0 pt-2">
               <button
                 onClick={handleBuyNow}
-                className="flex-1 py-5 text-xs font-black tracking-widest transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer border-2 border-black dark:border-white bg-[hsl(var(--foreground))] text-[hsl(var(--background))] hover:bg-red-600 hover:text-white hover:border-red-600"
+                className="flex-1 py-6 text-sm font-black tracking-widest transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer border-2 border-black dark:border-white bg-[hsl(var(--foreground))] text-[hsl(var(--background))] hover:bg-red-600 hover:text-white hover:border-red-600"
               >
                 BUY NOW
               </button>
               <button
                 onClick={handleAddToCart}
-                className={`flex-1 py-5 text-xs font-black tracking-widest transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer border-2 border-l-0 border-black dark:border-white ${isAdded
+                className={`flex-1 py-6 text-sm font-black tracking-widest transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer border-2 border-l-0 border-black dark:border-white ${isAdded
                   ? 'bg-green-600 text-white border-green-600'
                   : 'bg-[hsl(var(--card))] text-[hsl(var(--foreground))] hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))]'
                   }`}

@@ -30,7 +30,7 @@ const WishlistPage = () => {
   return (
     <div className="bg-zinc-50 dark:bg-zinc-950 min-h-screen">
       <div className="container mx-auto px-4 sm:px-6 py-8">
-        <h1 className="text-2xl font-black uppercase tracking-widest mb-8 text-zinc-900 dark:text-white">
+        <h1 className="text-4xl font-black uppercase tracking-widest mb-8 text-zinc-900 dark:text-white">
           My Wishlist
           {wishlistItems.length > 0 && (
             <span className="text-sm font-semibold text-zinc-400 normal-case tracking-normal ml-2">

@@ -44,7 +44,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({ categoryId, categoryN
     return (
       <section ref={ref} className="border-b-2 border-black dark:border-white">
         <div className="px-6 sm:px-10 py-10">
-          <h2 className="text-4xl sm:text-6xl font-black tracking-tighter uppercase">{categoryName}</h2>
+          <h2 className="text-5xl sm:text-7xl font-black tracking-tighter uppercase">{categoryName}</h2>
           {isLoading && (
             <div className="mt-8 flex gap-0 overflow-x-hidden">
               {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -69,10 +69,10 @@ const CategorySection: React.FC<CategorySectionProps> = ({ categoryId, categoryN
     <section ref={ref} className="border-b-2 border-black dark:border-white">
       {/* Header */}
       <div className="px-6 sm:px-10 py-10 flex items-end justify-between gap-4 border-b-2 border-black dark:border-white">
-        <h2 className="text-4xl sm:text-6xl font-black tracking-tighter uppercase">{categoryName}</h2>
+        <h2 className="text-5xl sm:text-7xl font-black tracking-tighter uppercase">{categoryName}</h2>
         <Link
           to={`/men?category=${encodeURIComponent(categoryName)}`}
-          className="hidden sm:inline-flex items-center gap-2 text-xs font-black tracking-widest hover:text-red-600 transition-colors"
+          className="hidden sm:inline-flex items-center gap-2 text-sm font-black tracking-widest hover:text-red-600 transition-colors"
         >
           VIEW ALL PRODUCTS <ArrowRight size={16} strokeWidth={2.5} />
         </Link>

@@ -48,7 +48,7 @@ const MiniCart = ({ isOpen, onClose }: MiniCartProps) => {
         <div className="flex items-center justify-between px-6 py-5 border-b-2 border-black dark:border-white shrink-0">
           <div className="flex items-center gap-3">
             <ShoppingBag size={20} strokeWidth={2.5} />
-            <span className="text-sm font-black tracking-widest uppercase">
+            <span className="text-base font-black tracking-widest uppercase">
               My Bag
               {cartItems.length > 0 && (
                 <span className="ml-2 text-xs bg-[hsl(var(--foreground))] text-[hsl(var(--background))] px-2 py-0.5 font-black">

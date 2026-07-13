@@ -104,7 +104,6 @@ const HomePage = () => {
     <div className="w-full bg-[hsl(var(--background))] text-[hsl(var(--foreground))] font-sans uppercase">
       {/* ───────── HERO ───────── */}
       <section className="relative min-h-[calc(100vh-130px)] overflow-hidden bg-black text-white border-b-2 border-black">
-        {/* {heroImages.map((img, idx) => ( */}
         {heroImages.map((img: string, idx: number) => (
           <div
             key={idx}
@@ -128,49 +127,51 @@ const HomePage = () => {
             )}
           </div>
         ))}
-        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/50 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
         <div className="relative z-10 flex min-h-[calc(100vh-130px)] w-full max-w-[1920px] mx-auto px-6 sm:px-10 lg:px-16 py-16 items-end">
           <div className="w-full flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8 pb-10">
             <div className="max-w-3xl">
-              <h1 className="text-[2.2rem] min-[375px]:text-4xl sm:text-6xl lg:text-[5.5rem] font-black leading-[0.9] tracking-tighter uppercase">
+              <p className="text-sm sm:text-base font-black tracking-[0.3em] text-red-500 mb-4">NEW SEASON DROP</p>
+              <h1 className="text-[2.5rem] min-[375px]:text-5xl sm:text-7xl lg:text-[6rem] font-black leading-[0.85] tracking-tighter uppercase">
                 <span className="block sm:hidden whitespace-nowrap">AETHER WEAR</span>
                 <span className="hidden sm:block">AETHER<br />WEAR</span>
               </h1>
-              <div className="mt-6 sm:mt-8 flex flex-row gap-2 sm:gap-0 w-full sm:w-auto">
-                <Link to="/men" className="group/btn flex-1 sm:flex-initial justify-center inline-flex items-center gap-1.5 sm:gap-2 bg-white px-4 py-3.5 sm:px-8 sm:py-5 text-[10px] sm:text-xs font-black tracking-widest text-black transition-all duration-300 hover:bg-red-600 hover:text-white border-2 border-white relative overflow-hidden">
-                  <span className="relative z-10 flex items-center gap-1 sm:gap-2 whitespace-nowrap">
-                    SHOP MEN <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform duration-300 group-hover/btn:translate-x-1" />
+              <p className="mt-4 sm:mt-6 text-sm sm:text-base text-zinc-400 max-w-lg normal-case tracking-normal font-medium leading-relaxed">
+                Premium streetwear engineered for the modern rebel. Limited drops, infinite attitude.
+              </p>
+              <div className="mt-8 sm:mt-10 flex flex-row gap-3 sm:gap-0 w-full sm:w-auto">
+                <Link to="/men" className="group/btn flex-1 sm:flex-initial justify-center inline-flex items-center gap-2 bg-white px-5 py-4 sm:px-10 sm:py-5 text-xs sm:text-sm font-black tracking-widest text-black transition-all duration-300 hover:bg-red-600 hover:text-white border-2 border-white relative overflow-hidden">
+                  <span className="relative z-10 flex items-center gap-2 whitespace-nowrap">
+                    SHOP MEN <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-300 group-hover/btn:translate-x-1" />
                   </span>
                 </Link>
-                <Link to="/women" className="group/btn flex-1 sm:flex-initial justify-center inline-flex items-center gap-1.5 sm:gap-2 px-4 py-3.5 sm:px-8 sm:py-5 text-[10px] sm:text-xs font-black tracking-widest text-white transition-all duration-300 hover:bg-white hover:text-black border-2 border-white sm:-ml-[2px] relative overflow-hidden">
-                  <span className="relative z-10 flex items-center gap-1 sm:gap-2 whitespace-nowrap">
-                    SHOP WOMEN <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform duration-300 group-hover/btn:translate-x-1" />
+                <Link to="/women" className="group/btn flex-1 sm:flex-initial justify-center inline-flex items-center gap-2 px-5 py-4 sm:px-10 sm:py-5 text-xs sm:text-sm font-black tracking-widest text-white transition-all duration-300 hover:bg-white hover:text-black border-2 border-white sm:-ml-[2px] relative overflow-hidden">
+                  <span className="relative z-10 flex items-center gap-2 whitespace-nowrap">
+                    SHOP WOMEN <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-300 group-hover/btn:translate-x-1" />
                   </span>
                 </Link>
               </div>
             </div>
-            <div className="grid grid-cols-3 w-full lg:w-auto mt-6 lg:mt-0">
+            <div className="grid grid-cols-3 w-full lg:w-auto mt-8 lg:mt-0">
               {[
                 ['12K+', 'FITS SHIPPED'],
                 ['4.8', 'AVG RATING'],
                 ['48H', 'DISPATCH'],
               ].map(([value, label], idx) => (
-                <div key={label} className={`border-2 border-white p-3 sm:p-5 text-center bg-black/50 backdrop-blur-sm min-w-0 ${idx > 0 ? '-ml-[2px]' : ''}`}>
-                  <div className="text-xl sm:text-3xl font-black">{value}</div>
-                  <div className="mt-1 text-[8px] sm:text-[9px] font-bold tracking-widest text-zinc-400 truncate">{label}</div>
+                <div key={label} className={`border-2 border-white p-4 sm:p-6 text-center bg-black/50 backdrop-blur-sm min-w-0 ${idx > 0 ? '-ml-[2px]' : ''}`}>
+                  <div className="text-2xl sm:text-4xl font-black">{value}</div>
+                  <div className="mt-1.5 text-[10px] sm:text-xs font-bold tracking-widest text-zinc-400 truncate">{label}</div>
                 </div>
               ))}
             </div>
           </div>
         </div>
         <div className="absolute bottom-8 left-6 sm:left-10 lg:left-16 z-20 flex gap-2">
-          {/* {heroImages.map((_, idx) => ( */}
           {heroImages.map((_: string, idx: number) => (
-
             <button
               key={idx}
               onClick={() => setCurrentHeroIdx(idx)}
-              className="group relative h-1 w-12 cursor-pointer bg-white/20 transition-all hover:bg-white/40 overflow-hidden"
+              className="group relative h-1.5 w-14 cursor-pointer bg-white/20 transition-all hover:bg-white/40 overflow-hidden"
             >
               <span
                 className={`absolute inset-y-0 left-0 bg-white transition-all ${idx === currentHeroIdx ? 'w-full duration-[2000ms] ease-linear' : 'w-0 duration-0'
@@ -180,6 +181,8 @@ const HomePage = () => {
           ))}
         </div>
       </section>
+
+      {/* ───────── FEATURES STRIP ───────── */}
       <section className="border-b-2 border-black dark:border-white bg-[hsl(var(--card))]">
         <div className="flex flex-col md:flex-row">
           {[
@@ -187,34 +190,67 @@ const HomePage = () => {
             { icon: ShieldCheck, title: 'ORIGINAL QUALITY', copy: 'Checked fabrics & finishing' },
             { icon: BadgePercent, title: 'BUNDLE PRICING', copy: 'Buy 3 and save more' },
           ].map(({ icon: Icon, title, copy }, idx) => (
-            <div key={title} className={`group flex-1 flex items-center gap-4 p-6 sm:p-8 transition-all duration-300 hover:bg-[hsl(var(--foreground))]/5 ${idx < 2 ? 'border-b-2 md:border-b-0 md:border-r-2 border-black dark:border-white' : ''}`}>
-              <span className="inline-flex h-12 w-12 items-center justify-center border-2 border-black dark:border-white group-hover:bg-[hsl(var(--foreground))] group-hover:text-[hsl(var(--background))] transition-all duration-300">
-                <Icon size={20} strokeWidth={2} />
+            <div key={title} className={`group flex-1 flex items-center gap-4 p-6 sm:p-8 md:p-10 transition-all duration-300 hover:bg-[hsl(var(--foreground))]/5 ${idx < 2 ? 'border-b-2 md:border-b-0 md:border-r-2 border-black dark:border-white' : ''}`}>
+              <span className="inline-flex h-14 w-14 items-center justify-center border-2 border-black dark:border-white group-hover:bg-[hsl(var(--foreground))] group-hover:text-[hsl(var(--background))] transition-all duration-300">
+                <Icon size={22} strokeWidth={2} />
               </span>
               <div>
-                <h3 className="text-sm font-black tracking-widest">{title}</h3>
-                <p className="mt-1 text-xs text-zinc-500 normal-case tracking-normal">{copy}</p>
+                <h3 className="text-base sm:text-lg font-black tracking-widest">{title}</h3>
+                <p className="mt-1.5 text-sm text-zinc-500 normal-case tracking-normal">{copy}</p>
               </div>
             </div>
           ))}
         </div>
       </section>
 
+      {/* ───────── NEW ARRIVALS ───────── */}
+      {newArrivals.length > 0 && (
+        <section className="border-b-2 border-black dark:border-white">
+          <div className="max-w-[1920px] mx-auto px-6 sm:px-10 lg:px-16 py-12 sm:py-16 lg:py-20">
+            <div className="flex items-end justify-between mb-8 sm:mb-10">
+              <div>
+                <p className="text-xs sm:text-sm font-black tracking-[0.25em] text-zinc-500 mb-2">FRESH DROPS</p>
+                <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-none">NEW ARRIVALS</h2>
+              </div>
+              <Link
+                to="/new-arrivals"
+                className="hidden sm:inline-flex items-center gap-2 text-xs sm:text-sm font-black tracking-widest hover:underline underline-offset-4 transition-all group"
+              >
+                VIEW ALL <ArrowRight size={16} strokeWidth={2.5} className="group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 border-t-2 border-l-2 border-black dark:border-white">
+              {newArrivals.slice(0, 8).map((product: any) => (
+                <ProductCard key={product.pid || product._id} product={product} />
+              ))}
+            </div>
+            <div className="mt-8 text-center sm:hidden">
+              <Link
+                to="/new-arrivals"
+                className="inline-flex items-center gap-2 px-8 py-4 border-2 border-black dark:border-white text-xs font-black tracking-widest hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))] transition-colors"
+              >
+                VIEW ALL NEW ARRIVALS <ArrowRight size={14} strokeWidth={2.5} />
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ───────── SALE CTA + STYLE BOXES ───────── */}
-      <section className="border-b-2 border-black dark:border-white">
+      {/* <section className="border-b-2 border-black dark:border-white">
         <div className="grid lg:grid-cols-2">
           {/* Sale box */}
-          <div className="group/sale bg-black text-white p-10 sm:p-14 flex flex-col justify-center border-b-2 lg:border-b-0 lg:border-r-2 border-black dark:border-white relative overflow-hidden">
-            <img src={dynamicImg1} alt="Sale" className="absolute right-0 top-0 h-full w-1/2 object-cover opacity-20 group-hover/sale:opacity-30 transition-opacity duration-500" />
+      {/* <div className="group/sale bg-black text-white p-10 sm:p-14 lg:p-16 flex flex-col justify-center border-b-2 lg:border-b-0 lg:border-r-2 border-black dark:border-white relative overflow-hidden min-h-[420px]">
+            <img src={dynamicImg1} alt="Sale" className="absolute right-0 top-0 h-full w-1/2 object-cover opacity-20 group-hover/sale:opacity-30 transition-all duration-700 ease-out" />
             <div className="relative z-10">
-              <span className="text-xs font-black tracking-widest text-red-500">LIMITED OFFER</span>
-              <h2 className="mt-4 text-5xl sm:text-7xl font-black leading-[0.85] tracking-tighter">
+              <span className="text-xs sm:text-sm font-black tracking-widest text-red-500">LIMITED OFFER</span>
+              <h2 className="mt-4 text-5xl sm:text-7xl lg:text-8xl font-black leading-[0.85] tracking-tighter">
                 BUY 3<br />FOR {formatUSD(1199)}
               </h2>
-              <p className="mt-6 max-w-lg text-sm text-zinc-400 normal-case tracking-normal leading-relaxed">
-                Build a full rotation with graphic tees, essentials, and relaxed fits.
+              <p className="mt-6 max-w-lg text-sm sm:text-base text-zinc-400 normal-case tracking-normal leading-relaxed">
+                Build a full rotation with graphic tees, essentials, and relaxed fits. Mix, match, and own the room.
               </p>
-              <Link to="/sale" className="group/btn mt-8 inline-flex items-center gap-2 bg-white text-black px-8 py-5 text-xs font-black tracking-widest hover:bg-red-600 hover:text-white transition-all duration-300 border-2 border-white relative overflow-hidden">
+              <Link to="/sale" className="group/btn mt-8 sm:mt-10 inline-flex items-center gap-2 bg-white text-black px-8 sm:px-10 py-5 text-xs sm:text-sm font-black tracking-widest hover:bg-red-600 hover:text-white transition-all duration-300 border-2 border-white relative overflow-hidden">
                 <span className="relative z-10 flex items-center gap-2">
                   SHOP SALE <ArrowRight size={16} strokeWidth={2.5} className="transition-transform duration-300 group-hover/btn:translate-x-1" />
                 </span>
@@ -222,23 +258,52 @@ const HomePage = () => {
             </div>
           </div>
           {/* Sale products grid */}
-          <div className="grid grid-cols-2">
+      {/* <div className="grid grid-cols-2">
             {saleProducts.length > 0 ? (
-              saleProducts.map((product: any) => (
+              saleProducts.slice(0, 4).map((product: any) => (
                 <ProductCard key={product.pid || product._id} product={product} />
               ))
             ) : (
               [['OVERSIZED', 'Built for easy layering'], ['GRAPHIC', 'Collab-inspired prints'], ['ESSENTIALS', 'Clean daily staples'], ['ACCESSORIES', 'Finish the look']].map(([title, copy], idx) => (
-                <div key={title} className={`p-8 sm:p-10 border-black dark:border-white ${idx < 2 ? 'border-b-2' : ''} ${idx % 2 === 0 ? 'border-r-2' : ''}`}>
-                  <h3 className="text-2xl sm:text-3xl font-black tracking-tighter">{title}</h3>
-                  <p className="mt-2 text-xs text-zinc-500 normal-case tracking-normal">{copy}</p>
-                  <ArrowRight size={20} strokeWidth={2.5} className="mt-4 text-zinc-400" />
+                <div key={title} className={`p-8 sm:p-10 lg:p-12 border-black dark:border-white ${idx < 2 ? 'border-b-2' : ''} ${idx % 2 === 0 ? 'border-r-2' : ''}`}>
+                  <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tighter leading-none">{title}</h3>
+                  <p className="mt-2 text-sm text-zinc-500 normal-case tracking-normal">{copy}</p>
+                  <ArrowRight size={20} strokeWidth={2.5} className="mt-4 text-zinc-400 group-hover:translate-x-1 transition-transform" />
                 </div>
               ))
             )}
           </div>
         </div>
-      </section>
+      </section>  */}
+
+      {/* ───────── CATEGORIES GRID ─────────
+      <section className="border-b-2 border-black dark:border-white">
+        <div className="max-w-[1920px] mx-auto px-6 sm:px-10 lg:px-16 py-12 sm:py-16 lg:py-20">
+          <div className="text-center mb-10 sm:mb-14">
+            <p className="text-xs sm:text-sm font-black tracking-[0.25em] text-zinc-500 mb-3">EXPLORE</p>
+            <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-none">SHOP BY CATEGORY</h2>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+            {[
+              { title: 'Men', to: '/men', img: dynamicImg1 },
+              { title: 'Women', to: '/women', img: dynamicImg1 },
+              { title: 'Accessories', to: '/collections/accessories', img: dynamicImg1 },
+              { title: 'Sale', to: '/sale', img: dynamicImg1, accent: true },
+            ].map(({ title, to, accent }) => (
+              <Link
+                key={title}
+                to={to}
+                className={`group relative aspect-square overflow-hidden border-2 border-black dark:border-white flex items-center justify-center ${accent ? 'bg-red-600 hover:bg-red-700' : 'bg-zinc-900 hover:bg-zinc-800'} transition-all duration-500`}
+              >
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <span className={`relative z-10 text-xl sm:text-2xl lg:text-3xl font-black tracking-tight ${accent ? 'text-white' : 'text-white'} group-hover:scale-110 transition-transform duration-300`}>
+                  {title}
+                </span>x`
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section> */}
 
       {/* ── 10s LOGIN POPUP ── */}
       {showLoginPopup && !userInfo && (
@@ -259,7 +324,6 @@ const HomePage = () => {
             <div className="px-7 pt-7 pb-8">
               {/* Countdown ring + heading */}
               <div className="flex items-center gap-4 mb-5">
-                {/* SVG countdown ring */}
                 <div className="relative w-12 h-12 shrink-0">
                   <svg className="w-12 h-12 -rotate-90" viewBox="0 0 48 48">
                     <circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" strokeWidth="3" className="text-zinc-200 dark:text-zinc-700" />
@@ -280,44 +344,44 @@ const HomePage = () => {
                 </div>
                 <div>
                   <h2 className="text-xl font-black uppercase tracking-tight leading-tight">Welcome Back!</h2>
-                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">Sign in to continue shopping</p>
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">Sign in to continue shopping</p>
                 </div>
               </div>
 
               {/* Login form */}
               <form onSubmit={handlePopupLogin} className="space-y-3">
                 {loginError && (
-                  <p className="text-xs text-red-500 font-semibold bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-3 py-2 rounded-lg">
+                  <p className="text-sm text-red-500 font-semibold bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-3 py-2 rounded-lg">
                     {loginError}
                   </p>
                 )}
 
                 {/* Email */}
-                <div className="flex items-center gap-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 focus-within:border-black dark:focus-within:border-white transition-colors">
-                  <Mail size={15} className="text-zinc-400 shrink-0" />
+                <div className="flex items-center gap-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3.5 focus-within:border-black dark:focus-within:border-white transition-colors">
+                  <Mail size={16} className="text-zinc-400 shrink-0" />
                   <input
                     type="email"
                     placeholder="Email address"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="flex-1 bg-transparent text-sm font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none"
+                    className="flex-1 bg-transparent text-base font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none"
                     required
                   />
                 </div>
 
                 {/* Password */}
-                <div className="flex items-center gap-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 focus-within:border-black dark:focus-within:border-white transition-colors">
-                  <Lock size={15} className="text-zinc-400 shrink-0" />
+                <div className="flex items-center gap-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3.5 focus-within:border-black dark:focus-within:border-white transition-colors">
+                  <Lock size={16} className="text-zinc-400 shrink-0" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="flex-1 bg-transparent text-sm font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none"
+                    className="flex-1 bg-transparent text-base font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none"
                     required
                   />
                   <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors">
-                    {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
 
@@ -325,17 +389,17 @@ const HomePage = () => {
                 <button
                   type="submit"
                   disabled={loginLoading}
-                  className="w-full flex items-center justify-center gap-2 bg-black dark:bg-white text-white dark:text-black py-3.5 rounded-xl text-xs font-black tracking-widest uppercase hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all duration-200 disabled:opacity-50 shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0"
+                  className="w-full flex items-center justify-center gap-2 bg-black dark:bg-white text-white dark:text-black py-4 rounded-xl text-sm font-black tracking-widest uppercase hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all duration-200 disabled:opacity-50 shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0"
                 >
                   {loginLoading ? 'Signing in...' : 'Sign In'}
-                  {!loginLoading && <ArrowRight size={13} />}
+                  {!loginLoading && <ArrowRight size={14} />}
                 </button>
               </form>
 
               {/* Divider */}
               <div className="flex items-center gap-3 my-4">
                 <div className="flex-1 h-px bg-zinc-200 dark:bg-zinc-700" />
-                <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">or</span>
+                <span className="text-xs text-zinc-400 font-bold uppercase tracking-widest">or</span>
                 <div className="flex-1 h-px bg-zinc-200 dark:bg-zinc-700" />
               </div>
 
@@ -343,12 +407,12 @@ const HomePage = () => {
               <Link
                 to="/register"
                 onClick={() => setShowLoginPopup(false)}
-                className="block w-full text-center border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 py-3 rounded-xl text-xs font-bold tracking-wider hover:border-black dark:hover:border-white hover:text-black dark:hover:text-white transition-all duration-200"
+                className="block w-full text-center border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 py-3.5 rounded-xl text-sm font-bold tracking-wider hover:border-black dark:hover:border-white hover:text-black dark:hover:text-white transition-all duration-200"
               >
                 Create an account
               </Link>
 
-              <p className="text-center text-[10px] text-zinc-400 mt-4">
+              <p className="text-center text-xs text-zinc-400 mt-4">
                 Your data is safe. We don't spam.
               </p>
             </div>

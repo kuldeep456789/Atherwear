@@ -188,13 +188,13 @@ const ProductCard = ({ product, keyword }: ProductCardProps) => {
         <Link to={`/product/${productId}`}>
           {keyword ? (
             <h3
-              className="text-sm font-bold text-[hsl(var(--foreground))] line-clamp-1 leading-snug hover:underline transition-colors uppercase tracking-wide"
+              className="text-base font-bold text-[hsl(var(--foreground))] line-clamp-2 leading-tight hover:underline transition-colors uppercase tracking-wide"
               dangerouslySetInnerHTML={{
                 __html: DOMPurify.sanitize((product.title || product.name).replace(new RegExp(`(${keyword})`, 'gi'), '<mark class="bg-yellow-300 text-black px-1 font-black">$1</mark>'))
               }}
             />
           ) : (
-            <h3 className="text-sm font-bold text-[hsl(var(--foreground))] line-clamp-1 leading-snug hover:underline transition-colors uppercase tracking-wide">
+            <h3 className="text-base font-bold text-[hsl(var(--foreground))] line-clamp-2 leading-tight hover:underline transition-colors uppercase tracking-wide">
               {product.title || product.name}
             </h3>
           )}
@@ -204,12 +204,12 @@ const ProductCard = ({ product, keyword }: ProductCardProps) => {
         <div className="flex items-center gap-2 mt-1 font-mono">
           {product.discountPrice && product.discountPrice < product.price ? (
             <>
-              <span className="text-lg font-black text-[hsl(var(--foreground))]">{formatUSD(product.discountPrice)}</span>
-              <span className="text-sm text-zinc-400 line-through">{formatUSD(product.price)}</span>
-              <span className="text-xs font-black text-red-600">-{discountPercentage}%</span>
+              <span className="text-xl font-black text-[hsl(var(--foreground))]">{formatUSD(product.discountPrice)}</span>
+              <span className="text-base text-zinc-400 line-through">{formatUSD(product.price)}</span>
+              <span className="text-sm font-black text-red-600">-{discountPercentage}%</span>
             </>
           ) : (
-            <span className="text-lg font-black text-[hsl(var(--foreground))]">{formatUSD(product.price)}</span>
+            <span className="text-xl font-black text-[hsl(var(--foreground))]">{formatUSD(product.price)}</span>
           )}
         </div>
       </div>

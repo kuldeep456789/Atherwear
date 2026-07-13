@@ -14,8 +14,11 @@ import OrderSuccessPage from './pages/OrderSuccessPage';
 import WishlistPage from './pages/WishlistPage';
 import LoginPage from './pages/LoginPage';
 import AccountPage from './pages/AccountPage';
+import FaqPage from './pages/FaqPage';
+import ContactPage from './pages/ContactPage';
+import TrackOrderPage from './pages/TrackOrderPage';
 import PrivateRoute from './components/auth/PrivateRoute';
-import WelcomePopup from './components/WelcomePopup';
+
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -54,11 +57,13 @@ function App() {
             <Route path="/payment" element={<PrivateRoute><PaymentPage /></PrivateRoute>} />
             <Route path="/placeorder" element={<PrivateRoute><PlaceOrderPage /></PrivateRoute>} />
             <Route path="/order/:id" element={<PrivateRoute><OrderSuccessPage /></PrivateRoute>} />
+            <Route path="/faq" element={<FaqPage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/track-order" element={<TrackOrderPage />} />
           </Routes>
         </main>
 
         <Footer />
-        <WelcomePopup />
       </div>
     </Router>
   );
