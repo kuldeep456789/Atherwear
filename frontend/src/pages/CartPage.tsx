@@ -182,8 +182,9 @@ const CartPage = () => {
                   
                   {/* Details */}
                   <div className="flex-1 flex flex-col justify-between">
-                    <div className="flex justify-between items-start">
-                      <div>
+                    <div className="flex justify-between items-start gap-4">
+                      <p className="font-extrabold text-lg text-zinc-950 dark:text-white shrink-0">{formatUSD(item.price)}</p>
+                      <div className="text-right">
                         <Link to={`/product/${item._id}`} className="text-lg font-bold tracking-tight hover:underline line-clamp-1">
                           {item.name}
                         </Link>
@@ -191,7 +192,6 @@ const CartPage = () => {
                           Color: {item.variant.color} &nbsp;|&nbsp; Size: {item.variant.size}
                         </p>
                       </div>
-                      <p className="font-extrabold text-lg text-zinc-950 dark:text-white">{formatUSD(item.price)}</p>
                     </div>
 
                     {/* Stepper controls & actions */}

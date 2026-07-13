@@ -33,10 +33,9 @@ const Navbar = () => {
   const [isDark, setIsDark] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [searchOverlayOpen, setSearchOverlayOpen] = useState(false);
   const [promoIndex, setPromoIndex] = useState(0);
   const [miniCartOpen, setMiniCartOpen] = useState(false);
-  const [showSuggestions, setShowSuggestions] = useState(false);
 
   // Live search
   const { data: searchResults, isFetching: isSearchFetching } = useGetProductsQuery(
@@ -56,7 +55,14 @@ const Navbar = () => {
     }
   }, []);
 
-
+  useEffect(() => {
+    if (!searchOverlayOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSearchOverlayOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [searchOverlayOpen]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -82,7 +88,7 @@ const Navbar = () => {
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-      setMobileSearchOpen(false);
+      setSearchOverlayOpen(false);
       setMobileMenuOpen(false);
     }
   };
@@ -182,7 +188,7 @@ const Navbar = () => {
             <div key={to} className="relative h-full group">
               <Link
                 to={to}
-                className={`h-full flex items-center px-8 border-r-2 border-black dark:border-white font-bold text-base tracking-widest group-hover:bg-[hsl(var(--foreground))] group-hover:text-[hsl(var(--background))] transition-colors ${
+                className={`h-full flex items-center px-8 border-r-2 border-black dark:border-white font-bold text-sm sm:text-base lg:text-lg tracking-widest group-hover:bg-[hsl(var(--foreground))] group-hover:text-[hsl(var(--background))] transition-colors ${
                   accent ? 'text-red-600 dark:text-red-400 group-hover:text-red-600' : ''
                 }`}
               >
@@ -194,7 +200,7 @@ const Navbar = () => {
                     <Link
                       key={sub.to}
                       to={sub.to}
-                      className="px-4 py-3 text-sm font-bold border-b last:border-b-0 border-black dark:border-white hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))] transition-colors"
+                      className="px-4 py-3 text-sm sm:text-base font-bold border-b last:border-b-0 border-black dark:border-white hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))] transition-colors"
                     >
                       {sub.label}
                     </Link>
@@ -212,69 +218,10 @@ const Navbar = () => {
 
         {/* Right actions */}
         <div className="flex items-center h-full border-l-2 border-black dark:border-white shrink-0">
-          {/* Desktop Search */}
-          <div className="hidden xl:flex items-center h-full border-r-2 border-black dark:border-white w-64 relative group">
-            <form onSubmit={handleSearch} className="w-full h-full relative">
-              <input
-                type="search"
-                placeholder="SEARCH..."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setShowSuggestions(true);
-                }}
-                onFocus={() => setShowSuggestions(true)}
-                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                className="w-full h-full px-4 text-xs font-bold bg-transparent focus:outline-none placeholder:text-zinc-400"
-              />
-              <button type="submit" className="absolute right-4 top-1/2 -translate-y-1/2">
-                <Search className="h-4 w-4" strokeWidth={2.5} />
-              </button>
-            </form>
-
-            {/* Suggestions Dropdown */}
-            {showSuggestions && searchQuery.trim().length >= 2 && (
-              <div className="absolute top-full right-0 w-80 bg-[hsl(var(--card))] border-2 border-t-0 border-black dark:border-white shadow-xl z-50">
-                {isSearchFetching ? (
-                  <div className="p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest text-center">Searching...</div>
-                ) : searchResults?.products?.length > 0 ? (
-                  <div className="flex flex-col">
-                    {searchResults.products.slice(0, 5).map((product: any) => (
-                      <Link
-                        key={getProductId(product)}
-                        to={`/product/${getProductId(product)}`}
-                        onClick={() => setShowSuggestions(false)}
-                        className="flex items-center gap-3 p-3 hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))] border-b border-black/10 dark:border-white/10 last:border-0 transition-colors group/item"
-                      >
-                        <img 
-                          src={product.images?.[0] || 'https://via.placeholder.com/40'} 
-                          alt="product" 
-                          className="w-10 h-10 object-cover border border-black/20 dark:border-white/20"
-                        />
-                        <div className="flex flex-col overflow-hidden">
-                          <span className="text-xs font-bold truncate">{product.title || product.productName}</span>
-                          <span className="text-[10px] opacity-70 truncate">{product.categoryName}</span>
-                        </div>
-                      </Link>
-                    ))}
-                    <button 
-                      onClick={handleSearch}
-                      className="p-3 text-xs font-black uppercase tracking-widest text-center border-t-2 border-black dark:border-white hover:bg-red-600 hover:text-white transition-colors"
-                    >
-                      View All Results
-                    </button>
-                  </div>
-                ) : (
-                  <div className="p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest text-center">No results found</div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Mobile search toggle */}
+          {/* Search button — opens full-screen overlay */}
           <button
-            className="xl:hidden flex items-center justify-center w-14 sm:w-16 h-full border-r-2 border-black dark:border-white hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))] transition-colors cursor-pointer"
-            onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
+            className="flex items-center justify-center w-14 sm:w-16 h-full border-r-2 border-black dark:border-white hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))] transition-colors cursor-pointer"
+            onClick={() => { setSearchOverlayOpen(true); setSearchQuery(''); }}
           >
             <Search className="h-5 w-5" strokeWidth={2} />
           </button>
@@ -290,7 +237,7 @@ const Navbar = () => {
           {/* Account */}
           {userInfo ? (
             <div className="relative hidden sm:flex items-center px-6 h-full border-r-2 border-black dark:border-white group">
-                <button className="font-bold text-sm tracking-widest hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))] transition-colors">
+                <button className="font-bold text-sm sm:text-base tracking-widest hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))] transition-colors">
                 HI, {userDisplayName.toUpperCase()} ▼
               </button>
               <div className="absolute right-0 top-full w-48 bg-[hsl(var(--card))] border-2 border-black dark:border-white shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-20">
@@ -340,22 +287,6 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile search bar */}
-      {mobileSearchOpen && (
-        <form onSubmit={handleSearch} className="xl:hidden w-full border-b-2 border-black dark:border-white flex h-14">
-          <input
-            type="search"
-            placeholder="SEARCH PRODUCTS..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1 px-4 text-xs font-bold bg-[hsl(var(--card))] focus:outline-none"
-          />
-          <button type="submit" className="w-16 flex items-center justify-center bg-[hsl(var(--foreground))] text-[hsl(var(--background))]">
-            <Search className="h-4 w-4" strokeWidth={2.5} />
-          </button>
-        </form>
-      )}
-
       {/* Mobile menu */}
       {mobileMenuOpen && (
         <div className="lg:hidden bg-[hsl(var(--card))] border-b-2 border-black dark:border-white flex flex-col font-bold tracking-widest text-sm max-h-[80vh] overflow-y-auto">
@@ -364,7 +295,7 @@ const Navbar = () => {
               <Link
                 to={to}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`p-5 text-base font-black tracking-widest hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))] transition-colors ${
+                className={`p-5 text-base sm:text-lg font-black tracking-widest hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))] transition-colors ${
                   accent ? 'text-red-600 dark:text-red-400' : ''
                 }`}
               >
@@ -377,7 +308,7 @@ const Navbar = () => {
                       key={sub.to}
                       to={sub.to}
                       onClick={() => setMobileMenuOpen(false)}
-                      className="p-4 pl-10 text-xs text-[hsl(var(--foreground))] hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))] transition-colors border-b last:border-b-0 border-black/10 dark:border-white/20"
+                      className="p-4 pl-10 text-xs sm:text-sm text-[hsl(var(--foreground))] hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))] transition-colors border-b last:border-b-0 border-black/10 dark:border-white/20"
                     >
                       {sub.label}
                     </Link>
@@ -407,6 +338,95 @@ const Navbar = () => {
               LOGOUT
             </button>
           )}
+        </div>
+      )}
+
+      {/* Full-screen Search Overlay */}
+      {searchOverlayOpen && (
+        <div className="fixed inset-0 z-[100] flex flex-col bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/40" onClick={() => setSearchOverlayOpen(false)} />
+          
+          {/* Overlay panel */}
+          <div className="relative z-10 mx-auto mt-[10vh] w-full max-w-2xl px-4 sm:px-6" onClick={(e) => e.stopPropagation()}>
+            {/* Close button */}
+            <button
+              onClick={() => setSearchOverlayOpen(false)}
+              className="absolute -top-14 right-4 sm:right-6 flex items-center gap-2 text-sm font-black tracking-widest hover:text-red-600 transition-colors cursor-pointer z-20"
+            >
+              <X className="h-5 w-5" strokeWidth={2.5} /> CLOSE
+            </button>
+
+            {/* Search input */}
+            <form onSubmit={(e) => { handleSearch(e); setSearchOverlayOpen(false); }}>
+              <div className="flex border-4 border-[hsl(var(--foreground))] bg-[hsl(var(--card))]">
+                <input
+                  type="search"
+                  placeholder="SEARCH PRODUCTS..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  autoFocus
+                  className="flex-1 px-6 py-5 sm:py-6 text-lg sm:text-xl font-bold bg-transparent focus:outline-none placeholder:text-zinc-400 uppercase tracking-wider"
+                />
+                <button type="submit" className="px-8 sm:px-10 bg-[hsl(var(--foreground))] text-[hsl(var(--background))] hover:bg-red-600 hover:text-white transition-colors flex items-center justify-center cursor-pointer">
+                  <Search className="h-6 w-6" strokeWidth={2.5} />
+                </button>
+              </div>
+            </form>
+
+            {/* Results */}
+            <div className="mt-4 bg-[hsl(var(--card))] border-4 border-t-0 border-[hsl(var(--foreground))] max-h-[50vh] overflow-y-auto">
+              {searchQuery.trim().length >= 2 ? (
+                isSearchFetching ? (
+                  <div className="p-8 text-center">
+                    <div className="inline-block h-8 w-8 border-4 border-[hsl(var(--foreground))] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                    <p className="text-sm font-bold tracking-widest text-zinc-500">SEARCHING...</p>
+                  </div>
+                ) : searchResults?.products?.length > 0 ? (
+                  <div className="divide-y-2 divide-black dark:divide-white">
+                    {searchResults.products.slice(0, 8).map((product: any) => (
+                      <Link
+                        key={getProductId(product)}
+                        to={`/product/${getProductId(product)}`}
+                        onClick={() => setSearchOverlayOpen(false)}
+                        className="flex items-center gap-5 p-5 hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))] transition-colors group"
+                      >
+                        <img 
+                          src={product.images?.[0] || 'https://via.placeholder.com/48'} 
+                          alt="product" 
+                          className="w-14 h-16 sm:w-16 sm:h-20 object-cover border-2 border-black dark:border-white group-hover:border-[hsl(var(--background))] transition-colors"
+                        />
+                        <div className="flex flex-col overflow-hidden flex-1 min-w-0">
+                          <span className="text-sm sm:text-base font-bold truncate">{product.title || product.productName}</span>
+                          <span className="text-xs text-zinc-500 group-hover:text-zinc-300 truncate mt-1">{product.categoryName}</span>
+                          <span className="text-sm font-black mt-1 font-mono">{formatUSD(product.discountPrice || product.price)}</span>
+                        </div>
+                        <Search className="h-5 w-5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" strokeWidth={2} />
+                      </Link>
+                    ))}
+                    <button
+                      onClick={(e) => { handleSearch(e); setSearchOverlayOpen(false); }}
+                      className="w-full p-5 text-sm font-black tracking-widest text-center border-t-2 border-black dark:border-white bg-[hsl(var(--foreground))] text-[hsl(var(--background))] hover:bg-red-600 hover:text-white transition-colors flex items-center justify-center gap-3 cursor-pointer"
+                    >
+                      VIEW ALL {searchResults.products.length} RESULTS <Search className="h-4 w-4" strokeWidth={2.5} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="p-8 text-center">
+                    <span className="text-4xl block mb-4 text-zinc-300">✕</span>
+                    <p className="text-sm font-bold tracking-widest text-zinc-500">NO PRODUCTS FOUND</p>
+                    <p className="text-xs text-zinc-400 mt-2 tracking-normal normal-case">Try a different search term</p>
+                  </div>
+                )
+              ) : (
+                <div className="p-8 text-center">
+                  <Search className="h-8 w-8 mx-auto mb-3 text-zinc-300" strokeWidth={1.5} />
+                  <p className="text-sm font-bold tracking-widest text-zinc-500">TYPE TO SEARCH</p>
+                  <p className="text-xs text-zinc-400 mt-1">Enter at least 2 characters</p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </header>

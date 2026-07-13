@@ -366,20 +366,26 @@ const ProductDetailsPage = () => {
             {/* Color */}
             <div>
               <p className="text-xs font-black tracking-widest mb-3">
-                COLOR: <span className="text-zinc-500">{selectedColor || 'SELECT'}</span>
+                COLOR: <span className="text-zinc-500 capitalize">{selectedColor || 'SELECT'}</span>
               </p>
-              <div className="flex gap-2">
+              <div className="flex gap-3 flex-wrap">
                 {colors.map((color: any) => (
                   <button
                     key={color}
                     onClick={() => setSelectedColor(color)}
-                    className={`w-10 h-10 border-2 transition-all cursor-pointer ${selectedColor === color
-                      ? 'border-[hsl(var(--foreground))] ring-2 ring-[hsl(var(--foreground))] ring-offset-2 ring-offset-[hsl(var(--background))]'
-                      : 'border-black dark:border-white hover:opacity-80'
-                      }`}
-                    style={{ backgroundColor: getColorHex(color) }}
-                    title={color}
-                  />
+                    className={`flex flex-col items-center gap-1.5 transition-all cursor-pointer group ${selectedColor === color ? '' : 'opacity-70 hover:opacity-100'}`}
+                  >
+                    <span
+                      className={`w-12 h-12 sm:w-14 sm:h-14 border-2 transition-all block ${selectedColor === color
+                        ? 'border-[hsl(var(--foreground))] ring-2 ring-[hsl(var(--foreground))] ring-offset-2 ring-offset-[hsl(var(--background))] scale-110'
+                        : 'border-black dark:border-white group-hover:scale-105'
+                        }`}
+                      style={{ backgroundColor: getColorHex(color) }}
+                    />
+                    <span className={`text-[9px] sm:text-[10px] font-bold tracking-wider whitespace-nowrap ${selectedColor === color ? 'text-[hsl(var(--foreground))]' : 'text-zinc-500'}`}>
+                      {(color || '').charAt(0).toUpperCase() + (color || '').slice(1)}
+                    </span>
+                  </button>
                 ))}
               </div>
             </div>
