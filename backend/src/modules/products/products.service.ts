@@ -1,13 +1,12 @@
-import { BadRequestException, Injectable, UnauthorizedException, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { Model } from 'mongoose';
 import { CjService } from '../cj/cj.service';
 import { RedisService } from '../redis/redis.service';
 import { UsersService } from '../users/users.service';
 import { CreateReviewDto } from './dto/create-review.dto';
-import { Product } from './schemas/product.schema';
 import { Review } from './schemas/review.schema';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
 type ProductQuery = {
   categoryId?: string;
@@ -38,7 +37,6 @@ export class ProductsService {
     private readonly redisService: RedisService,
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
-    @InjectModel(Product.name) private readonly productModel: Model<Product>,
     @InjectModel(Review.name) private readonly reviewModel: Model<Review>,
   ) { }
 
@@ -53,7 +51,7 @@ export class ProductsService {
 
     console.log(`[Products] Cache MISS ${cacheKey}`);
 
-    const products = await this.runSingleFlight(cacheKey, () => this.getProductsFromMongoOrCj(query));
+    const products = await this.runSingleFlight(cacheKey, () => this.fetchFromCj(query));
 
     const productCount = Array.isArray(products?.products)
       ? products.products.length
@@ -78,31 +76,20 @@ export class ProductsService {
     const cacheKey = `product:${id}`;
     const cached = await this.redisService.getJson<Record<string, any>>(cacheKey);
 
-    let product: Record<string, any>;
-
     if (cached) {
       console.log(`[Product] Cache HIT ${cacheKey}`);
-      product = cached;
-    } else {
-      console.log(`[Product] Cache MISS ${cacheKey}`);
-
-      product = await this.runSingleFlight(cacheKey, async () => {
-        console.log(`[Product] Fetching detail from CJ API ${id}`);
-        const cjProduct = await this.cjService.getProductById(id);
-
-        // Persist the enriched product back to MongoDB
-        await this.productModel.updateOne(
-          { pid: id },
-          { $set: this.normalizeProductForStorage(cjProduct) },
-          { upsert: true },
-        );
-
-        return cjProduct;
-      });
-
-      await this.redisService.setJson(cacheKey, product, this.productTtlSeconds);
-      console.log(`[Product] Cache WRITE ${cacheKey} ttl=${this.productTtlSeconds}s`);
+      return this.withReviews(cached, id);
     }
+
+    console.log(`[Product] Cache MISS ${cacheKey}`);
+
+    const product = await this.runSingleFlight(cacheKey, async () => {
+      console.log(`[Product] Fetching detail from CJ API ${id}`);
+      return await this.cjService.getProductById(id);
+    });
+
+    await this.redisService.setJson(cacheKey, product, this.productTtlSeconds);
+    console.log(`[Product] Cache WRITE ${cacheKey} ttl=${this.productTtlSeconds}s`);
 
     return this.withReviews(product, id);
   }
@@ -116,46 +103,24 @@ export class ProductsService {
       return { products: cached };
     }
 
-    const currentProduct = await this.productModel.findOne({ pid: id }).lean().exec();
+    // Fetch from CJ API — get products in the same category
+    try {
+      const cjProduct = await this.cjService.getProductById(id);
+      const categoryId = cjProduct?.categoryId;
+      if (categoryId) {
+        const related = await this.cjService.getProductsByCategory(categoryId, id);
+        const products = Array.isArray(related?.products) ? related.products.slice(0, 8) : [];
 
-    if (!currentProduct) {
-      // If the product isn't in DB, we can't find related based on category, 
-      // just return some generic related items
-      const generic = await this.productModel.find().limit(4).lean().exec();
-      return { products: generic };
+        const withRatings = await Promise.all(products.map((p: any) => this.withReviews(p, p.pid || p._id)));
+
+        await this.redisService.setJson(cacheKey, withRatings, 60 * 60);
+        return { products: withRatings };
+      }
+    } catch (err: any) {
+      console.warn(`[Products] Failed to fetch related for ${id}:`, err?.message ?? err);
     }
 
-    // Find products in same subcategory or category, excluding current product
-    const related = await this.productModel.find({
-      $and: [
-        { pid: { $ne: id } },
-        { 
-          $or: [
-            { subcategoryName: currentProduct.subcategoryName },
-            { categoryId: currentProduct.categoryId },
-          ]
-        }
-      ]
-    }).limit(10).lean().exec();
-
-    // Fetch ratings for related products
-    const withRatings = await Promise.all(related.map(p => this.withReviews(p, p.pid)));
-    
-    // Sort by most reviewed/rated as a naive "best related" metric
-    const sorted = withRatings.sort((a, b) => b.numReviews - a.numReviews).slice(0, 8);
-
-    await this.redisService.setJson(cacheKey, sorted, 60 * 60); // 1 hr cache
-    return { products: sorted };
-  }
-
-  /** Merge two image arrays, deduplicating and keeping CJ detail images first */
-  private mergeImages(existing: string[], incoming: string[]): string[] {
-    const all = [...incoming, ...existing].map((img) => {
-      if (!img) return '';
-      if (typeof img === 'string') return img;
-      return (img as any).url || (img as any).src || '';
-    }).filter(Boolean);
-    return Array.from(new Set(all));
+    return { products: [] };
   }
 
   async createReview(id: string, token: string, dto: CreateReviewDto) {
@@ -211,7 +176,6 @@ export class ProductsService {
   }
 
   private buildCacheKey(query: ProductQuery) {
-    // Strip client-side filters from cache key — price/rating are applied on the frontend
     const IGNORE_PARAMS = new Set(['minPrice', 'maxPrice', 'minRating', 'pageNum', 'pageSize', 'page', 'limit']);
     const normalized = Object.entries(query)
       .filter(([key, value]) => Boolean(value) && !IGNORE_PARAMS.has(key))
@@ -221,23 +185,20 @@ export class ProductsService {
     return normalized.length > 0 ? `products:${normalized.join(':')}` : 'products:all';
   }
 
-  private async getProductsFromMongoOrCj(query: ProductQuery) {
+  private async fetchFromCj(query: ProductQuery) {
     let cjProducts: any;
-    let fromCache = false;
 
     try {
       cjProducts = query.categoryId
         ? await this.cjService.getProductsByCategory(query.categoryId, query.pid, query)
         : await this.cjService.getProducts(query);
     } catch (err: any) {
-      console.warn('[Products] CJ API failed, falling back to MongoDB:', err?.message ?? err);
-      cjProducts = { products: await this.productModel.find().lean().exec() };
-      fromCache = true;
+      console.error('[Products] CJ API failed:', err?.message ?? err);
+      return { products: [] };
     }
 
     const normalizedProducts = Array.isArray(cjProducts?.products) ? cjProducts.products : [];
 
-    // collectionType filter
     const afterCollectionFilter = query.collectionType
       ? normalizedProducts.filter((product: Record<string, any>) =>
         String(product.collectionType ?? '').trim().toLowerCase() ===
@@ -245,7 +206,6 @@ export class ProductsService {
       )
       : normalizedProducts;
 
-    // gender filter (HomePage sends gender:'men'/'women' — match against collectionType)
     const afterGenderFilter = query.gender
       ? afterCollectionFilter.filter((product: Record<string, any>) =>
         String(product.collectionType ?? product.gender ?? '').trim().toLowerCase() ===
@@ -259,89 +219,11 @@ export class ProductsService {
       )
       : afterGenderFilter;
 
-    if (!fromCache && filteredProducts.length > 0) {
-      const operations = filteredProducts
-        .filter((p: Record<string, any>) => String(p.pid ?? '').trim())
-        .map((product: Record<string, any>) => ({
-          updateOne: {
-            filter: { pid: String(product.pid) },
-            update: { $set: this.normalizeProductForStorage(product) },
-            upsert: true,
-          },
-        }));
-
-      if (operations.length > 0) {
-        try {
-          await this.productModel.bulkWrite(operations, { ordered: false });
-        } catch (err: any) {
-          // Log the error but don't propagate — products are already in Redis
-          console.error('[Products] bulkWrite error (non-fatal):', err?.message ?? err);
-        }
-      }
-    }
-
     return {
       ...cjProducts,
       products: filteredProducts,
-      source: fromCache ? 'mongodb' : 'cj',
+      source: 'cj',
     };
-  }
-
-  private normalizeProductForStorage(product: Record<string, any>) {
-    // Only store fields that exist in the Product schema
-    // Never spread unknown CJ fields — that's what caused sku_1 duplicate key errors
-    const pid = String(product.pid ?? product._id ?? product.id ?? '').trim();
-    return {
-      pid,
-      productName: String(product.productName ?? product.name ?? product.title ?? ''),
-      collectionType: String(product.collectionType ?? '').trim(),
-      categoryId: String(product.categoryId ?? '').trim(),
-      categoryName: String(product.categoryName ?? '').trim(),
-      subcategoryId: String(product.subcategoryId ?? '').trim(),
-      subcategoryName: String(product.subcategoryName ?? '').trim(),
-      gender: String(product.gender ?? '').trim(),
-      price: Number(product.price ?? 0) || 0,
-      discountPrice: Number(product.discountPrice ?? 0) || 0,
-      images: Array.isArray(product.images) ? product.images.filter(Boolean) : [],
-      colors: Array.isArray(product.colors) ? product.colors.filter(Boolean) : [],
-      sizes: Array.isArray(product.sizes) ? product.sizes.filter(Boolean) : [],
-      variants: Array.isArray(product.variants) ? product.variants : [],
-      tags: Array.isArray(product.tags) ? product.tags : [],
-      description: String(product.description ?? ''),
-      name: String(product.name ?? product.productName ?? ''),
-      title: String(product.title ?? product.productName ?? product.name ?? ''),
-    };
-  }
-
-  async syncAllProducts(categoryId?: string) {
-    console.log(`[Products] Starting full sync...`);
-    const cjProducts = await this.cjService.getAllProducts(categoryId);
-    
-    if (cjProducts.length > 0) {
-      const operations = cjProducts
-        .filter((p: Record<string, any>) => String(p.pid ?? '').trim())
-        .map((product: Record<string, any>) => ({
-          updateOne: {
-            filter: { pid: String(product.pid ?? product._id ?? product.id) },
-            update: { $set: this.normalizeProductForStorage(product) },
-            upsert: true,
-          },
-        }));
-
-      if (operations.length > 0) {
-        try {
-          await this.productModel.bulkWrite(operations, { ordered: false });
-          console.log(`[Products] Sync complete. Upserted ${operations.length} products.`);
-        } catch (err: any) {
-          console.error('[Products] Sync bulkWrite error:', err?.message ?? err);
-        }
-      }
-    }
-    
-    // Invalidate the all-products cache
-    await this.redisService.del('products:all');
-    console.log(`[Products] Sync finished. Found ${cjProducts.length} items from CJ API.`);
-    return { synced: cjProducts.length };
   }
 
   private escapeRegex(value: string) {

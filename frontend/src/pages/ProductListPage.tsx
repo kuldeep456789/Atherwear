@@ -4,6 +4,9 @@ import { ChevronRight } from 'lucide-react';
 import { useGetProductsQuery } from '../store/slices/productApiSlice';
 import { useGetCategoriesQuery } from '../store/slices/categoryApiSlice';
 import ProductCard from '../components/product/ProductCard';
+import Pagination from '../components/Pagination';
+
+const ITEMS_PER_PAGE = 10;
 
 const ProductListPage = () => {
   const location = useLocation();
@@ -63,7 +66,7 @@ const ProductListPage = () => {
       ...(activeCategoryId ? { categoryId: activeCategoryId } : {}),
       ...(keyword ? { q: keyword } : {}),
       ...(collectionType ? { collectionType } : {}),
-      pageNum: page,
+      pageNum: 1,
       pageSize: 80,
     }
   );
@@ -99,6 +102,9 @@ const ProductListPage = () => {
     if (sortBy === 'Customer Rating') return b.averageRating - a.averageRating;
     return 0;
   });
+
+  const totalPages = Math.max(1, Math.ceil(sortedProducts.length / ITEMS_PER_PAGE));
+  const paginatedProducts = sortedProducts.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
   const pageTitle = keyword
     ? `Search: "${keyword}"`
@@ -216,7 +222,7 @@ const ProductListPage = () => {
           <>
             {/* BORDER-COLLAPSE GRID */}
             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 border-t-2 border-l-2 border-black dark:border-white">
-              {sortedProducts.map((product: any, index: number) => (
+              {paginatedProducts.map((product: any, index: number) => (
                 <ProductCard
                   key={product.pid || product._id || product.id || `${product.title || product.name || 'product'}-${index}`}
                   product={product}
@@ -226,26 +232,7 @@ const ProductListPage = () => {
             </div>
 
             {/* Pagination */}
-            {!keyword && productsData?.pages > 1 && (
-              <div className="flex justify-center py-10 gap-0 border-t-2 border-black dark:border-white">
-                {[...Array(productsData.pages)].map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => {
-                      setPage(i + 1);
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}
-                    className={`w-12 h-12 border-2 border-black dark:border-white flex items-center justify-center font-black text-sm transition-all cursor-pointer -ml-[2px] first:ml-0 ${
-                      page === i + 1
-                        ? 'bg-[hsl(var(--foreground))] text-[hsl(var(--background))]'
-                        : 'bg-[hsl(var(--card))] text-[hsl(var(--foreground))] hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))]'
-                    }`}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-              </div>
-            )}
+            <Pagination currentPage={page} totalPages={totalPages} onPageChange={(p) => { setPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />
           </>
         )}
       </div>

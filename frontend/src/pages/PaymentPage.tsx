@@ -15,8 +15,8 @@ const PaymentOption = ({
 }) => (
   <label
     className={`relative flex items-center gap-4 px-5 sm:px-6 py-5 cursor-pointer transition-colors border-2 ${checked
-        ? 'border-black dark:border-white'
-        : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600'
+      ? 'border-black dark:border-white'
+      : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600'
       }`}
   >
     {checked && <span className="absolute left-0 top-0 h-full w-1 bg-red-600" />}
@@ -120,8 +120,6 @@ const PaymentPage = () => {
               </p>
             </div>
           </div>
-
-          {/* ── Right: Order Summary ── */}
           <div className="lg:w-2/5 px-6 sm:px-10 py-8">
             <OrderSummarySidebar
               buttonText="Continue to Review"
@@ -133,5 +131,4 @@ const PaymentPage = () => {
     </div>
   );
 };
-
 export default PaymentPage;

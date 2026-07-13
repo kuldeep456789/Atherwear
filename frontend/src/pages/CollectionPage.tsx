@@ -4,6 +4,7 @@ import { ChevronRight } from 'lucide-react';
 import { useGetProductsByCategoryQuery, useGetProductsQuery } from '../store/slices/productApiSlice';
 import { useGetCategoriesQuery } from '../store/slices/categoryApiSlice';
 import ProductCard from '../components/product/ProductCard';
+import Pagination from '../components/Pagination';
 
 const normalizeSlug = (value: string) =>
   value
@@ -16,12 +17,6 @@ const normalizeSlug = (value: string) =>
 
 const toSlug = (value: string) => normalizeSlug(value);
 const fromSlug = (value: string) => value.replace(/-/g, ' ');
-
-const COLLECTION_SUBCATEGORIES: Record<string, string[]> = {
-  men: ['Shirts', 'T-Shirts', 'Oversized', 'Polo', 'Jeans', 'Cargo', 'Shorts', 'Jackets', 'Hoodies'],
-  women: ['Dresses', 'Tops', 'Shirts', 'Jeans', 'Jackets', 'Co-ords'],
-  accessories: ['Caps', 'Wallets', 'Sunglasses', 'Belts', 'Bags'],
-};
 
 const matchesCollection = (name: string, gender: string, group = '') => {
   const normalized = `${name} ${group}`.toLowerCase();
@@ -49,11 +44,14 @@ const matchesCollection = (name: string, gender: string, group = '') => {
   return true;
 };
 
+const ITEMS_PER_PAGE = 10;
+
 const CollectionPage = () => {
   const { gender, subcategory } = useParams();
   const normalizedGender = gender?.toLowerCase() || '';
   const normalizedSubcategory = subcategory?.toLowerCase() || '';
   const [sortBy, setSortBy] = useState('Popularity');
+  const [page, setPage] = useState(1);
 
   const { data: categoriesData = [], isLoading: categoriesLoading } = useGetCategoriesQuery(undefined);
   const collectionTabs = Array.isArray(categoriesData)
@@ -116,6 +114,9 @@ const CollectionPage = () => {
     if (sortBy === 'Customer Rating') return bRating - aRating;
     return 0;
   });
+
+  const totalPages = Math.max(1, Math.ceil(sortedProducts.length / ITEMS_PER_PAGE));
+  const paginatedProducts = sortedProducts.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
   const pageTitle = activeCategory?.name
     ? `${activeCategory.name}`
@@ -213,11 +214,14 @@ const CollectionPage = () => {
             <h3 className="text-2xl font-black uppercase tracking-widest text-[hsl(var(--foreground))] mb-3">No Products Found</h3>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 border-t-2 border-l-2 border-black dark:border-white">
-            {sortedProducts.map((product: any) => (
-              <ProductCard key={product.pid || product._id || product.id || product.name} product={product} />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 border-t-2 border-l-2 border-black dark:border-white">
+              {paginatedProducts.map((product: any) => (
+                <ProductCard key={product.pid || product._id || product.id || product.name} product={product} />
+              ))}
+            </div>
+            <Pagination currentPage={page} totalPages={totalPages} onPageChange={(p) => { setPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />
+          </>
         )}
       </div>
     </div>

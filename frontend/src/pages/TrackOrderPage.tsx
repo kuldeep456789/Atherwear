@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight, Package, PackageCheck, Truck, Search, ChevronDown } from 'lucide-react';
+import { ChevronRight, PackageCheck, Truck, Search } from 'lucide-react';
 
 const TrackOrderPage = () => {
   const [orderId, setOrderId] = useState('');

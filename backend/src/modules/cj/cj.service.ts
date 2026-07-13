@@ -146,29 +146,19 @@ export class CjService {
       throw new BadRequestException('product id is required');
     }
 
-    const searchParams = new URLSearchParams({ pid });
-    const url = `/v1/product/query?${searchParams.toString()}`;
+    const url = `/v1/product/list?pid=${pid}`;
     console.log(`[CJ] GET ${url}`);
     const response = await this.scheduleRequest(url, {
       method: 'GET',
       headers: await this.authHeaders(),
     });
 
-    console.log("========== CJ RAW RESPONSE ==========");
-    console.dir(response, { depth: null });
-    console.log("=====================================");
-
-    const rawProduct =
-      response?.data ??
-      (typeof response?.result === 'object' ? response.result : null) ??
-      response?.product ??
-      response;
-
     if (response?.result === false || (response?.code && response.code !== 200 && response.code !== '200')) {
       throw new NotFoundException(`CJ API Error: ${response?.message || 'Product not found'}`);
     }
 
-    const product = rawProduct ? this.normalizeProduct(rawProduct) : null;
+    const normalized = this.normalizeProductResponse(response);
+    const product = normalized?.products?.[0] ?? null;
 
     if (!product) {
       throw new NotFoundException('Product not found');
@@ -332,21 +322,8 @@ export class CjService {
     };
   }
 
-  // CJ's category API returns a nested tree (first/second/third level lists) whose
-  // field names vary by account/version. Recurse into whichever array-of-objects
-  // property each node has until we hit leaf categories, and normalize every node
-  // to a stable { _id, name, group } shape the storefront's filters can rely on.
-  //
-  // Both leaf (third-level) categories AND second-level categories are surfaced
-  // as selectable entries — some storefront tabs (e.g. "T-Shirts", "Tops") map
-  // more naturally to a CJ second-level grouping than to any single leaf product
-  // type. Every entry also carries `group`, the top-level CJ category name (e.g.
-  // "Men's Clothing", "Bags & Shoes"), so callers can scope matches to the right
-  // department instead of doing an unscoped substring search across CJ's entire
-  // catalog (which can otherwise match unrelated things, e.g. "Pet Bags" for a
-  // storefront "Bags" tab).
+  // CJ's category API returns
   private isBlocked(catName: string): boolean {
-    // Must match normalizeCategoryText in category.mapper.ts
     const name = catName.toLowerCase().replace(/[\s_'&-]+/g, '');
     return BLOCKED.some(word => name.includes(word));
   }

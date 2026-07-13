@@ -34,9 +34,8 @@ const CategorySection: React.FC<CategorySectionProps> = ({ categoryId, categoryN
 
   const { data, isLoading, error } = useGetProductsByCategoryQuery(
     { categoryId, pageNum: 1, pageSize: 20 },
-    { skip: !isVisible }, // Don't fire the API call until visible
+    { skip: !isVisible },
   );
-
   const products = Array.isArray(data?.products) ? data.products : [];
 
   // Skeleton placeholder while loading
@@ -59,12 +58,9 @@ const CategorySection: React.FC<CategorySectionProps> = ({ categoryId, categoryN
       </section>
     );
   }
-
-  // Don't render section if no products came back
   if (error || products.length === 0) {
     return null;
   }
-
   return (
     <section ref={ref} className="border-b-2 border-black dark:border-white">
       {/* Header */}

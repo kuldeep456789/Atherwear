@@ -57,13 +57,6 @@ export class ProductsController {
     });
   }
 
-  @Post('sync')
-  async syncAllProducts(
-    @Query('categoryId') categoryId?: string,
-  ) {
-    return await this.productsService.syncAllProducts(categoryId);
-  }
-
   @Get(':id')
   async getProduct(
     @Param('id') id: string,
