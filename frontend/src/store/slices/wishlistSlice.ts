@@ -28,17 +28,19 @@ const wishlistSlice = createSlice({
       const existItem = state.wishlistItems.find((x) => x._id === item._id);
 
       if (existItem) {
-        // Remove if it already exists
         state.wishlistItems = state.wishlistItems.filter((x) => x._id !== item._id);
       } else {
-        // Add if it doesn't exist
         state.wishlistItems.push(item);
       }
+      localStorage.setItem('wishlistItems', JSON.stringify(state.wishlistItems));
+    },
+    removeFromWishlist: (state, action: PayloadAction<string>) => {
+      state.wishlistItems = state.wishlistItems.filter((x) => x._id !== action.payload);
       localStorage.setItem('wishlistItems', JSON.stringify(state.wishlistItems));
     },
   },
 });
 
-export const { toggleWishlist } = wishlistSlice.actions;
+export const { toggleWishlist, removeFromWishlist } = wishlistSlice.actions;
 
 export default wishlistSlice.reducer;
