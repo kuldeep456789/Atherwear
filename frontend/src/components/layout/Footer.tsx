@@ -53,8 +53,8 @@ const Footer = () => {
           <h4 className="text-[10px] font-black tracking-[0.2em] mb-3 text-zinc-500">SHOP</h4>
           <ul className="space-y-2.5">
             {[
-              { to: '/men', label: 'Men' },
-              { to: '/women', label: 'Women' },
+              { to: '/collections/men', label: 'Men' },
+              { to: '/collections/women', label: 'Women' },
             ].map(({ to, label }) => (
               <li key={to}>
                 <Link

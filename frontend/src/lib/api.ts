@@ -20,6 +20,20 @@ export function getApiBaseUrl(): string {
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
+const EXCLUDED_CATEGORY_IDS = new Set([
+    '2607130752441623600',
+    '2607130905271619800',
+    '2075876029409300482',
+    '2046802660565475329',
+    '2502151121241601900',
+    '2043934021520044033',
+    '2043944570651648002',
+    '2043945824983830529',
+    '2043943887814762497',
+    '2043294797236301825',
+    '2606121220391623700',
+]);
+
 export async function getFeaturedProducts(): Promise<CjProduct[]> {
     const res = await fetch(`${API_URL}/cj/featured-products`);
 
@@ -28,5 +42,7 @@ export async function getFeaturedProducts(): Promise<CjProduct[]> {
     }
 
     const data: FeaturedProductsResponse = await res.json();
-    return data.featured;
+    return (data.featured || []).filter(
+        (p) => !EXCLUDED_CATEGORY_IDS.has(String((p as any).categoryId ?? '')),
+    );
 }
