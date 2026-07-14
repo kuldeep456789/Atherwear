@@ -213,11 +213,31 @@ export class ProductsService {
       )
       : afterCollectionFilter;
 
-    const filteredProducts = query.subcategoryName
+    const afterSubcategoryFilter = query.subcategoryName
       ? afterGenderFilter.filter((product: Record<string, any>) =>
         this.matchesRequestedSubcategory(product, query.subcategoryName!),
       )
       : afterGenderFilter;
+
+    const filteredProducts = query.q
+      ? afterSubcategoryFilter.filter((product: Record<string, any>) => {
+        const searchText = [
+          product?.name,
+          product?.title,
+          product?.productName,
+          product?.categoryName,
+          product?.subcategoryName,
+          product?.description,
+          product?.collectionType,
+          ...(Array.isArray(product?.tags) ? product.tags : []),
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
+        const searchTerms = String(query.q).toLowerCase().trim();
+        return searchText.includes(searchTerms);
+      })
+      : afterSubcategoryFilter;
 
     return {
       ...cjProducts,
