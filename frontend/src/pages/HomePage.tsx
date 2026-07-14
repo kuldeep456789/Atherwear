@@ -137,7 +137,7 @@ const HomePage = () => {
   };
 
   return (
-    <div className="w-full bg-[hsl(var(--background))] text-[hsl(var(--foreground))] font-sans uppercase">
+    <div className="w-full bg-[hsl(var(--background))] text-[hsl(var(--foreground))] font-sans uppercase pt-[112px] sm:pt-[116px] lg:pt-[124px]">
       {/* ───────── HERO ───────── */}
       <section className="relative min-h-[calc(100vh-130px)] overflow-hidden bg-black text-white border-b-2 border-black">
         {heroImages.map((img: string, idx: number) => (

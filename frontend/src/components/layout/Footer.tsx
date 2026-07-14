@@ -14,13 +14,13 @@ const Footer = () => {
   return (
     <footer className="bg-black text-white font-sans uppercase w-full">
       {/* Newsletter strip */}
-      <div className="w-full border-b border-zinc-800 flex flex-col md:flex-row">
+      {/* <div className="w-full border-b border-zinc-800 flex flex-col md:flex-row">
         <div className="flex-1 px-6 py-7 sm:px-10 sm:py-9 md:px-12 md:py-11 border-b md:border-b-0 md:border-r border-zinc-800">
           <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight leading-none">
             JOIN THE CLUB
           </h3>
-        </div>
-        {/* <div className="flex-1 px-6 py-7 sm:px-10 sm:py-9 md:px-12 md:py-11 flex items-center">
+        </div> */}
+      {/* <div className="flex-1 px-6 py-7 sm:px-10 sm:py-9 md:px-12 md:py-11 flex items-center">
           <form className="flex w-full border border-zinc-700 focus-within:border-[#C9A227] transition-colors duration-300" onSubmit={handleSubscribe}>
             <input
               type="email"
@@ -36,7 +36,7 @@ const Footer = () => {
             <p className="text-[#C9A227] text-xs ml-3 font-black whitespace-nowrap animate-pulse">SUBSCRIBED ✓</p>
           )}
         </div> */}
-      </div>
+      {/* </div> */}
 
       {/* Main footer grid — 4 columns */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-zinc-800">
@@ -132,7 +132,7 @@ const Footer = () => {
           </div>
         </div>
       </div>
-    </footer>
+    </footer >
   );
 };
 export default Footer;

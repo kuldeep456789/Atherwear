@@ -39,13 +39,13 @@ const OrderSuccessPage = () => {
   const { data: order, isLoading, error } = useGetOrderDetailsQuery(id);
 
   if (isLoading) return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-50 dark:bg-[#0F0F10] pt-[100px] sm:pt-[104px] lg:pt-[112px]">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-50 dark:bg-[#0F0F10] pt-[112px] sm:pt-[116px] lg:pt-[124px]">
       <div className="w-12 h-12 border-4 border-zinc-900 dark:border-white border-t-transparent rounded-full animate-spin" />
     </div>
   );
 
   if (error || !order) return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-[#0F0F10] pt-[100px] sm:pt-[104px] lg:pt-[112px] text-red-500">
+    <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-[#0F0F10] pt-[112px] sm:pt-[116px] lg:pt-[124px] text-red-500">
       Failed to load order. <Link to="/" className="underline ml-2 font-semibold">Go Home</Link>
     </div>
   );
@@ -58,7 +58,7 @@ const OrderSuccessPage = () => {
     : (isPaid ? 'PAYMENT CAPTURED' : 'PAYMENT PENDING');
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-[#0F0F10] pt-[100px] sm:pt-[104px] lg:pt-[112px]">
+    <div className="min-h-screen bg-zinc-50 dark:bg-[#0F0F10] pt-[112px] sm:pt-[116px] lg:pt-[124px]">
       <div className="mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
         {/* Success Banner */}
         <div className="text-center mb-10 animate-fadeIn">

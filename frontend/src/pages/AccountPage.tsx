@@ -66,7 +66,7 @@ const AccountPage = () => {
     : new Date().getFullYear().toString();
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-[#0F0F10] pt-[100px] sm:pt-[104px] lg:pt-[112px]">
+    <div className="min-h-screen bg-zinc-50 dark:bg-[#0F0F10] pt-[112px] sm:pt-[116px] lg:pt-[124px]">
       {/* ── Profile Header ── */}
       <div className="bg-gradient-to-r from-zinc-900 via-zinc-800 to-zinc-900 dark:from-[#18181B] dark:via-[#1f1f23] dark:to-[#18181B] border-b border-zinc-200 dark:border-[#2A2A2A]">
         <div className="mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
