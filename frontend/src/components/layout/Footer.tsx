@@ -74,7 +74,8 @@ const Footer = () => {
           <ul className="space-y-2.5">
             {[
               { to: '/faq', label: 'FAQ' },
-              { to: "/shipping-returns", label: 'Shipping & Returns' },
+              { to: '/shipping-policy', label: 'Shipping Policy' },
+              { to: '/returns', label: 'Returns & Refunds' },
               { to: '/track-order', label: 'Track Order' },
               { to: '/contact', label: 'Contact Us' },
             ].map(({ to, label }) => (
