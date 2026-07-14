@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, ChevronDown } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useGetProductsByCategoryQuery, useGetProductsQuery } from '../store/slices/productApiSlice';
 import { useGetCategoriesQuery } from '../store/slices/categoryApiSlice';
 import ProductCard from '../components/product/ProductCard';
@@ -17,6 +18,18 @@ const normalizeSlug = (value: string) =>
 
 const toSlug = (value: string) => normalizeSlug(value);
 const fromSlug = (value: string) => value.replace(/-/g, ' ');
+
+const cleanCategoryName = (name: string): string => {
+  const lower = name.toLowerCase().trim();
+  if (lower === "men's clothing" || lower === "women's clothing") return 'ALL';
+  const cleaned = name
+    .replace(/\bmen's\b/gi, '')
+    .replace(/\bwomen's\b/gi, '')
+    .replace(/couple\s*&\s*parent-child/gi, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+  return cleaned || name;
+};
 
 const matchesCollection = (name: string, gender: string, group = '') => {
   const normalized = `${name} ${group}`.toLowerCase();
@@ -40,6 +53,29 @@ const CollectionPage = () => {
   const normalizedSubcategory = subcategory?.toLowerCase() || '';
   const [sortBy, setSortBy] = useState('Popularity');
   const [page, setPage] = useState(1);
+  const [sortOpen, setSortOpen] = useState(false);
+  const sortRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setPage(1);
+  }, [normalizedGender, normalizedSubcategory]);
+
+  useEffect(() => {
+    if (!sortOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
+        setSortOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [sortOpen]);
+
+  const sortOptions = [
+    { value: 'Popularity', label: 'Popularity' },
+    { value: 'Price: Low to High', label: 'Price ↑' },
+    { value: 'Price: High to Low', label: 'Price ↓' },
+  ];
 
   const { data: categoriesData = [], isLoading: categoriesLoading } = useGetCategoriesQuery(undefined);
   const collectionTabs = Array.isArray(categoriesData)
@@ -103,7 +139,7 @@ const CollectionPage = () => {
   const paginatedProducts = sortedProducts.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
   const pageTitle = activeCategory?.name
-    ? `${activeCategory.name}`
+    ? `${cleanCategoryName(activeCategory.name)}`
     : subcategory
       ? `${fromSlug(subcategory)}`
       : gender
@@ -155,19 +191,49 @@ const CollectionPage = () => {
                   className={`h-full flex items-center px-6 sm:px-8 text-xs font-black tracking-widest uppercase border-r-2 border-black dark:border-white transition-colors cursor-pointer shrink-0 ${isActive ? 'bg-[hsl(var(--foreground))] text-[hsl(var(--background))]' : 'bg-[hsl(var(--card))] text-[hsl(var(--foreground))] hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))]'
                     }`}
                 >
-                  {tab.name}
+                  {cleanCategoryName(tab.name)}
                 </Link>
               );
             })
           )}
         </div>
         <div className="flex items-center h-14 shrink-0">
-          <div className="flex items-center h-full border-l-2 border-black dark:border-white">
-            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="h-full px-6 text-xs font-black tracking-widest uppercase bg-[hsl(var(--card))] text-[hsl(var(--foreground))] cursor-pointer focus:outline-none appearance-none">
-              <option value="Popularity">SORT: POPULAR</option>
-              <option value="Price: Low to High">SORT: PRICE ↑</option>
-              <option value="Price: High to Low">SORT: PRICE ↓</option>
-            </select>
+          <div className="relative flex items-center h-full border-l-2 border-black dark:border-white" ref={sortRef}>
+            <button
+              onClick={() => setSortOpen(!sortOpen)}
+              className="relative flex items-center gap-2 h-full px-5 text-sm font-semibold tracking-wider bg-[hsl(var(--card))] text-[hsl(var(--foreground))] hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer whitespace-nowrap"
+            >
+              {sortOptions.find((o) => o.value === sortBy)?.label}
+              <ChevronDown size={14} strokeWidth={2.5} className={`transition-transform duration-200 ${sortOpen ? 'rotate-180' : ''}`} />
+            </button>
+            <AnimatePresence>
+              {sortOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                  transition={{ duration: 0.2, ease: 'easeOut' }}
+                  className="absolute top-full right-0 mt-1.5 w-[230px] bg-white dark:bg-zinc-900 rounded-xl shadow-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden z-50"
+                  style={{ transformOrigin: 'top right' }}
+                >
+                  <div className="py-1.5">
+                    {sortOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => { setSortBy(option.value); setSortOpen(false); }}
+                        className={`w-full flex items-center px-4 py-3 text-base font-medium tracking-normal text-left transition-all duration-150 cursor-pointer ${
+                          sortBy === option.value
+                            ? 'bg-zinc-100 dark:bg-zinc-800 text-black dark:text-white'
+                            : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 hover:text-black dark:hover:text-white'
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>
