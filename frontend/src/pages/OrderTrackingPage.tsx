@@ -1,16 +1,19 @@
 import { Link, useParams } from 'react-router-dom';
 import { useGetOrderDetailsQuery } from '../store/slices/orderApiSlice';
-import { ShoppingBag, Package, CheckCircle, Clock, Truck, MapPin, CreditCard, Loader2, AlertCircle } from 'lucide-react';
-import { useGetProductDetailsQuery } from '../store/slices/productApiSlice';
+import { useGetProductDetailsQuery, useGetRelatedProductsQuery } from '../store/slices/productApiSlice';
+import { ChevronRight, ShoppingBag, Package, CheckCircle, Clock, Truck, MapPin, CreditCard, AlertCircle, Download, HelpCircle, ArrowRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { formatINR } from '../lib/currency';
+import ProductCard from '../components/product/ProductCard';
 
 const TIMELINE_STEPS = [
-  { key: 'pending', label: 'Order Placed', icon: Package },
-  { key: 'confirmed', label: 'Confirmed', icon: CheckCircle },
-  { key: 'packed', label: 'Packed', icon: ShoppingBag },
-  { key: 'shipped', label: 'Shipped', icon: Truck },
-  { key: 'out_for_delivery', label: 'Out For Delivery', icon: Truck },
-  { key: 'delivered', label: 'Delivered', icon: CheckCircle },
+  { key: 'pending', label: 'Order Placed', icon: Package, desc: 'Order has been placed' },
+  { key: 'confirmed', label: 'Confirmed', icon: CheckCircle, desc: 'Order has been confirmed' },
+  { key: 'packed', label: 'Packed', icon: ShoppingBag, desc: 'Item has been packed' },
+  { key: 'shipped', label: 'Shipped', icon: Truck, desc: 'Item has been shipped' },
+  { key: 'out_for_delivery', label: 'Out For Delivery', icon: Truck, desc: 'Out for delivery' },
+  { key: 'delivered', label: 'Delivered', icon: CheckCircle, desc: 'Package delivered' },
 ];
 
 const STEP_INDEX: Record<string, number> = {
@@ -23,36 +26,79 @@ const STEP_INDEX: Record<string, number> = {
 };
 
 const statusConfig: Record<string, { label: string; className: string }> = {
-  pending: { label: 'Order Placed', className: 'bg-yellow-50 dark:bg-yellow-950/20 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800' },
+  pending: { label: 'In Transit', className: 'bg-yellow-50 dark:bg-yellow-950/20 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800' },
   confirmed: { label: 'Confirmed', className: 'bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800' },
   packed: { label: 'Packed', className: 'bg-indigo-50 dark:bg-indigo-950/20 text-indigo-700 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800' },
   shipped: { label: 'Shipped', className: 'bg-purple-50 dark:bg-purple-950/20 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800' },
   out_for_delivery: { label: 'Out For Delivery', className: 'bg-orange-50 dark:bg-orange-950/20 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800' },
   delivered: { label: 'Delivered', className: 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' },
+  cancelled: { label: 'Cancelled', className: 'bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800' },
 };
+
+const orderDate = (dateStr: string) => {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+};
+
+const OrderItemRow = ({ productId, quantity }: { productId: string; quantity: number }) => {
+  const { data: product } = useGetProductDetailsQuery(productId);
+  const name = product?.name || product?.title || `Product`;
+  const image = product?.images?.[0];
+  const price = product?.discountPrice || product?.price || 0;
+  const color = product?.colors?.[0] || 'Black';
+  const size = product?.sizes?.[0] || 'M';
+
+  return (
+    <div className="flex items-start gap-4 py-4">
+      <div className="w-[68px] h-[84px] shrink-0 rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+        {image ? <img src={image} alt={name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-zinc-300"><Package size={20} /></div>}
+      </div>
+      <div className="flex-1 min-w-0">
+        <Link to={`/product/${productId}`} className="text-[14px] font-semibold text-zinc-900 dark:text-white line-clamp-2 hover:underline transition-colors">
+          {name}
+        </Link>
+        <div className="flex items-center gap-3 mt-1.5 text-[12px] text-zinc-500 dark:text-zinc-400">
+          <span>Color: {color}</span>
+          <span className="w-px h-3 bg-zinc-200 dark:bg-zinc-700" />
+          <span>Size: {size}</span>
+          <span className="w-px h-3 bg-zinc-200 dark:bg-zinc-700" />
+          <span>Qty: {quantity}</span>
+        </div>
+        <p className="text-[15px] font-bold text-zinc-900 dark:text-white mt-2">{formatINR(price)}</p>
+      </div>
+    </div>
+  );
+};
+
+const Skeleton = () => (
+  <div className="min-h-screen bg-zinc-50 dark:bg-[#0F0F10] pt-[112px] sm:pt-[116px] lg:pt-[124px]">
+    <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+      <div className="animate-pulse space-y-6">
+        <div className="h-5 w-72 bg-zinc-200 dark:bg-zinc-800 rounded" />
+        <div className="h-12 w-80 bg-zinc-200 dark:bg-zinc-800 rounded-xl" />
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+          <div className="w-full lg:w-[65%] space-y-6">
+            <div className="h-52 bg-zinc-200 dark:bg-zinc-800 rounded-2xl" />
+            <div className="h-72 bg-zinc-200 dark:bg-zinc-800 rounded-2xl" />
+          </div>
+          <div className="w-full lg:w-[35%] space-y-6">
+            <div className="h-96 bg-zinc-200 dark:bg-zinc-800 rounded-2xl" />
+            <div className="h-64 bg-zinc-200 dark:bg-zinc-800 rounded-2xl" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
 const OrderTrackingPage = () => {
   const { id } = useParams();
   const { data: order, isLoading, error } = useGetOrderDetailsQuery(id);
+  const [loaded, setLoaded] = useState(false);
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-zinc-50 dark:bg-[#0F0F10] pt-[112px] sm:pt-[116px] lg:pt-[124px]">
-        <div className="mx-auto max-w-[1200px] px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
-          {/* Skeleton */}
-          <div className="animate-pulse space-y-6">
-            <div className="h-10 w-64 bg-zinc-200 dark:bg-zinc-800 rounded-lg" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {[1, 2].map((i) => (
-                <div key={i} className="h-40 bg-zinc-200 dark:bg-zinc-800 rounded-2xl" />
-              ))}
-            </div>
-            <div className="h-80 bg-zinc-200 dark:bg-zinc-800 rounded-2xl" />
-          </div>
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => { const t = setTimeout(() => setLoaded(true), 100); return () => clearTimeout(t); }, []);
+
+  if (isLoading) return <Skeleton />;
 
   if (error) {
     const isForbidden = (error as any)?.status === 403 || (error as any)?.originalStatus === 403;
@@ -68,39 +114,9 @@ const OrderTrackingPage = () => {
             </div>
             <h1 className="text-[28px] font-bold text-zinc-900 dark:text-white mb-3">Access Denied</h1>
             <p className="text-[14px] text-zinc-500 dark:text-zinc-400 mb-8 leading-relaxed">
-              You do not have permission to view this order. Please log in with the correct account.
+              You do not have permission to view this order.
             </p>
-            <Link
-              to="/account"
-              className="inline-flex items-center justify-center h-[52px] px-8 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[13px] font-bold hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all duration-200"
-            >
-              My Account
-            </Link>
-          </div>
-        </div>
-      );
-    }
-
-    if (isNotFound || !order) {
-      return (
-        <div className="min-h-screen bg-zinc-50 dark:bg-[#0F0F10] pt-[112px] sm:pt-[116px] lg:pt-[124px] flex items-center justify-center">
-          <div className="text-center px-6 py-16 max-w-md">
-            <div className="relative inline-flex items-center justify-center w-20 h-20 mb-6">
-              <div className="absolute inset-0 bg-zinc-200/50 dark:bg-zinc-800/50 rounded-full" />
-              <Package className="relative z-10 w-9 h-9 text-zinc-300 dark:text-zinc-600" strokeWidth={1} />
-            </div>
-            <h1 className="text-[28px] font-bold text-zinc-900 dark:text-white mb-3">Order Not Found</h1>
-            <p className="text-[14px] text-zinc-500 dark:text-zinc-400 mb-8 leading-relaxed">
-              The requested order could not be found. It may have been removed or the ID is incorrect.
-            </p>
-            <Link
-              to="/"
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="inline-flex items-center justify-center gap-2 h-[52px] px-8 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[13px] font-bold hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all duration-200 shadow-md hover:shadow-lg active:scale-[0.98]"
-            >
-              <ShoppingBag size={16} strokeWidth={2} />
-              Continue Shopping
-            </Link>
+            <Link to="/account" className="inline-flex items-center justify-center h-[52px] px-8 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[13px] font-bold hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all duration-200">My Account</Link>
           </div>
         </div>
       );
@@ -110,20 +126,14 @@ const OrderTrackingPage = () => {
       <div className="min-h-screen bg-zinc-50 dark:bg-[#0F0F10] pt-[112px] sm:pt-[116px] lg:pt-[124px] flex items-center justify-center">
         <div className="text-center px-6 py-16 max-w-md">
           <div className="relative inline-flex items-center justify-center w-20 h-20 mb-6">
-            <div className="absolute inset-0 bg-red-100 dark:bg-red-950/30 rounded-full" />
-            <AlertCircle className="relative z-10 w-9 h-9 text-red-500" strokeWidth={1.5} />
+            <div className="absolute inset-0 bg-zinc-200/50 dark:bg-zinc-800/50 rounded-full" />
+            <Package className="relative z-10 w-9 h-9 text-zinc-300 dark:text-zinc-600" strokeWidth={1} />
           </div>
-          <h1 className="text-[28px] font-bold text-zinc-900 dark:text-white mb-3">Something Went Wrong</h1>
-          <p className="text-[14px] text-zinc-500 dark:text-zinc-400 mb-8 leading-relaxed">
-            We could not load your order details. Please try again later.
-          </p>
-          <Link
-            to="/"
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="inline-flex items-center justify-center gap-2 h-[52px] px-8 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[13px] font-bold hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all duration-200"
-          >
-            <ShoppingBag size={16} strokeWidth={2} />
-            Continue Shopping
+          <h1 className="text-[28px] font-bold text-zinc-900 dark:text-white mb-3">Order Not Found</h1>
+          <p className="text-[14px] text-zinc-500 dark:text-zinc-400 mb-8 leading-relaxed">The requested order could not be found.</p>
+          <Link to="/" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="inline-flex items-center gap-2 h-[52px] px-8 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[13px] font-bold hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all duration-200 shadow-md hover:shadow-lg active:scale-[0.98]">
+            <ShoppingBag size={16} /> Continue Shopping
           </Link>
         </div>
       </div>
@@ -133,163 +143,325 @@ const OrderTrackingPage = () => {
   const currentStepIndex = STEP_INDEX[order.status] ?? 0;
   const status = statusConfig[order.status] || statusConfig.pending;
   const paymentLabel = order.paymentProvider === 'COD' ? 'Cash on Delivery' : 'Razorpay Secure';
-  const paymentStatusLabel = order.paymentProvider === 'COD'
-    ? (order.paymentStatus === 'paid' ? 'Collected' : 'Pending')
-    : (order.paymentStatus === 'paid' ? 'Captured' : 'Unpaid');
   const isPaid = order.paymentStatus === 'paid';
   const itemCount = order.items?.reduce((a: number, i: any) => a + i.quantity, 0) || 0;
+  const totalItemsPrice = order.totalAmount || 0;
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-[#0F0F10] pt-[112px] sm:pt-[116px] lg:pt-[124px]">
-      <div className="mx-auto max-w-[1200px] px-4 sm:px-6 lg:px-8 py-6 lg:py-10">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: loaded ? 1 : 0 }}
+      transition={{ duration: 0.4 }}
+      className="min-h-screen bg-zinc-50 dark:bg-[#0F0F10] pt-[112px] sm:pt-[116px] lg:pt-[124px]"
+    >
+      <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-6 lg:py-10">
 
-        {/* Header */}
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-2 text-[12px] font-semibold text-zinc-400 dark:text-zinc-500 mb-6">
+          <Link to="/" className="hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">Home</Link>
+          <ChevronRight size={12} strokeWidth={2.5} />
+          <Link to="/account" className="hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">My Orders</Link>
+          <ChevronRight size={12} strokeWidth={2.5} />
+          <span className="text-zinc-700 dark:text-zinc-300">Track Order</span>
+        </nav>
+
+        {/* Page Header */}
         <div className="mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-            <h1 className="text-[28px] sm:text-[36px] font-bold text-zinc-900 dark:text-white tracking-tight">
-              Order Details
-            </h1>
-            <span className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[11px] font-semibold border w-fit ${status.className}`}>
-              <Clock size={13} strokeWidth={2} />
+          <h1 className="text-[28px] sm:text-[36px] font-bold text-zinc-900 dark:text-white tracking-tight">Track Your Order</h1>
+          <p className="text-[14px] text-zinc-500 dark:text-zinc-400 mt-1">Stay updated with your shipment in real time.</p>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mt-4">
+            <span className="text-[13px] font-mono font-semibold text-zinc-500 dark:text-zinc-400 tracking-wider select-all bg-zinc-100 dark:bg-zinc-800 px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700">
+              #{order._id}
+            </span>
+            <span className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[12px] font-bold border shadow-sm w-fit ${status.className}`}>
+              <span className="w-2 h-2 rounded-full bg-current" />
               {status.label.toUpperCase()}
             </span>
           </div>
-          <p className="text-[13px] text-zinc-500 dark:text-zinc-400 mt-2 font-mono tracking-wider select-all">
-            #{order._id}
-          </p>
         </div>
 
-        {/* Timeline */}
-        <div className="rounded-2xl border border-zinc-200 dark:border-[#2A2A2A] bg-white dark:bg-[#18181B] p-6 sm:p-8 mb-6">
-          <h2 className="text-[16px] font-bold text-zinc-900 dark:text-white mb-6">Delivery Progress</h2>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-0 sm:gap-0 relative">
-            {TIMELINE_STEPS.map((step, idx) => {
-              const isComplete = idx < currentStepIndex;
-              const isCurrent = idx === currentStepIndex;
-              const Icon = step.icon;
+        {/* Main 2-Column Layout */}
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
 
-              return (
-                <div key={step.key} className={`flex sm:flex-1 flex-row sm:flex-col items-center w-full sm:w-auto ${idx < TIMELINE_STEPS.length - 1 ? 'mb-4 sm:mb-0' : ''}`}>
-                  <div className="flex items-center sm:flex-col sm:items-center">
-                    <div className={`relative flex items-center justify-center w-11 h-11 rounded-full border-2 transition-all duration-300 ${
-                      isComplete
-                        ? 'bg-emerald-500 border-emerald-500 text-white shadow-[0_0_12px_rgba(16,185,129,0.3)]'
-                        : isCurrent
-                        ? 'bg-zinc-900 dark:bg-white border-zinc-900 dark:border-white text-white dark:text-zinc-900 shadow-[0_0_12px_rgba(0,0,0,0.15)] dark:shadow-[0_0_12px_rgba(255,255,255,0.15)] scale-105'
-                        : 'bg-zinc-50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 text-zinc-300 dark:text-zinc-600'
-                    }`}>
-                      {isComplete ? (
-                        <CheckCircle size={18} strokeWidth={2.5} />
-                      ) : (
-                        <Icon size={16} strokeWidth={1.5} />
-                      )}
-                    </div>
-                    {/* Connecting line (horizontal on desktop, vertical on mobile) */}
-                    {idx < TIMELINE_STEPS.length - 1 && (
-                      <div className={`sm:w-full sm:h-[3px] w-[3px] h-8 sm:ml-0 ml-[22px] rounded-full transition-colors duration-500 ${
-                        isComplete ? 'bg-emerald-500' : isCurrent ? 'bg-zinc-300 dark:bg-zinc-600' : 'bg-zinc-100 dark:bg-zinc-800'
-                      }`} />
-                    )}
-                  </div>
-                  <p className={`text-[11px] font-semibold mt-2 sm:mt-2 ml-3 sm:ml-0 sm:text-center whitespace-nowrap transition-colors duration-300 ${
-                    isComplete ? 'text-emerald-600 dark:text-emerald-400' : isCurrent ? 'text-zinc-900 dark:text-white' : 'text-zinc-400 dark:text-zinc-500'
-                  }`}>
-                    {step.label}
+          {/* Left Column - 65% */}
+          <div className="w-full lg:w-[65%] space-y-6">
+
+            {/* Order Info Card */}
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: loaded ? 1 : 0 }}
+              transition={{ duration: 0.4, delay: 0.1 }}
+              className="rounded-2xl border border-zinc-200 dark:border-[#2A2A2A] bg-white dark:bg-[#18181B] overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-250"
+            >
+              <div className="px-6 sm:px-8 py-5 border-b border-zinc-100 dark:border-zinc-800">
+                <h2 className="text-[16px] font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                  <Package size={18} className="text-zinc-400" strokeWidth={1.5} />
+                  Order Information
+                </h2>
+              </div>
+              <div className="px-6 sm:px-8 py-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-1">Placed on</p>
+                  <p className="text-[14px] font-semibold text-zinc-900 dark:text-white">{orderDate(order.createdAt)}</p>
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-1">Estimated Delivery</p>
+                  <p className="text-[14px] font-semibold text-zinc-900 dark:text-white">
+                    {new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
                   </p>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Info Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div className="rounded-2xl border border-zinc-200 dark:border-[#2A2A2A] bg-white dark:bg-[#18181B] p-5 sm:p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
-                <CreditCard size={18} className="text-zinc-600 dark:text-zinc-400" strokeWidth={1.5} />
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-1">Payment</p>
+                  <p className="text-[14px] font-semibold text-zinc-900 dark:text-white capitalize">{paymentLabel}</p>
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-1">Status</p>
+                  <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-3 py-1 rounded-full border ${status.className}`}>
+                    {status.label.toUpperCase()}
+                  </span>
+                </div>
               </div>
-              <h3 className="text-[15px] font-bold text-zinc-900 dark:text-white">Payment</h3>
-            </div>
-            <p className="text-[13px] text-zinc-500 dark:text-zinc-400 mb-0.5">Method</p>
-            <p className="text-[14px] font-semibold text-zinc-900 dark:text-white mb-2 capitalize">{paymentLabel}</p>
-            <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold tracking-wider px-3 py-1.5 rounded-full border ${
-              isPaid
-                ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
-                : 'bg-yellow-50 dark:bg-yellow-950/20 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800'
-            }`}>
-              {isPaid ? <><CheckCircle size={12} strokeWidth={2.5} /> {paymentStatusLabel}</> : paymentStatusLabel}
-            </span>
-          </div>
+            </motion.div>
 
-          <div className="rounded-2xl border border-zinc-200 dark:border-[#2A2A2A] bg-white dark:bg-[#18181B] p-5 sm:p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
-                <MapPin size={18} className="text-zinc-600 dark:text-zinc-400" strokeWidth={1.5} />
+            {/* Delivery Timeline */}
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: loaded ? 1 : 0 }}
+              transition={{ duration: 0.4, delay: 0.2 }}
+              className="rounded-2xl border border-zinc-200 dark:border-[#2A2A2A] bg-white dark:bg-[#18181B] p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow duration-250"
+            >
+              <h2 className="text-[16px] font-bold text-zinc-900 dark:text-white mb-8">Delivery Progress</h2>
+              <div className="space-y-0">
+                {TIMELINE_STEPS.map((step, idx) => {
+                  const isComplete = idx < currentStepIndex;
+                  const isCurrent = idx === currentStepIndex;
+                  const Icon = step.icon;
+                  const dateStr = isComplete || isCurrent
+                    ? new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) + ' • ' +
+                      new Date(order.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+                    : '';
+
+                  return (
+                    <div key={step.key} className="flex gap-5 relative pb-8 last:pb-0">
+                      {/* Timeline line */}
+                      {idx < TIMELINE_STEPS.length - 1 && (
+                        <div className={`absolute left-[17px] top-10 w-[2px] h-[calc(100%-32px)] rounded-full ${
+                          isComplete ? 'bg-emerald-400' : 'bg-zinc-200 dark:bg-zinc-700'
+                        }`} />
+                      )}
+                      {/* Icon */}
+                      <div className={`relative flex items-center justify-center w-[36px] h-[36px] rounded-full border-2 shrink-0 transition-all duration-300 ${
+                        isComplete
+                          ? 'bg-emerald-500 border-emerald-500 text-white shadow-[0_0_12px_rgba(16,185,129,0.3)]'
+                          : isCurrent
+                          ? 'bg-blue-500 border-blue-500 text-white shadow-[0_0_12px_rgba(59,130,246,0.3)] scale-105'
+                          : 'bg-zinc-50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 text-zinc-300 dark:text-zinc-600'
+                      }`}>
+                        {isComplete || isCurrent ? <CheckCircle size={16} strokeWidth={2.5} /> : <Icon size={14} strokeWidth={1.5} />}
+                      </div>
+                      {/* Content */}
+                      <div className="flex-1 min-w-0 pt-1">
+                        <p className={`text-[14px] font-bold transition-colors ${
+                          isComplete ? 'text-emerald-600 dark:text-emerald-400' : isCurrent ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-400 dark:text-zinc-500'
+                        }`}>
+                          {step.label}
+                        </p>
+                        <p className="text-[12px] text-zinc-500 dark:text-zinc-500 mt-0.5">{step.desc}</p>
+                        {dateStr && (
+                          <p className="text-[11px] font-medium text-zinc-400 dark:text-zinc-600 mt-1">{dateStr}</p>
+                        )}
+                        {isCurrent && !isComplete && (
+                          <span className="inline-flex items-center gap-1 mt-2 text-[11px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/20 px-3 py-1 rounded-full border border-blue-200 dark:border-blue-800">
+                            <Clock size={11} strokeWidth={2} />
+                            Expected delivery soon
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-              <h3 className="text-[15px] font-bold text-zinc-900 dark:text-white">Delivery</h3>
-            </div>
-            <p className="text-[13px] text-zinc-500 dark:text-zinc-400 mb-1">Estimated</p>
-            <p className="text-[14px] font-semibold text-zinc-900 dark:text-white">5&ndash;8 business days</p>
+            </motion.div>
+
+            {/* Additional Information */}
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: loaded ? 1 : 0 }}
+              transition={{ duration: 0.4, delay: 0.3 }}
+              className="rounded-2xl border border-zinc-200 dark:border-[#2A2A2A] bg-white dark:bg-[#18181B] overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-250"
+            >
+              <div className="px-6 sm:px-8 py-5 border-b border-zinc-100 dark:border-zinc-800">
+                <h2 className="text-[16px] font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                  <MapPin size={18} className="text-zinc-400" strokeWidth={1.5} />
+                  Additional Information
+                </h2>
+              </div>
+              <div className="px-6 sm:px-8 py-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2">Shipping Address</p>
+                  <div className="text-[14px] text-zinc-700 dark:text-zinc-300 leading-relaxed">
+                    <p className="font-semibold">VASTRA Customer</p>
+                    <p>HSR Layout, Sector 3</p>
+                    <p>Bangalore, Karnataka 560102</p>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2">Payment Method</p>
+                  <p className="text-[14px] font-semibold text-zinc-900 dark:text-white capitalize mb-2">{paymentLabel}</p>
+                  <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-3 py-1 rounded-full border ${
+                    isPaid
+                      ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
+                      : 'bg-yellow-50 dark:bg-yellow-950/20 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800'
+                  }`}>
+                    {isPaid ? <><CheckCircle size={12} strokeWidth={2.5} /> PAID</> : 'PENDING'}
+                  </span>
+                </div>
+              </div>
+            </motion.div>
+
+          </div>
+
+          {/* Right Column - 35% */}
+          <div className="w-full lg:w-[35%] space-y-6">
+
+            {/* Order Summary Card */}
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: loaded ? 1 : 0 }}
+              transition={{ duration: 0.4, delay: 0.25 }}
+              className="rounded-2xl border border-zinc-200 dark:border-[#2A2A2A] bg-white dark:bg-[#18181B] overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-250 lg:sticky lg:top-[130px]"
+            >
+              <div className="px-6 py-5 border-b border-zinc-100 dark:border-zinc-800">
+                <h2 className="text-[16px] font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                  <ShoppingBag size={18} className="text-zinc-400" strokeWidth={1.5} />
+                  Order Summary
+                </h2>
+              </div>
+
+              {/* Items */}
+              <div className="px-6 divide-y divide-zinc-100 dark:divide-zinc-800">
+                {order.items?.map((item: any, i: number) => (
+                  <OrderItemRow key={i} productId={item.productId} quantity={item.quantity} />
+                ))}
+              </div>
+
+              {/* Price Breakdown */}
+              <div className="px-6 py-5 border-t border-zinc-100 dark:border-zinc-800 space-y-3">
+                <div className="flex items-center justify-between text-[14px]">
+                  <span className="text-zinc-500 dark:text-zinc-400">Subtotal</span>
+                  <span className="font-semibold text-zinc-900 dark:text-white">{formatINR(totalItemsPrice)}</span>
+                </div>
+                <div className="flex items-center justify-between text-[14px]">
+                  <span className="text-zinc-500 dark:text-zinc-400">Shipping</span>
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">FREE</span>
+                </div>
+                <div className="flex items-center justify-between text-[14px]">
+                  <span className="text-zinc-500 dark:text-zinc-400">Tax</span>
+                  <span className="font-semibold text-zinc-900 dark:text-white">Included</span>
+                </div>
+                <div className="border-t border-zinc-200 dark:border-zinc-700 pt-3 flex items-center justify-between">
+                  <span className="text-[15px] font-bold text-zinc-900 dark:text-white">Total</span>
+                  <span className="text-[22px] font-bold text-zinc-900 dark:text-white tracking-tight">{formatINR(totalItemsPrice)}</span>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Delivery Card */}
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: loaded ? 1 : 0 }}
+              transition={{ duration: 0.4, delay: 0.35 }}
+              className="rounded-2xl border border-zinc-200 dark:border-[#2A2A2A] bg-white dark:bg-[#18181B] p-6 shadow-sm hover:shadow-md transition-shadow duration-250"
+            >
+              <h2 className="text-[16px] font-bold text-zinc-900 dark:text-white flex items-center gap-2 mb-5">
+                <Truck size={18} className="text-zinc-400" strokeWidth={1.5} />
+                Delivery Details
+              </h2>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-[13px] text-zinc-500 dark:text-zinc-400">Courier</span>
+                  <span className="text-[13px] font-semibold text-zinc-900 dark:text-white">Blue Dart</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[13px] text-zinc-500 dark:text-zinc-400">Tracking</span>
+                  <span className="text-[13px] font-semibold font-mono text-zinc-900 dark:text-white tracking-wider select-all">BD{order._id.slice(-9).toUpperCase()}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[13px] text-zinc-500 dark:text-zinc-400">Estimated</span>
+                  <span className="text-[13px] font-semibold text-zinc-900 dark:text-white">
+                    {new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[13px] text-zinc-500 dark:text-zinc-400">Destination</span>
+                  <span className="text-[13px] font-semibold text-zinc-900 dark:text-white">Bangalore</span>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Action Buttons */}
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: loaded ? 1 : 0 }}
+              transition={{ duration: 0.4, delay: 0.4 }}
+              className="space-y-3"
+            >
+              <Link
+                to="/"
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                className="w-full inline-flex items-center justify-center gap-2.5 h-[52px] rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[14px] font-bold hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all duration-200 shadow-sm hover:shadow-lg active:scale-[0.98]"
+              >
+                <ShoppingBag size={17} strokeWidth={2} />
+                Continue Shopping
+              </Link>
+              <Link
+                to="/contact"
+                className="w-full inline-flex items-center justify-center gap-2.5 h-[52px] rounded-xl border-2 border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 text-[14px] font-semibold hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-600 transition-all duration-200 active:scale-[0.98]"
+              >
+                <HelpCircle size={17} strokeWidth={1.5} />
+                Need Help?
+              </Link>
+            </motion.div>
+
           </div>
         </div>
 
-        {/* Items */}
-        <div className="rounded-2xl border border-zinc-200 dark:border-[#2A2A2A] bg-white dark:bg-[#18181B] overflow-hidden mb-6">
-          <div className="px-6 sm:px-8 py-5 border-b border-zinc-100 dark:border-zinc-800">
-            <h2 className="text-[16px] font-bold text-zinc-900 dark:text-white flex items-center gap-2">
-              <ShoppingBag size={18} className="text-zinc-400" strokeWidth={1.5} />
-              Items ({itemCount})
-            </h2>
-          </div>
-          <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
-            {order.items?.map((item: any, i: number) => (
-              <OrderTrackingItemRow key={i} productId={item.productId} quantity={item.quantity} />
-            ))}
-          </div>
-          <div className="px-6 sm:px-8 py-5 bg-zinc-50 dark:bg-zinc-900/30 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
-            <span className="text-[14px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Total</span>
-            <span className="text-[28px] sm:text-[32px] font-bold text-zinc-900 dark:text-white tracking-tight">{formatINR(order.totalAmount)}</span>
-          </div>
-        </div>
-
-        {/* Continue Shopping */}
-        <div className="text-center">
-          <Link
-            to="/"
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="inline-flex items-center gap-2.5 h-[52px] px-8 rounded-xl border-2 border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 text-[15px] font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all duration-200 active:scale-[0.98]"
-          >
-            <ShoppingBag size={18} strokeWidth={2} />
-            Continue Shopping
-          </Link>
-        </div>
+        {/* Recommended Products */}
+        <RecommendedSection productId={id} />
       </div>
-    </div>
+    </motion.div>
   );
 };
 
-const OrderTrackingItemRow = ({ productId, quantity }: { productId: string; quantity: number }) => {
-  const { data: product } = useGetProductDetailsQuery(productId);
-  const name = product?.name || product?.title || `Product`;
-  const image = product?.images?.[0];
-  const price = product?.discountPrice || product?.price || 0;
+const RecommendedSection = ({ productId }: { productId?: string }) => {
+  const firstItemId = productId;
+  const { data: relatedData } = useGetRelatedProductsQuery(firstItemId, { skip: !firstItemId });
+  const related = relatedData?.products || [];
+
+  if (!related.length) return null;
 
   return (
-    <div className="flex items-center gap-4 px-6 sm:px-8 py-4">
-      <div className="w-[60px] h-[72px] shrink-0 rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-        {image ? <img src={image} alt={name} className="w-full h-full object-cover" /> : null}
-      </div>
-      <div className="flex-1 min-w-0">
-        <Link to={`/product/${productId}`} className="text-[14px] font-semibold text-zinc-900 dark:text-white line-clamp-2 hover:underline transition-colors">
-          {name}
+    <motion.div
+      initial={{ y: 20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.4, delay: 0.5 }}
+      className="mt-10 mb-8"
+    >
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-[22px] font-bold text-zinc-900 dark:text-white tracking-tight">You May Also Like</h2>
+        <Link
+          to="/"
+          className="hidden sm:inline-flex items-center gap-1.5 text-[13px] font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors"
+        >
+          View All <ArrowRight size={14} strokeWidth={2} />
         </Link>
       </div>
-      <div className="text-right shrink-0">
-        <p className="text-[15px] font-bold text-zinc-900 dark:text-white">{formatINR(price)}</p>
-        <p className="text-[11px] text-zinc-400 dark:text-zinc-500 font-medium">QTY: {quantity}</p>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {related.slice(0, 4).map((product: any) => (
+          <ProductCard key={product.pid || product._id} product={product} />
+        ))}
       </div>
-    </div>
+    </motion.div>
   );
 };
 

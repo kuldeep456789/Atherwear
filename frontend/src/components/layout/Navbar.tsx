@@ -184,7 +184,6 @@ const Navbar = () => {
     e.preventDefault();
     doSearchRefValue(searchQuery);
   };
-
   const highlightMatch = (text: string) => {
     if (!debouncedQuery || debouncedQuery.length < 2) return text;
     const idx = text.toLowerCase().indexOf(debouncedQuery.toLowerCase());
@@ -224,18 +223,16 @@ const Navbar = () => {
               <Link
                 key={item.to}
                 to={item.to}
-                className={`relative text-[17px] font-bold tracking-wider transition-colors duration-200 group ${
-                  isActive(item.to)
+                className={`relative text-[17px] font-bold tracking-wider transition-colors duration-200 group ${isActive(item.to)
                     ? 'text-black dark:text-white'
                     : 'text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white'
-                }`}
+                  }`}
               >
                 {item.label}
-                <span className={`absolute -bottom-[6px] left-0 h-[3px] rounded-full transition-all duration-300 ease-out ${
-                  isActive(item.to)
+                <span className={`absolute -bottom-[6px] left-0 h-[3px] rounded-full transition-all duration-300 ease-out ${isActive(item.to)
                     ? 'w-full bg-black dark:bg-white'
                     : 'w-0 bg-black dark:bg-white group-hover:w-full'
-                }`} />
+                  }`} />
               </Link>
             ))}
           </nav>
