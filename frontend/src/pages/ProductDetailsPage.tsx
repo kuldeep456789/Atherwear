@@ -6,7 +6,7 @@ import { addToCart } from '../store/slices/cartSlice';
 import { toggleWishlist } from '../store/slices/wishlistSlice';
 import { addRecentlyViewed } from '../store/slices/recentlyViewedSlice';
 import type { RootState } from '../store/store';
-import { ShoppingBag, Heart, ShieldCheck, Truck, RotateCcw, Star, Check, ChevronRight, ChevronLeft, X, ZoomIn, SendHorizonal, ThumbsUp } from 'lucide-react';
+import { ShoppingBag, Heart, ShieldCheck, Truck, RotateCcw, Star, Check, ChevronRight, ChevronLeft, X, ZoomIn, SendHorizonal, ThumbsUp, Share2 } from 'lucide-react';
 import ProductCard from '../components/product/ProductCard';
 import { getColorHex } from '../utils/colorMap';
 import { getProductImages, getProductId } from '../lib/product';
@@ -52,7 +52,10 @@ const ProductDetailsPage = () => {
   const [isAdded, setIsAdded] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
-  const [zoomOrigin, setZoomOrigin] = useState('center');
+  const imageRef = useRef<HTMLDivElement>(null);
+  const [zoomLens, setZoomLens] = useState({ active: false, imgX: 50, imgY: 50, conX: 50, conY: 50 });
+  const ZOOM_SCALE = 2.5;
+  const LENS_SIZE = 110;
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIdx, setLightboxIdx] = useState(0);
   // Reviews
@@ -77,13 +80,22 @@ const ProductDetailsPage = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[hsl(var(--background))]">
-        <div className="max-w-[1920px] mx-auto flex flex-col lg:flex-row">
-          <div className="flex-1 aspect-[3/4] shimmer border-r-2 border-b-2 border-black dark:border-white" />
-          <div className="flex-1 p-12 space-y-6">
-            <div className="h-8 shimmer w-3/4" />
-            <div className="h-4 shimmer w-1/2" />
-            <div className="h-14 shimmer w-full" />
-            <div className="h-4 shimmer w-2/3" />
+        <div className="max-w-[1500px] mx-auto px-4 lg:px-7 flex flex-col lg:flex-row lg:gap-6 xl:gap-8">
+          <div className="w-full lg:w-[48%] flex gap-1.5 lg:gap-2">
+            <div className="hidden lg:flex flex-col gap-1.5">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="w-[52px] h-[68px] rounded-lg shimmer" />
+              ))}
+            </div>
+            <div className="flex-1 h-[550px] lg:h-[620px] shimmer rounded-xl border border-zinc-200 dark:border-zinc-700" />
+          </div>
+          <div className="w-full lg:w-[52%] py-4 lg:py-6 space-y-6 lg:space-y-7">
+            <div className="h-6 shimmer w-1/5 rounded" />
+            <div className="h-[52px] shimmer w-4/5 rounded" />
+            <div className="h-5 shimmer w-2/5 rounded" />
+            <div className="h-[44px] shimmer w-2/3 rounded" />
+            <div className="h-9 shimmer w-full rounded-lg" />
+            <div className="h-14 shimmer w-full rounded-xl" />
           </div>
         </div>
       </div>
@@ -185,11 +197,17 @@ const ProductDetailsPage = () => {
     ...baseImages,
   ])];
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - left) / width) * 100;
-    const y = ((e.clientY - top) / height) * 100;
-    setZoomOrigin(`${x}% ${y}%`);
+  const handleImageZoom = (e: React.MouseEvent<HTMLDivElement>) => {
+    const container = e.currentTarget;
+    const img = container.querySelector('img');
+    if (!img) return;
+    const crect = container.getBoundingClientRect();
+    const irect = img.getBoundingClientRect();
+    const imgX = ((e.clientX - irect.left) / irect.width) * 100;
+    const imgY = ((e.clientY - irect.top) / irect.height) * 100;
+    const conX = ((e.clientX - crect.left) / crect.width) * 100;
+    const conY = ((e.clientY - crect.top) / crect.height) * 100;
+    setZoomLens({ active: true, imgX: Math.min(100, Math.max(0, imgX)), imgY: Math.min(100, Math.max(0, imgY)), conX: Math.min(100, Math.max(0, conX)), conY: Math.min(100, Math.max(0, conY)) });
   };
 
   const openLightbox = (idx: number) => {
@@ -246,7 +264,7 @@ const ProductDetailsPage = () => {
   });
 
   return (
-    <div className="bg-[hsl(var(--background))] min-h-screen text-[hsl(var(--foreground))] font-sans uppercase pb-24 lg:pb-0">
+    <div className="bg-[hsl(var(--background))] min-h-screen text-[hsl(var(--foreground))] font-sans uppercase pb-24 lg:pb-0 pt-[100px] sm:pt-[104px] lg:pt-[112px]">
       {/* Breadcrumbs */}
       <div className="w-full border-b-2 border-black dark:border-white px-6 sm:px-10 py-4">
         <div className="flex gap-2 items-center text-xs font-bold tracking-widest text-zinc-500">
@@ -272,117 +290,257 @@ const ProductDetailsPage = () => {
         </div>
       </div>
 
-      <div className="max-w-[1920px] mx-auto flex flex-col lg:flex-row">
-        {/* Left — Images */}
-        <div className="w-full lg:w-[55%] flex flex-col-reverse sm:flex-row border-r-0 lg:border-r-2 border-black dark:border-white">
-          {/* Thumbnails */}
-          <div className="flex sm:flex-col gap-0 sm:w-20 overflow-x-auto sm:overflow-y-auto border-t-2 sm:border-t-0 sm:border-r-2 border-black dark:border-white">
-            {displayImages.map((img: string, i: number) => (
-              <button
-                key={i}
-                onClick={() => setSelectedImage(i)}
-                className={`flex-shrink-0 w-20 h-24 sm:w-full sm:h-24 border-b-2 border-r-2 sm:border-r-0 border-black dark:border-white overflow-hidden cursor-pointer transition-opacity ${selectedImage === i ? 'opacity-100' : 'opacity-50 hover:opacity-80'
+      <div className="max-w-[1500px] mx-auto px-4 lg:px-7 flex flex-col lg:flex-row lg:gap-6 xl:gap-8">
+        {/* Left — Images (48%) */}
+        <div className="w-full lg:w-[48%]">
+          <div className="flex gap-1.5 lg:gap-2">
+            {/* Thumbnails — vertical on desktop */}
+            <div className="hidden lg:flex flex-col gap-1.5 shrink-0 pt-0">
+              {displayImages.map((img: string, i: number) => (
+                <button
+                  key={i}
+                  onClick={() => setSelectedImage(i)}
+                  className={`w-[52px] h-[68px] rounded-lg overflow-hidden cursor-pointer transition-all duration-200 border-2 ${
+                    selectedImage === i
+                      ? 'border-[hsl(var(--foreground))] opacity-100 shadow-sm'
+                      : 'border-zinc-200 dark:border-zinc-700 opacity-60 hover:opacity-100 hover:border-zinc-400 dark:hover:border-zinc-500'
                   }`}
-              >
-                <img src={img} alt={`View ${i + 1}`} className="w-full h-full object-cover" />
-              </button>
-            ))}
-          </div>
-          {/* Main image */}
-          <div
-            onMouseMove={handleMouseMove}
-            onMouseLeave={() => setZoomOrigin('center')}
-            onClick={() => openLightbox(selectedImage)}
-            className="flex-1 aspect-[4/5] bg-zinc-100 dark:bg-[#F4F4F2] dark:p-2 overflow-hidden relative cursor-zoom-in group"
-          >
-            <img
-              src={displayImages[selectedImage] || displayImages[0]}
-              alt={productName || 'Product'}
-              className="w-full h-full object-cover transition-transform duration-150 ease-out hover:scale-[1.8] dark:mix-blend-multiply"
-              style={{ transformOrigin: zoomOrigin }}
-            />
-            {/* Zoom hint overlay */}
-            <div className="absolute bottom-4 right-4 bg-black/70 text-white text-[10px] font-black tracking-widest px-3 py-2 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-              <ZoomIn size={12} strokeWidth={2.5} /> CLICK TO ZOOM
+                >
+                  <img src={img} alt={`View ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
+                </button>
+              ))}
             </div>
-            {productName.toLowerCase().includes('oversized') && (
-              <span className="absolute top-0 left-0 bg-black text-white text-[10px] font-black tracking-widest px-4 py-2 border-r-2 border-b-2 border-white z-10">
-                OVERSIZED
-              </span>
-            )}
-            {discountPct > 0 && (
-              <span className="absolute top-0 right-0 bg-red-600 text-white text-[10px] font-black tracking-widest px-4 py-2 border-l-2 border-b-2 border-black z-10">
-                SALE
-              </span>
-            )}
+            {/* Main image + Zoom preview wrapper */}
+            <div className="flex-1 flex gap-0 xl:gap-3 min-w-0">
+              {/* Main image */}
+              <div className="flex-1 min-w-0 relative" ref={imageRef}>
+                <div
+                  onMouseMove={handleImageZoom}
+                  onMouseLeave={() => setZoomLens((p) => ({ ...p, active: false }))}
+                  onClick={() => openLightbox(selectedImage)}
+                  className="w-full h-[550px] lg:h-[620px] bg-zinc-100 dark:bg-[#F4F4F2] overflow-hidden relative cursor-crosshair group rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-sm flex items-center justify-center"
+                >
+                  <img
+                    key={selectedImage}
+                    src={displayImages[selectedImage] || displayImages[0]}
+                    alt={productName || 'Product'}
+                    className="max-w-full max-h-full object-contain p-2 transition-opacity duration-300 ease-out animate-fadeIn select-none"
+                    draggable={false}
+                  />
+
+                  {/* Zoom lens overlay */}
+                  {zoomLens.active && (
+                    <div
+                      className="absolute border-2 border-[hsl(var(--foreground))] bg-white/10 dark:bg-black/10 pointer-events-none z-30 rounded-sm"
+                      style={{
+                        width: `${LENS_SIZE}px`,
+                        height: `${LENS_SIZE}px`,
+                        left: `calc(${zoomLens.conX}% - ${LENS_SIZE / 2}px)`,
+                        top: `calc(${zoomLens.conY}% - ${LENS_SIZE / 2}px)`,
+                      }}
+                    />
+                  )}
+
+                  {/* Badges */}
+                  <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
+                    {discountPct > 0 && (
+                      <span className="bg-red-600 text-white text-[10px] font-semibold tracking-wider px-3 py-1.5 rounded-md shadow-sm">
+                        -{discountPct}%
+                      </span>
+                    )}
+                    {productName.toLowerCase().includes('oversized') && (
+                      <span className="bg-black text-white text-[10px] font-semibold tracking-wider px-3 py-1.5 rounded-md shadow-sm">
+                        OVERSIZED
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Floating Wishlist + Share */}
+                  <div className="absolute top-3 right-3 flex flex-col gap-2 z-20">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        dispatch(
+                          toggleWishlist({
+                            _id: productId,
+                            name: product.name,
+                            price: product.price,
+                            discountPrice: product.discountPrice,
+                            image: getProductImages(product)[0] || '',
+                          })
+                        );
+                      }}
+                      className={`w-9 h-9 rounded-full flex items-center justify-center backdrop-blur-sm transition-all duration-200 cursor-pointer active:scale-90 ${
+                        isWishlisted
+                          ? 'bg-red-600 text-white shadow-md'
+                          : 'bg-white/80 dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300 shadow-sm hover:bg-white dark:hover:bg-zinc-800'
+                      }`}
+                      aria-label="Wishlist"
+                    >
+                      <Heart className="w-[18px] h-[18px]" fill={isWishlisted ? 'currentColor' : 'none'} strokeWidth={1.5} />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (navigator.share) {
+                          navigator.share({ title: productName, url: window.location.href });
+                        } else {
+                          navigator.clipboard?.writeText(window.location.href);
+                        }
+                      }}
+                      className="w-9 h-9 rounded-full bg-white/80 dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300 shadow-sm hover:bg-white dark:hover:bg-zinc-800 flex items-center justify-center backdrop-blur-sm transition-all duration-200 cursor-pointer active:scale-90"
+                      aria-label="Share"
+                    >
+                      <Share2 className="w-[16px] h-[16px]" strokeWidth={1.5} />
+                    </button>
+                  </div>
+
+                  {/* Left/Right arrows */}
+                  {displayImages.length > 1 && (
+                    <>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedImage((prev) => (prev - 1 + displayImages.length) % displayImages.length);
+                        }}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300 shadow-sm hover:bg-white dark:hover:bg-zinc-800 flex items-center justify-center backdrop-blur-sm transition-all duration-200 cursor-pointer opacity-0 group-hover:opacity-100 active:scale-90 z-10"
+                        aria-label="Previous image"
+                      >
+                        <ChevronLeft className="w-5 h-5" strokeWidth={2} />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedImage((prev) => (prev + 1) % displayImages.length);
+                        }}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300 shadow-sm hover:bg-white dark:hover:bg-zinc-800 flex items-center justify-center backdrop-blur-sm transition-all duration-200 cursor-pointer opacity-0 group-hover:opacity-100 active:scale-90 z-10"
+                        aria-label="Next image"
+                      >
+                        <ChevronRight className="w-5 h-5" strokeWidth={2} />
+                      </button>
+                    </>
+                  )}
+
+                  {/* Zoom hint */}
+                  <div className="absolute bottom-3 right-3 bg-black/60 text-white text-[9px] font-medium tracking-wider px-2.5 py-1.5 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity rounded-md pointer-events-none z-10">
+                    <ZoomIn size={11} strokeWidth={2} /> ZOOM
+                  </div>
+                </div>
+
+                {/* Thumbnails — horizontal on mobile */}
+                <div className="flex lg:hidden gap-1.5 mt-1.5 overflow-x-auto pb-1">
+                  {displayImages.map((img: string, i: number) => (
+                    <button
+                      key={i}
+                      onClick={() => setSelectedImage(i)}
+                      className={`flex-shrink-0 w-12 h-16 rounded-lg overflow-hidden cursor-pointer transition-all duration-200 border-2 ${
+                        selectedImage === i
+                          ? 'border-[hsl(var(--foreground))] opacity-100'
+                          : 'border-transparent opacity-60 hover:opacity-100'
+                      }`}
+                    >
+                      <img src={img} alt={`View ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Zoom preview panel — xl screens */}
+              {zoomLens.active && (
+                <div className="hidden xl:block w-[200px] shrink-0 self-start sticky top-[130px]">
+                  <div className="w-full h-[266px] overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-lg bg-white dark:bg-zinc-900">
+                    <img
+                      src={displayImages[selectedImage] || displayImages[0]}
+                      alt=""
+                      className="w-full h-full object-cover"
+                      draggable={false}
+                      style={{
+                        transform: `scale(${ZOOM_SCALE})`,
+                        transformOrigin: `${zoomLens.imgX}% ${zoomLens.imgY}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Right — Details (sticky) */}
-        <div className="w-full lg:w-[45%] lg:sticky lg:top-32 lg:self-start">
-          <div className="p-8 sm:p-12 space-y-6">
+        {/* Right — Details (sticky, 52%) */}
+        <div className="w-full lg:w-[52%] lg:sticky lg:top-[130px] lg:self-start">
+          <div className="pt-4 lg:pt-6 space-y-6 lg:space-y-7">
             {collabTag && (
-              <span className="text-[10px] font-black text-zinc-500 tracking-widest">
+              <span className="text-[12px] font-medium text-zinc-500 tracking-[0.15em] uppercase">
                 VASTRA × {collabTag}
               </span>
             )}
 
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight normal-case">
-              {productName || 'Product'}
-            </h1>
+            <div className="max-w-[420px]">
+              <h1 className="text-[32px] sm:text-[42px] lg:text-[52px] font-bold leading-[1.1] tracking-tight normal-case">
+                {productName || 'Product'}
+              </h1>
+            </div>
 
             {/* Rating */}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1 bg-[hsl(var(--foreground))] text-[hsl(var(--background))] px-3 py-1.5 text-xs font-black">
-                <Star size={12} fill="currentColor" />
-                {Number(averageRatingVal).toFixed(1)}
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((s) => (
+                  <Star
+                    key={s}
+                    size={15}
+                    strokeWidth={1.5}
+                    fill={s <= Math.round(averageRatingVal) ? 'currentColor' : 'none'}
+                    className={s <= Math.round(averageRatingVal) ? 'text-amber-500' : 'text-zinc-200 dark:text-zinc-700'}
+                  />
+                ))}
               </div>
-              <span className="text-xs text-zinc-500 font-bold tracking-wider">
-                {totalNumReviews} REVIEWS
+              <span className="text-[15px] text-zinc-500 font-normal tracking-wide normal-case">
+                {Number(averageRatingVal).toFixed(1)} ({totalNumReviews})
               </span>
             </div>
 
             {/* Price */}
-            <div className="flex items-baseline gap-3 py-5 border-y-2 border-black dark:border-white font-mono">
+            <div className="flex items-baseline gap-4">
               {product.discountPrice ? (
                 <>
-                  <span className="text-4xl font-black">{formatINR(product.discountPrice)}</span>
+                  <span className="text-[40px] lg:text-[44px] font-bold tracking-tight">{formatINR(product.discountPrice)}</span>
                   <span className="text-xl text-zinc-400 line-through">{formatINR(product.price)}</span>
-                  <span className="text-base font-black text-red-600 bg-red-50 dark:bg-red-950/30 px-3 py-1 border-2 border-red-600">
+                  <span className="text-sm font-bold text-red-600 bg-red-50 dark:bg-red-950/30 px-3 py-1 rounded-md border border-red-600">
                     -{discountPct}%
                   </span>
                 </>
               ) : (
-                <span className="text-4xl font-black">{formatINR(product.price)}</span>
+                <span className="text-[40px] lg:text-[44px] font-bold tracking-tight">{formatINR(product.price)}</span>
               )}
             </div>
 
             {errorMsg && (
-              <div className="bg-red-600 text-white p-4 text-xs font-black tracking-widest border-2 border-red-800">
+              <div className="bg-red-600 text-white p-4 text-xs font-bold tracking-wider rounded-lg">
                 {errorMsg}
               </div>
             )}
 
             {/* Color */}
             <div>
-              <p className="text-xs font-black tracking-widest mb-3">
-                COLOR: <span className="text-zinc-500 capitalize">{selectedColor || 'SELECT'}</span>
+              <p className="text-[14px] font-semibold tracking-[0.12em] uppercase mb-4">
+                Color: <span className="text-zinc-500 capitalize font-normal normal-case">{selectedColor || 'Select'}</span>
               </p>
               <div className="flex gap-3 flex-wrap">
                 {colors.map((color: any) => (
                   <button
                     key={color}
                     onClick={() => setSelectedColor(color)}
-                    className={`flex flex-col items-center gap-1.5 transition-all cursor-pointer group ${selectedColor === color ? '' : 'opacity-70 hover:opacity-100'}`}
+                    className={`flex flex-col items-center gap-1.5 transition-all duration-200 cursor-pointer group ${selectedColor === color ? '' : 'opacity-50 hover:opacity-100'}`}
                   >
                     <span
-                      className={`w-12 h-12 sm:w-14 sm:h-14 border-2 transition-all block ${selectedColor === color
-                        ? 'border-[hsl(var(--foreground))] ring-2 ring-[hsl(var(--foreground))] ring-offset-2 ring-offset-[hsl(var(--background))] scale-110'
-                        : 'border-black dark:border-white group-hover:scale-105'
-                        }`}
+                      className={`w-[36px] h-[36px] rounded-full border-2 transition-all duration-200 block ${
+                        selectedColor === color
+                          ? 'border-[hsl(var(--foreground))] ring-2 ring-[hsl(var(--foreground))] ring-offset-2 ring-offset-[hsl(var(--background))] scale-110'
+                          : 'border-zinc-300 dark:border-zinc-600 group-hover:scale-110 group-hover:border-zinc-400 dark:group-hover:border-zinc-500'
+                      }`}
                       style={{ backgroundColor: getColorHex(color) }}
                     />
-                    <span className={`text-[9px] sm:text-[10px] font-bold tracking-wider whitespace-nowrap ${selectedColor === color ? 'text-[hsl(var(--foreground))]' : 'text-zinc-500'}`}>
+                    <span className={`text-[11px] font-medium tracking-wide whitespace-nowrap ${selectedColor === color ? 'text-[hsl(var(--foreground))]' : 'text-zinc-400'}`}>
                       {(color || '').charAt(0).toUpperCase() + (color || '').slice(1)}
                     </span>
                   </button>
@@ -392,26 +550,27 @@ const ProductDetailsPage = () => {
 
             {/* Size */}
             <div>
-              <div className="flex justify-between mb-3">
-                <p className="text-xs font-black tracking-widest">
-                  SIZE: <span className="text-zinc-500">{selectedSize || 'SELECT'}</span>
+              <div className="flex justify-between items-center mb-4">
+                <p className="text-[14px] font-semibold tracking-[0.12em] uppercase">
+                  Size: <span className="text-zinc-500 font-normal normal-case">{selectedSize || 'Select'}</span>
                 </p>
                 <button
                   onClick={() => setSizeGuideOpen(true)}
-                  className="text-xs text-zinc-500 underline underline-offset-4 cursor-pointer hover:text-[hsl(var(--foreground))]"
+                  className="text-[13px] text-zinc-500 underline underline-offset-2 cursor-pointer hover:text-[hsl(var(--foreground))] transition-colors font-medium"
                 >
                   SIZE GUIDE
                 </button>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2.5">
                 {sizes.map((size: any) => (
                   <button
                     key={size}
                     onClick={() => setSelectedSize(size)}
-                    className={`w-16 h-16 border-2 border-black dark:border-white text-base font-black transition-all cursor-pointer ${selectedSize === size
-                      ? 'bg-[hsl(var(--foreground))] text-[hsl(var(--background))]'
-                      : 'bg-[hsl(var(--card))] text-[hsl(var(--foreground))] hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))]'
-                      }`}
+                    className={`min-w-[60px] px-5 py-3.5 rounded-lg border text-sm font-semibold transition-all duration-200 cursor-pointer active:scale-[0.97] ${
+                      selectedSize === size
+                        ? 'bg-[hsl(var(--foreground))] text-[hsl(var(--background))] border-[hsl(var(--foreground))] shadow-sm'
+                        : 'bg-[hsl(var(--card))] text-[hsl(var(--foreground))] border-zinc-300 dark:border-zinc-600 hover:border-[hsl(var(--foreground))] hover:shadow-sm'
+                    }`}
                   >
                     {size}
                   </button>
@@ -420,24 +579,25 @@ const ProductDetailsPage = () => {
             </div>
 
             {/* Actions */}
-            <div className="flex gap-0 pt-2">
+            <div className="flex gap-2.5 pt-1">
               <button
                 onClick={handleBuyNow}
-                className="flex-1 py-8 sm:py-10 text-base sm:text-lg font-black tracking-widest transition-all duration-300 flex items-center justify-center gap-3 cursor-pointer border-2 border-black dark:border-white bg-[hsl(var(--foreground))] text-[hsl(var(--background))] hover:bg-red-600 hover:text-white hover:border-red-600"
+                className="flex-1 h-[56px] rounded-xl text-sm font-bold tracking-wider transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer bg-[hsl(var(--foreground))] text-[hsl(var(--background))] hover:opacity-85 active:scale-[0.98] shadow-sm hover:shadow-md"
               >
                 BUY NOW
               </button>
               <button
                 onClick={handleAddToCart}
-                className={`flex-1 py-8 sm:py-10 text-base sm:text-lg font-black tracking-widest transition-all duration-300 flex items-center justify-center gap-3 cursor-pointer border-2 border-l-0 border-black dark:border-white ${isAdded
-                  ? 'bg-green-600 text-white border-green-600'
-                  : 'bg-[hsl(var(--card))] text-[hsl(var(--foreground))] hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))]'
-                  }`}
+                className={`flex-1 h-[56px] rounded-xl text-sm font-bold tracking-wider transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer border-2 ${
+                  isAdded
+                    ? 'bg-green-600 text-white border-green-600'
+                    : 'bg-[hsl(var(--card))] text-[hsl(var(--foreground))] border-zinc-300 dark:border-zinc-600 hover:border-[hsl(var(--foreground))] hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))] active:scale-[0.98]'
+                }`}
               >
                 {isAdded ? (
                   <><Check className="w-4 h-4" strokeWidth={3} /> ADDED</>
                 ) : (
-                  <><ShoppingBag className="w-4 h-4" strokeWidth={2.5} /> ADD TO CART</>
+                  <><ShoppingBag className="w-4 h-4" strokeWidth={2} /> ADD TO CART</>
                 )}
               </button>
               <button
@@ -452,36 +612,37 @@ const ProductDetailsPage = () => {
                     })
                   )
                 }
-                className={`w-16 border-2 border-l-0 border-black dark:border-white transition-all flex items-center justify-center cursor-pointer ${isWishlisted
-                  ? 'bg-red-600 text-white border-red-600'
-                  : 'bg-[hsl(var(--card))] text-[hsl(var(--foreground))] hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))]'
-                  }`}
+                className={`h-[56px] w-[56px] shrink-0 rounded-xl border-2 transition-all duration-200 flex items-center justify-center cursor-pointer active:scale-[0.97] ${
+                  isWishlisted
+                    ? 'bg-red-600 text-white border-red-600'
+                    : 'bg-[hsl(var(--card))] text-[hsl(var(--foreground))] border-zinc-300 dark:border-zinc-600 hover:border-red-400 hover:text-red-500 hover:shadow-sm'
+                }`}
               >
                 <Heart className="w-5 h-5" fill={isWishlisted ? 'currentColor' : 'none'} strokeWidth={2} />
               </button>
             </div>
 
             {/* Trust badges */}
-            <div className="flex gap-0 pt-4">
+            <div className="grid grid-cols-3 gap-2 pt-1">
               {[
                 { icon: Truck, label: 'FREE SHIPPING' },
                 { icon: RotateCcw, label: '14 DAY RETURNS' },
                 { icon: ShieldCheck, label: 'SECURE CHECKOUT' },
-              ].map(({ icon: Icon, label }, idx) => (
-                <div key={label} className={`flex-1 flex flex-col items-center text-center p-4 border-2 border-black dark:border-white ${idx > 0 ? '-ml-[2px]' : ''}`}>
-                  <Icon className="w-5 h-5 mb-2" strokeWidth={2} />
-                  <span className="text-[9px] font-black tracking-widest">{label}</span>
+              ].map(({ icon: Icon, label }) => (
+                <div key={label} className="flex flex-col items-center justify-center text-center py-3.5 px-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-[hsl(var(--card))] min-h-[76px] transition-all duration-250 hover:-translate-y-0.5 hover:border-zinc-300 dark:hover:border-zinc-600 hover:shadow-md">
+                  <Icon className="w-5 h-5 mb-1.5 text-zinc-500 dark:text-zinc-400" strokeWidth={1.5} />
+                  <span className="text-[9px] font-semibold tracking-wider leading-tight">{label}</span>
                 </div>
               ))}
             </div>
 
             {/* Description */}
-            <div className="pt-6 border-t-2 border-black dark:border-white">
-              <h3 className="text-xs font-black tracking-widest mb-3">
-                PRODUCT DESCRIPTION
+            <div className="pt-2">
+              <h3 className="text-[14px] font-semibold tracking-[0.12em] uppercase mb-3">
+                Description
               </h3>
               <div
-                className="product-description text-sm leading-relaxed normal-case tracking-normal text-zinc-600 dark:text-zinc-400"
+                className="product-description text-[15px] leading-relaxed normal-case tracking-normal text-zinc-500 dark:text-zinc-400"
                 dangerouslySetInnerHTML={{
                   __html: DOMPurify.sanitize(product.description ?? '', {
                     ADD_TAGS: ['img'],
@@ -659,31 +820,31 @@ const ProductDetailsPage = () => {
       </div>
 
       {/* Sticky Mobile Add to Bag Bar */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[hsl(var(--card))] border-t-2 border-black dark:border-white p-5 backdrop-blur-md">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[hsl(var(--card))] border-t border-zinc-200 dark:border-zinc-700 p-4 backdrop-blur-md shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
         <div className="flex items-center gap-3">
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-black text-zinc-500 tracking-widest truncate">{productName || 'Product'}</p>
-            <p className="text-base font-black tracking-wider text-[hsl(var(--foreground))]">
+            <p className="text-xs font-semibold text-zinc-500 tracking-wide truncate">{productName || 'Product'}</p>
+            <p className="text-base font-bold tracking-tight text-[hsl(var(--foreground))]">
               {formatINR(product.discountPrice || product.price)}
             </p>
           </div>
           <button
             onClick={handleBuyNow}
-            className="flex-1 px-6 py-5 text-sm font-black tracking-widest transition-all duration-300 cursor-pointer border-2 border-black dark:border-white bg-[hsl(var(--foreground))] text-[hsl(var(--background))] hover:bg-red-600 hover:text-white hover:border-red-600"
+            className="flex-1 h-12 rounded-xl text-sm font-bold tracking-wider transition-all duration-200 cursor-pointer bg-[hsl(var(--foreground))] text-[hsl(var(--background))] hover:opacity-90 active:scale-[0.98] shadow-sm"
           >
             BUY NOW
           </button>
           <button
             onClick={handleAddToCart}
-            className={`flex-1 px-6 py-5 text-sm font-black tracking-widest transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer border-2 border-black dark:border-white ${isAdded
+            className={`flex-1 h-12 rounded-xl text-sm font-bold tracking-wider transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer border-2 ${isAdded
               ? 'bg-green-600 text-white border-green-600'
-              : 'bg-[hsl(var(--card))] text-[hsl(var(--foreground))] hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))]'
+              : 'bg-[hsl(var(--card))] text-[hsl(var(--foreground))] border-zinc-300 dark:border-zinc-600 hover:border-[hsl(var(--foreground))] hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))] active:scale-[0.98]'
               }`}
           >
             {isAdded ? (
               <><Check className="w-3.5 h-3.5" strokeWidth={3} /> ADDED</>
             ) : (
-              <><ShoppingBag className="w-3.5 h-3.5" strokeWidth={2.5} /> ADD TO CART</>
+              <><ShoppingBag className="w-3.5 h-3.5" strokeWidth={2} /> ADD TO CART</>
             )}
           </button>
         </div>
