@@ -8,6 +8,16 @@ import Pagination from '../components/Pagination';
 
 const ITEMS_PER_PAGE = 10;
 
+const getCollectionFromPath = (pathname: string) =>
+  pathname.includes('/men') ? 'Men' as const
+    : pathname.includes('/women') ? 'Women' as const
+      : undefined;
+
+const getActiveTabFromPath = (pathname: string) =>
+  pathname.includes('/men') ? 'MEN'
+    : pathname.includes('/women') ? 'WOMEN'
+      : 'ALL';
+
 const ProductListPage = () => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -15,21 +25,12 @@ const ProductListPage = () => {
   const categoryParam = searchParams.get('category') || '';
 
   const [page, setPage] = useState(1);
-  const [collectionType, setCollectionType] = useState<'Men' | 'Women' | undefined>(undefined);
+  const collectionType = getCollectionFromPath(location.pathname);
   const [sortBy, setSortBy] = useState('Popularity');
-  const [activeTab, setActiveTab] = useState('ALL');
+  const [activeTab, setActiveTab] = useState(() => getActiveTabFromPath(location.pathname));
 
   useEffect(() => {
-    if (location.pathname.includes('/men')) {
-      setCollectionType('Men');
-      setActiveTab('MEN');
-    } else if (location.pathname.includes('/women')) {
-      setCollectionType('Women');
-      setActiveTab('WOMEN');
-    } else {
-      setCollectionType(undefined);
-      setActiveTab('ALL');
-    }
+    setActiveTab(getActiveTabFromPath(location.pathname));
     setPage(1);
   }, [location.pathname]);
 
