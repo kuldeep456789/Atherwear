@@ -6,7 +6,7 @@ import { toggleWishlist } from '../../store/slices/wishlistSlice';
 import type { RootState } from '../../store/store';
 import { getColorHex } from '../../utils/colorMap';
 import { getFirstProductImage, getProductId, getProductImages } from '../../lib/product';
-import { formatUSD } from '../../lib/currency';
+import { formatINR } from '../../lib/currency';
 import DOMPurify from 'dompurify';
 
 const PLACEHOLDER_IMAGE =
@@ -20,9 +20,6 @@ interface ProductCardProps {
     price: number;
     discountPrice?: number;
     images: string[];
-    averageRating?: number;
-    rating?: number;
-    numReviews?: number;
     variants?: { color: string; size: string; stock: number }[];
     colors?: string[];
     sizes?: string[];
@@ -124,23 +121,6 @@ const ProductCard = ({ product, keyword }: ProductCardProps) => {
           <Heart size={18} fill={isWishlisted ? 'currentColor' : 'none'} strokeWidth={2} />
         </button>
 
-        {/* Rating + Badges row — top left */}
-        <div className="absolute top-2 left-2 flex flex-col items-start gap-1 z-10">
-          <div className="flex items-center gap-1 bg-white/90 dark:bg-black/90 px-2 py-1 border-2 border-black dark:border-white">
-            <div className="flex text-yellow-500 text-xs">
-              {"★".repeat(Math.round(Number(product.rating || product.averageRating || 4.5)))}
-              {"☆".repeat(5 - Math.round(Number(product.rating || product.averageRating || 4.5)))}
-            </div>
-          </div>
-          <div className="flex flex-col gap-0.5">
-            <span className="text-[8px] font-black uppercase tracking-widest text-white bg-green-600 px-1.5 py-0.5 leading-tight">
-              IN STOCK
-            </span>
-            {/* <span className="text-[8px] font-black uppercase tracking-widest text-white bg-blue-600 px-1.5 py-0.5 leading-tight">
-              FREE SHIPPING
-            </span> */}
-          </div>
-        </div>
         {uniqueColors.length > 0 && (
           <div className="absolute bottom-2 right-2 flex items-center gap-1 z-10">
             {uniqueColors.slice(0, 3).map((color) => (
@@ -182,8 +162,8 @@ const ProductCard = ({ product, keyword }: ProductCardProps) => {
         </select>
       </div>
 
-      {/* Product Info — centered */}
-      <div className="flex flex-col items-center text-center gap-1 p-4">
+      {/* Product Info */}
+      <div className="flex flex-col gap-1 p-4">
         {/* Title */}
         <Link to={`/product/${productId}`}>
           {keyword ? (
@@ -200,16 +180,16 @@ const ProductCard = ({ product, keyword }: ProductCardProps) => {
           )}
         </Link>
 
-        {/* Pricing — monospace */}
+        {/* Pricing */}
         <div className="flex items-center gap-2 mt-1 font-mono">
           {product.discountPrice && product.discountPrice < product.price ? (
             <>
-              <span className="text-xl font-black text-[hsl(var(--foreground))]">{formatUSD(product.discountPrice)}</span>
-              <span className="text-base text-zinc-400 line-through">{formatUSD(product.price)}</span>
+              <span className="text-xl font-black text-[hsl(var(--foreground))]">{formatINR(product.discountPrice)}</span>
+              <span className="text-base text-zinc-400 line-through">{formatINR(product.price)}</span>
               <span className="text-sm font-black text-red-600">-{discountPercentage}%</span>
             </>
           ) : (
-            <span className="text-xl font-black text-[hsl(var(--foreground))]">{formatUSD(product.price)}</span>
+            <span className="text-xl font-black text-[hsl(var(--foreground))]">{formatINR(product.price)}</span>
           )}
         </div>
       </div>

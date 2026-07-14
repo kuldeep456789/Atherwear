@@ -5,7 +5,7 @@ import type { RootState } from '../store/store';
 import CheckoutSteps from '../components/checkout/CheckoutSteps';
 import OrderSummarySidebar from '../components/checkout/OrderSummarySidebar';
 import { MapPin, CreditCard, Loader2 } from 'lucide-react';
-import { formatUSD } from '../lib/currency';
+import { formatINR } from '../lib/currency';
 import { clearCartItems } from '../store/slices/cartSlice';
 import {
   useCreateOrderMutation,
@@ -50,7 +50,7 @@ const PlaceOrderPage = () => {
     }
 
     if (!Number.isFinite(cart.totalPrice) || cart.totalPrice < 1) {
-      setLocalError(`Your order total must be at least ${formatUSD(1)} before online payment can be created.`);
+      setLocalError(`Your order total must be at least ${formatINR(1)} before online payment can be created.`);
       return;
     }
 

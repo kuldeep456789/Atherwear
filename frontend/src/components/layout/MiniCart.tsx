@@ -4,7 +4,7 @@ import type { RootState } from '../../store/store';
 import { addToCart, removeFromCart } from '../../store/slices/cartSlice';
 import type { CartItem } from '../../store/slices/cartSlice';
 import { X, ShoppingBag, Plus, Minus, Trash2, ArrowRight, ShoppingCart } from 'lucide-react';
-import { formatUSD } from '../../lib/currency';
+import { formatINR } from '../../lib/currency';
 
 interface MiniCartProps {
   isOpen: boolean;
@@ -144,7 +144,7 @@ const MiniCart = ({ isOpen, onClose }: MiniCartProps) => {
                       {/* Price + Remove */}
                       <div className="flex items-center gap-3">
                         <span className="text-sm font-black font-mono">
-                          {formatUSD(item.price * item.qty)}
+                          {formatINR(item.price * item.qty)}
                         </span>
                         <button
                           onClick={() => removeItem(item)}
@@ -168,7 +168,7 @@ const MiniCart = ({ isOpen, onClose }: MiniCartProps) => {
             {totalPrice < 399 ? (
               <div className="px-6 py-3 bg-zinc-50 dark:bg-zinc-900 border-b-2 border-black dark:border-white">
                 <div className="flex items-center justify-between text-[10px] font-black tracking-widest uppercase mb-1.5">
-                  <span className="text-zinc-500">Add {formatUSD(399 - totalPrice)} more for free shipping</span>
+                  <span className="text-zinc-500">Add {formatINR(399 - totalPrice)} more for free shipping</span>
                   <span className="text-[hsl(var(--foreground))]">{Math.round((totalPrice / 399) * 100)}%</span>
                 </div>
                 <div className="h-1 bg-zinc-200 dark:bg-zinc-700 w-full">
@@ -190,7 +190,7 @@ const MiniCart = ({ isOpen, onClose }: MiniCartProps) => {
             <div className="px-6 py-4 space-y-2">
               <div className="flex justify-between items-center text-xs font-bold tracking-widest uppercase">
                 <span className="text-zinc-500">Subtotal</span>
-                <span className="font-black font-mono">{formatUSD(totalPrice)}</span>
+                <span className="font-black font-mono">{formatINR(totalPrice)}</span>
               </div>
               <p className="text-[10px] text-zinc-400 tracking-wide normal-case">Taxes and shipping calculated at checkout</p>
             </div>

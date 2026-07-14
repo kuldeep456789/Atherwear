@@ -5,7 +5,7 @@ import type { RootState } from '../store/store';
 import { logout } from '../store/slices/authSlice';
 import { useGetUserOrdersQuery } from '../store/slices/orderApiSlice';
 import { Package, User, MapPin, Heart, Settings, LogOut, ChevronRight, ShoppingBag, Clock, CheckCircle, XCircle } from 'lucide-react';
-import { formatUSD } from '../lib/currency';
+import { formatINR } from '../lib/currency';
 
 const tabs = [
   { id: 'orders', label: 'Orders', icon: Package },
@@ -198,7 +198,7 @@ const AccountPage = () => {
                                   </div>
                                   <div className="text-left sm:text-right">
                                     <p className="text-xl font-bold text-zinc-900 dark:text-white">
-                                      {formatUSD(order.totalAmount || 0)}
+                                      {formatINR(order.totalAmount || 0)}
                                     </p>
                                   </div>
                                 </div>

@@ -7,7 +7,7 @@ import type { RootState } from '../../store/store';
 import { logout } from '../../store/slices/authSlice';
 import { useGetProductsQuery } from '../../store/slices/productApiSlice';
 import { getProductId } from '../../lib/product';
-import { formatUSD } from '../../lib/currency';
+import { formatINR } from '../../lib/currency';
 import MiniCart from './MiniCart';
 import VastraLogo from './VastraLogo';
 
@@ -166,7 +166,7 @@ const Navbar = () => {
       label: p.title || p.productName || p.name || '',
       to: `/product/${getProductId(p)}`,
       image: p.images?.[0],
-      price: formatUSD(p.discountPrice || p.price),
+      price: formatINR(p.discountPrice || p.price),
       category: p.collectionType || p.categoryName || '',
     }));
   }
@@ -363,7 +363,7 @@ const Navbar = () => {
                                   </p>
                                   <p className="text-xs text-zinc-500 mt-0.5 truncate">{p.collectionType || p.categoryName}</p>
                                 </div>
-                                <span className="text-sm font-semibold text-zinc-800 shrink-0">{formatUSD(p.discountPrice || p.price)}</span>
+                                <span className="text-sm font-semibold text-zinc-800 shrink-0">{formatINR(p.discountPrice || p.price)}</span>
                               </Link>
                             ))}
                             <button
@@ -710,7 +710,7 @@ const Navbar = () => {
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-zinc-800 truncate">{p.title || p.productName}</p>
                             <p className="text-xs text-zinc-500 mt-0.5">{p.collectionType || p.categoryName}</p>
-                            <p className="text-sm font-semibold text-zinc-800 mt-1">{formatUSD(p.discountPrice || p.price)}</p>
+                            <p className="text-sm font-semibold text-zinc-800 mt-1">{formatINR(p.discountPrice || p.price)}</p>
                           </div>
                         </Link>
                       ))}

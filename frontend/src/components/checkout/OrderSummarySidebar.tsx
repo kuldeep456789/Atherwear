@@ -1,7 +1,7 @@
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../store/store';
 import { ArrowRight, Package } from 'lucide-react';
-import { formatUSD } from '../../lib/currency';
+import { formatINR } from '../../lib/currency';
 
 interface OrderSummarySidebarProps {
   buttonText?: string;
@@ -41,7 +41,7 @@ const OrderSummarySidebar = ({ buttonText, buttonAction, disableButton }: OrderS
               <p className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-0.5 uppercase tracking-wider">
                 {item.variant.color} · {item.variant.size}
               </p>
-              <p className="text-xs font-black text-zinc-900 dark:text-white mt-1">{formatUSD(item.price)}</p>
+              <p className="text-xs font-black text-zinc-900 dark:text-white mt-1">{formatINR(item.price)}</p>
             </div>
           </div>
         ))}
@@ -51,24 +51,24 @@ const OrderSummarySidebar = ({ buttonText, buttonAction, disableButton }: OrderS
       <div className="px-6 py-4 border-t border-zinc-100 dark:border-zinc-800 space-y-2.5">
         <div className="flex justify-between items-center text-xs">
           <span className="text-zinc-500 dark:text-zinc-400">Subtotal</span>
-          <span className="font-semibold text-zinc-800 dark:text-zinc-200">{formatUSD(itemsPrice)}</span>
+          <span className="font-semibold text-zinc-800 dark:text-zinc-200">{formatINR(itemsPrice)}</span>
         </div>
         <div className="flex justify-between items-center text-xs">
           <span className="text-zinc-500 dark:text-zinc-400">Shipping</span>
           <span className={`font-bold text-sm ${shippingPrice === 0 ? 'text-emerald-500' : 'text-zinc-800 dark:text-zinc-200'}`}>
-            {shippingPrice === 0 ? 'FREE' : formatUSD(shippingPrice)}
+            {shippingPrice === 0 ? 'FREE' : formatINR(shippingPrice)}
           </span>
         </div>
         <div className="flex justify-between items-center text-xs">
           <span className="text-zinc-500 dark:text-zinc-400">Tax</span>
-          <span className="font-semibold text-zinc-800 dark:text-zinc-200">{formatUSD(taxPrice)}</span>
+          <span className="font-semibold text-zinc-800 dark:text-zinc-200">{formatINR(taxPrice)}</span>
         </div>
       </div>
 
       {/* Total */}
       <div className="px-6 py-4 border-t border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
         <span className="text-sm font-black uppercase tracking-wider text-zinc-900 dark:text-white">Total</span>
-        <span className="text-xl font-black text-zinc-900 dark:text-white">{formatUSD(totalPrice)}</span>
+        <span className="text-xl font-black text-zinc-900 dark:text-white">{formatINR(totalPrice)}</span>
       </div>
 
       {/* CTA Button */}

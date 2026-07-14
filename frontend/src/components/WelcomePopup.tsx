@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../store/store';
 import { X, Sparkles, ArrowRight, Shield, Truck, RefreshCw } from 'lucide-react';
-import { formatUSD } from '../lib/currency';
+import { formatINR } from '../lib/currency';
 
 const LS_KEY = 'vastra_welcome_seen';
 
@@ -73,7 +73,7 @@ const WelcomePopup = () => {
           {/* Perks */}
           <div className="grid grid-cols-3 gap-3 mb-6">
             {[
-              { icon: Truck, label: 'Free shipping', sub: `On orders over ${formatUSD(5000)}` },
+              { icon: Truck, label: 'Free shipping', sub: `On orders over ${formatINR(5000)}` },
               { icon: RefreshCw, label: 'Easy returns', sub: '30-day return policy' },
               { icon: Shield, label: 'Secure', sub: '256-bit encrypted' },
             ].map((perk) => (

@@ -6,7 +6,7 @@ import { saveShippingAddress } from '../store/slices/cartSlice';
 import CheckoutSteps from '../components/checkout/CheckoutSteps';
 import OrderSummarySidebar from '../components/checkout/OrderSummarySidebar';
 import { MapPin, Building2, Hash, Globe, Phone, ShieldCheck, RotateCcw, Truck } from 'lucide-react';
-import { formatUSD } from '../lib/currency';
+import { formatINR } from '../lib/currency';
 
 const InputField = ({
   id, label, value, onChange, icon, required, placeholder
@@ -58,7 +58,7 @@ const ShippingPage = () => {
   const trustBadges = [
     { icon: <ShieldCheck size={18} strokeWidth={2} />, label: 'Secure Checkout', sub: '256-bit SSL encrypted' },
     { icon: <RotateCcw size={18} strokeWidth={2} />, label: 'Easy Returns', sub: '30-day return policy' },
-    { icon: <Truck size={18} strokeWidth={2} />, label: 'Free Shipping', sub: `On orders over ${formatUSD(5000)}` },
+    { icon: <Truck size={18} strokeWidth={2} />, label: 'Free Shipping', sub: `On orders over ${formatINR(5000)}` },
   ];
 
   return (

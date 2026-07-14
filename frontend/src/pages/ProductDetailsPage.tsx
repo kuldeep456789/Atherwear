@@ -10,7 +10,7 @@ import { ShoppingBag, Heart, ShieldCheck, Truck, RotateCcw, Star, Check, Chevron
 import ProductCard from '../components/product/ProductCard';
 import { getColorHex } from '../utils/colorMap';
 import { getProductImages, getProductId } from '../lib/product';
-import { formatUSD } from '../lib/currency';
+import { formatINR } from '../lib/currency';
 import DOMPurify from 'dompurify';
 
 const normalizeSlug = (value: string) =>
@@ -346,14 +346,14 @@ const ProductDetailsPage = () => {
             <div className="flex items-baseline gap-3 py-5 border-y-2 border-black dark:border-white font-mono">
               {product.discountPrice ? (
                 <>
-                  <span className="text-4xl font-black">{formatUSD(product.discountPrice)}</span>
-                  <span className="text-xl text-zinc-400 line-through">{formatUSD(product.price)}</span>
+                  <span className="text-4xl font-black">{formatINR(product.discountPrice)}</span>
+                  <span className="text-xl text-zinc-400 line-through">{formatINR(product.price)}</span>
                   <span className="text-base font-black text-red-600 bg-red-50 dark:bg-red-950/30 px-3 py-1 border-2 border-red-600">
                     -{discountPct}%
                   </span>
                 </>
               ) : (
-                <span className="text-4xl font-black">{formatUSD(product.price)}</span>
+                <span className="text-4xl font-black">{formatINR(product.price)}</span>
               )}
             </div>
 
@@ -664,7 +664,7 @@ const ProductDetailsPage = () => {
           <div className="min-w-0 flex-1">
             <p className="text-xs font-black text-zinc-500 tracking-widest truncate">{productName || 'Product'}</p>
             <p className="text-base font-black tracking-wider text-[hsl(var(--foreground))]">
-              {formatUSD(product.discountPrice || product.price)}
+              {formatINR(product.discountPrice || product.price)}
             </p>
           </div>
           <button

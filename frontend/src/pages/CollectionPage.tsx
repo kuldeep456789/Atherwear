@@ -93,13 +93,9 @@ const CollectionPage = () => {
     const bPrice = Number(b.discountPrice ?? b.price ?? 0);
     const aReviews = Number(a.numReviews ?? 0);
     const bReviews = Number(b.numReviews ?? 0);
-    const aRating = Number(a.rating ?? a.averageRating ?? 0);
-    const bRating = Number(b.rating ?? b.averageRating ?? 0);
-
     if (sortBy === 'Popularity') return bReviews - aReviews;
     if (sortBy === 'Price: Low to High') return aPrice - bPrice;
     if (sortBy === 'Price: High to Low') return bPrice - aPrice;
-    if (sortBy === 'Customer Rating') return bRating - aRating;
     return 0;
   });
 
@@ -171,7 +167,6 @@ const CollectionPage = () => {
               <option value="Popularity">SORT: POPULAR</option>
               <option value="Price: Low to High">SORT: PRICE ↑</option>
               <option value="Price: High to Low">SORT: PRICE ↓</option>
-              <option value="Customer Rating">SORT: RATING</option>
             </select>
           </div>
         </div>

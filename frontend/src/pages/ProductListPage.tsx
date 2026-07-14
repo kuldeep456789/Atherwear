@@ -65,7 +65,6 @@ const ProductListPage = () => {
     if (sortBy === 'Popularity') return b.numReviews - a.numReviews;
     if (sortBy === 'Price: Low to High') return aPrice - bPrice;
     if (sortBy === 'Price: High to Low') return bPrice - aPrice;
-    if (sortBy === 'Customer Rating') return b.averageRating - a.averageRating;
     return 0;
   });
 
@@ -129,7 +128,6 @@ const ProductListPage = () => {
             <option value="Popularity">SORT: POPULAR</option>
             <option value="Price: Low to High">SORT: PRICE ↑</option>
             <option value="Price: High to Low">SORT: PRICE ↓</option>
-            <option value="Customer Rating">SORT: RATING</option>
           </select>
         </div>
       </div>
