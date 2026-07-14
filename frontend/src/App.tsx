@@ -20,6 +20,7 @@ import TrackOrderPage from './pages/TrackOrderPage';
 import OrderTrackingPage from './pages/OrderTrackingPage';
 import ShippingPolicyPage from './pages/ShippingPolicyPage';
 import ReturnsPage from './pages/ReturnsPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import PrivateRoute from './components/auth/PrivateRoute';
 
 
@@ -63,6 +64,7 @@ function App() {
             <Route path="/faq" element={<FaqPage />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/track-order" element={<TrackOrderPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/shipping-policy" element={<ShippingPolicyPage />} />
             <Route path="/returns" element={<ReturnsPage />} />
           </Routes>

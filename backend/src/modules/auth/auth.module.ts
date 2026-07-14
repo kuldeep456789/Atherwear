@@ -4,6 +4,9 @@ import { SignOptions } from 'jsonwebtoken';
 import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { TwilioService } from './services/twilio.service';
+import { EmailOtpService } from './services/email-otp.service';
+import { OtpStoreService } from './services/otp-store.service';
 
 @Module({
   imports: [
@@ -11,14 +14,11 @@ import { AuthService } from './auth.service';
     JwtModule.registerAsync({
       useFactory: () => ({
         secret: process.env.JWT_SECRET ?? 'development-jwt-secret',
-        signOptions: {
-          expiresIn: (process.env.JWT_EXPIRES_IN ??
-            '7d') as SignOptions['expiresIn'],
-        },
+        signOptions: { expiresIn: (process.env.JWT_EXPIRES_IN ?? '7d') as SignOptions['expiresIn'] },
       }),
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService],
+  providers: [AuthService, TwilioService, EmailOtpService, OtpStoreService],
 })
 export class AuthModule {}

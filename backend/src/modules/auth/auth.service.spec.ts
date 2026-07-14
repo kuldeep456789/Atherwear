@@ -4,6 +4,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
 import { AuthService } from './auth.service';
+import { TwilioService } from './services/twilio.service';
+import { EmailOtpService } from './services/email-otp.service';
+import { OtpStoreService } from './services/otp-store.service';
 
 describe('AuthService', () => {
   let authService: AuthService;
@@ -20,6 +23,10 @@ describe('AuthService', () => {
     verifyAsync: jest.fn(),
   };
 
+  const twilioService = {} as any;
+  const emailOtpService = {} as any;
+  const otpStore = {} as any;
+
   beforeEach(async () => {
     jest.clearAllMocks();
 
@@ -28,6 +35,9 @@ describe('AuthService', () => {
         AuthService,
         { provide: UsersService, useValue: usersService },
         { provide: JwtService, useValue: jwtService },
+        { provide: TwilioService, useValue: twilioService },
+        { provide: EmailOtpService, useValue: emailOtpService },
+        { provide: OtpStoreService, useValue: otpStore },
       ],
     }).compile();
 
@@ -37,13 +47,17 @@ describe('AuthService', () => {
   it('registers a user and returns a token', async () => {
     usersService.create.mockResolvedValue({
       id: 'user-id',
+      firstName: 'Kuldeep',
+      lastName: '',
       name: 'Kuldeep',
       email: 'kuldeep@example.com',
+      role: 'customer',
     });
     jwtService.sign.mockReturnValue('token');
 
     const response = await authService.register({
-      name: 'Kuldeep',
+      firstName: 'Kuldeep',
+      lastName: '',
       email: 'Kuldeep@Example.com',
       password: 'secret123',
     });
@@ -52,6 +66,7 @@ describe('AuthService', () => {
       'Kuldeep',
       'kuldeep@example.com',
       expect.any(String),
+      undefined,
     );
     expect(response.accessToken).toBe('token');
   });

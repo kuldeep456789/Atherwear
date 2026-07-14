@@ -11,12 +11,13 @@ export const MEN_ALLOWED = [
 ];
 
 export const WOMEN_ALLOWED = [
-  "dresses",
-  "tops",
-  "shirts",
-  "jeans",
-  "jackets",
-  "co-ords",
+  // "dresses",
+  // "tops",
+  // "shirts",
+  // "jeans",
+  // "jackets",
+  // "co-ords",
+  // "wholesale-tops-sets"
 ];
 
 export const BLOCKED = [

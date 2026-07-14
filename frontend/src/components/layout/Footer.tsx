@@ -90,7 +90,6 @@ const Footer = () => {
             ))}
           </ul>
         </div>
-
         {/* Contact + Social */}
         <div className="px-6 py-7 sm:px-10 sm:py-9 md:px-12 md:py-11">
           <h4 className="text-[10px] font-black tracking-[0.2em] mb-3 text-zinc-500">CONTACT</h4>
@@ -114,7 +113,6 @@ const Footer = () => {
               </a>
             </li>
           </ul>
-
           {/* Social */}
           <div className="mt-5">
             <h5 className="text-[10px] font-black tracking-[0.2em] text-zinc-500 mb-2">FOLLOW US</h5>
