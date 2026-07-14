@@ -48,8 +48,8 @@ export class OrdersService {
       throw new BadRequestException('totalAmount is required');
     }
 
-    const paymentMethod = dto.paymentMethod === 'COD' ? 'COD' : 'Razorpay';
-    const paymentStatus = paymentMethod === 'COD' ? 'pending' : 'unpaid';
+    const paymentMethod = 'Razorpay';
+    const paymentStatus = 'unpaid';
 
     const order = await this.orderModel.create({
       userId: new Types.ObjectId(user.id),

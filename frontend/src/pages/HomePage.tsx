@@ -137,7 +137,7 @@ const HomePage = () => {
   };
 
   return (
-    <div className="w-full bg-[hsl(var(--background))] text-[hsl(var(--foreground))] font-sans uppercase pt-[112px] sm:pt-[116px] lg:pt-[124px]">
+    <div className="w-full bg-[hsl(var(--background))] text-[hsl(var(--foreground))] font-sans uppercase">
       {/* ───────── HERO ───────── */}
       <section className="relative min-h-[calc(100vh-130px)] overflow-hidden bg-black text-white border-b-2 border-black">
         {heroImages.map((img: string, idx: number) => (
@@ -255,8 +255,8 @@ const HomePage = () => {
                 VIEW ALL <ArrowRight size={16} strokeWidth={2.5} className="group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 border-t-2 border-l-2 border-black dark:border-white">
-              {newArrivals.slice(0, 12).map((product: any) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+              {newArrivals.slice(0, 10).map((product: any) => (
                 <ProductCard key={product.pid || product._id} product={product} />
               ))}
             </div>
@@ -270,120 +270,6 @@ const HomePage = () => {
             </div>
           </div>
         </section>
-      )}
-      {/* ── 10s LOGIN POPUP ── */}
-      {showLoginPopup && !userInfo && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
-          <div className="relative bg-white dark:bg-zinc-900 text-black dark:text-white w-full max-w-sm rounded-2xl shadow-2xl border border-zinc-200 dark:border-zinc-700 overflow-hidden animate-in fade-in zoom-in-95 duration-300">
-
-            {/* Top accent bar */}
-            <div className="h-1 w-full bg-gradient-to-r from-black via-zinc-600 to-black dark:from-white dark:via-zinc-400 dark:to-white" />
-
-            {/* Close */}
-            <button
-              onClick={() => setShowLoginPopup(false)}
-              className="absolute top-4 right-4 w-7 h-7 flex items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:text-black dark:hover:text-white hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
-            >
-              <X size={14} strokeWidth={2.5} />
-            </button>
-
-            <div className="px-7 pt-7 pb-8">
-              {/* Countdown ring + heading */}
-              <div className="flex items-center gap-4 mb-5">
-                <div className="relative w-12 h-12 shrink-0">
-                  <svg className="w-12 h-12 -rotate-90" viewBox="0 0 48 48">
-                    <circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" strokeWidth="3" className="text-zinc-200 dark:text-zinc-700" />
-                    <circle
-                      cx="24" cy="24" r="20"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="3"
-                      strokeDasharray={`${2 * Math.PI * 20}`}
-                      strokeDashoffset={`${2 * Math.PI * 20 * (1 - countdown / 10)}`}
-                      strokeLinecap="round"
-                      className="text-black dark:text-white transition-all duration-1000"
-                    />
-                  </svg>
-                  <span className="absolute inset-0 flex items-center justify-center text-sm font-black text-black dark:text-white">
-                    {countdown}
-                  </span>
-                </div>
-                <div>
-                  <h2 className="text-xl font-black uppercase tracking-tight leading-tight">Welcome Back!</h2>
-                  <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">Sign in to continue shopping</p>
-                </div>
-              </div>
-
-              {/* Login form */}
-              <form onSubmit={handlePopupLogin} className="space-y-3">
-                {loginError && (
-                  <p className="text-sm text-red-500 font-semibold bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-3 py-2 rounded-lg">
-                    {loginError}
-                  </p>
-                )}
-
-                {/* Email */}
-                <div className="flex items-center gap-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3.5 focus-within:border-black dark:focus-within:border-white transition-colors">
-                  <Mail size={16} className="text-zinc-400 shrink-0" />
-                  <input
-                    type="email"
-                    placeholder="Email address"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="flex-1 bg-transparent text-base font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none"
-                    required
-                  />
-                </div>
-
-                {/* Password */}
-                <div className="flex items-center gap-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3.5 focus-within:border-black dark:focus-within:border-white transition-colors">
-                  <Lock size={16} className="text-zinc-400 shrink-0" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="flex-1 bg-transparent text-base font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none"
-                    required
-                  />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors">
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
-
-                {/* Submit */}
-                <button
-                  type="submit"
-                  disabled={loginLoading}
-                  className="w-full flex items-center justify-center gap-2 bg-black dark:bg-white text-white dark:text-black py-4 rounded-xl text-sm font-black tracking-widest uppercase hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all duration-200 disabled:opacity-50 shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0"
-                >
-                  {loginLoading ? 'Signing in...' : 'Sign In'}
-                  {!loginLoading && <ArrowRight size={14} />}
-                </button>
-              </form>
-
-              {/* Divider */}
-              <div className="flex items-center gap-3 my-4">
-                <div className="flex-1 h-px bg-zinc-200 dark:bg-zinc-700" />
-                <span className="text-xs text-zinc-400 font-bold uppercase tracking-widest">or</span>
-                <div className="flex-1 h-px bg-zinc-200 dark:bg-zinc-700" />
-              </div>
-
-              {/* Register link */}
-              <Link
-                to="/register"
-                onClick={() => setShowLoginPopup(false)}
-                className="block w-full text-center border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 py-3.5 rounded-xl text-sm font-bold tracking-wider hover:border-black dark:hover:border-white hover:text-black dark:hover:text-white transition-all duration-200"
-              >
-                Create an account
-              </Link>
-
-              <p className="text-center text-xs text-zinc-400 mt-4">
-                Your data is safe. We don't spam.
-              </p>
-            </div>
-          </div>
-        </div>
       )}
     </div>
   );

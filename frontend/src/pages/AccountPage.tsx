@@ -66,7 +66,7 @@ const AccountPage = () => {
     : new Date().getFullYear().toString();
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-[#0F0F10] pt-[112px] sm:pt-[116px] lg:pt-[124px]">
+    <div className="min-h-screen bg-zinc-50 dark:bg-[#0F0F10]">
       {/* ── Profile Header ── */}
       <div className="bg-gradient-to-r from-zinc-900 via-zinc-800 to-zinc-900 dark:from-[#18181B] dark:via-[#1f1f23] dark:to-[#18181B] border-b border-zinc-200 dark:border-[#2A2A2A]">
         <div className="mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
@@ -234,9 +234,7 @@ const AccountPage = () => {
                                       </p>
                                       <p className="mt-0.5 text-[13px] text-zinc-400 dark:text-zinc-500">
                                         {itemCount} item{itemCount !== 1 ? 's' : ''}
-                                        {order.paymentProvider === 'COD'
-                                          ? order.paymentStatus === 'paid' ? ' · COD collected' : ' · COD pending'
-                                          : order.paymentStatus === 'paid' ? ' · Paid online' : ' · Payment pending'}
+                                        {order.paymentStatus === 'paid' ? ' · Paid online' : ' · Payment pending'}
                                       </p>
                                     </div>
                                     <div className="text-left sm:text-right shrink-0">

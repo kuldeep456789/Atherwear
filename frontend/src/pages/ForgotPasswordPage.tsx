@@ -95,7 +95,7 @@ const ForgotPasswordPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[hsl(var(--background))] text-[hsl(var(--foreground))] pt-[112px] sm:pt-[116px] lg:pt-[124px] flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-[hsl(var(--background))] text-[hsl(var(--foreground))] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         <Link to="/login" className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-zinc-500 hover:text-[hsl(var(--foreground))] transition-colors mb-8">
           <ArrowLeft size={14} strokeWidth={2} /> Back to Login

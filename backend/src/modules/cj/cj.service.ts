@@ -9,6 +9,9 @@ import { RedisService } from '../redis/redis.service';
 import { isProductAllowed, isCategoryAllowed, BLOCKED } from './category.mapper';
 import { SEARCH_KEYWORDS, BROAD_CATEGORY_KEYWORDS } from './keywords';
 
+const PRODUCT_COUNT_CACHE_KEY = 'cj:product_count';
+const PRODUCT_COUNT_TTL = 60 * 60 * 24;
+
 const DEFAULT_SIZES = ['S', 'M', 'L', 'XL'];
 const DEFAULT_COLORS = ['Black'];
 
@@ -25,7 +28,6 @@ const EXCLUDED_CATEGORY_IDS = new Set([
   '2043294797236301825',
   '2606121220391623700',
   '2075130484984541185',
-  '2607140925201607900'
 ]);
 
 const EXCLUDED_PRODUCT_PIDS = new Set([
@@ -97,7 +99,7 @@ export class CjService {
 
     for (const catId of targetCategoryIds) {
       let pageNum = 1;
-      const pageSize = 50;
+      const pageSize = 100;
 
       while (true) {
         const query: Record<string, string> = {
@@ -117,8 +119,7 @@ export class CjService {
 
           if (products.length < pageSize) break;
 
-          // Safety break per category
-          if (pageNum * pageSize >= 1000) { // Limit to 1000 items per category
+          if (pageNum * pageSize >= 2000) {
             break;
           }
 
@@ -129,14 +130,14 @@ export class CjService {
         }
       }
 
-      // Stop overall fetching if we reach a reasonable limit
-      if (allProducts.length >= 10000) {
-        console.warn(`[CJ] Hit 10000 products safety limit for getAllProducts`);
+      if (allProducts.length >= 25000) {
+        console.warn(`[CJ] Hit 25000 products safety limit for getAllProducts`);
         break;
       }
     }
 
     console.log(`[CJ] Finished fetching products. Total: ${allProducts.length}`);
+    await this.saveProductCount(allProducts.length);
     return allProducts;
   }
 
@@ -266,7 +267,7 @@ export class CjService {
             });
           }
 
-          if (products.length < 100 || pageNum >= 10) break;
+          if (products.length < 100 || pageNum >= 50) break;
           pageNum++;
         } catch (e: any) {
           console.warn(`[CJ] Keyword search failed for "${keyword}" page ${pageNum}:`, e.message);
@@ -274,14 +275,20 @@ export class CjService {
         }
       }
 
-      if (allProducts.length >= 20000) {
-        console.log(`[CJ] Reached 20,000 product limit, stopping keyword crawl`);
-        break;
-      }
     }
 
     console.log(`[CJ] Keyword crawl complete. Total unique products: ${allProducts.length}`);
+    await this.saveProductCount(allProducts.length);
     return allProducts;
+  }
+
+  async getProductCount(): Promise<number> {
+    const cached = await this.redisService.getJson<number>(PRODUCT_COUNT_CACHE_KEY);
+    return cached ?? 0;
+  }
+
+  private async saveProductCount(count: number): Promise<void> {
+    await this.redisService.setJson(PRODUCT_COUNT_CACHE_KEY, count, PRODUCT_COUNT_TTL);
   }
 
   private async enrichWithVariants(product: any, pid: string): Promise<any> {

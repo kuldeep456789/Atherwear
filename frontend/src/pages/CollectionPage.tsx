@@ -167,7 +167,7 @@ const CollectionPage = () => {
         : 'COLLECTIONS';
 
   return (
-    <div className="bg-[hsl(var(--background))] min-h-screen text-[hsl(var(--foreground))] uppercase pt-[112px] sm:pt-[116px] lg:pt-[124px]">
+    <div className="bg-[hsl(var(--background))] min-h-screen text-[hsl(var(--foreground))] uppercase">
       {/* Compact Header */}
       <div className="border-b border-zinc-200 dark:border-zinc-800">
         <div className="max-w-[1920px] mx-auto px-6 sm:px-10">
@@ -346,12 +346,9 @@ const CollectionPage = () => {
       {/* Products Grid */}
       <div className="max-w-[1920px] mx-auto">
         {isLoading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 border-t border-zinc-200 dark:border-zinc-800">
-            {[...Array(9)].map((_, i) => (
-              <div key={i} className="border-b border-r border-zinc-200 dark:border-zinc-800 p-0">
-                <div className="aspect-[4/5] bg-zinc-100 dark:bg-zinc-800 animate-pulse" />
-                <div className="p-4 space-y-2"><div className="h-4 bg-zinc-100 dark:bg-zinc-800 animate-pulse w-3/4" /><div className="h-4 bg-zinc-100 dark:bg-zinc-800 animate-pulse w-1/2" /></div>
-              </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+            {[...Array(10)].map((_, i) => (
+              <div key={i} className="aspect-[4/5] bg-zinc-100 dark:bg-zinc-800 rounded-2xl animate-pulse" />
             ))}
           </div>
         ) : error ? (
@@ -365,7 +362,7 @@ const CollectionPage = () => {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 border-t border-zinc-200 dark:border-zinc-800">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
               {paginatedProducts.map((product: any) => (
                 <ProductCard key={product.pid || product._id || product.id || product.name} product={product} />
               ))}

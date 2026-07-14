@@ -113,7 +113,7 @@ const ReturnsPage = () => {
   };
 
   const faqs = [
-    { q: 'How long does a refund take?', a: 'Refunds are processed within 3–5 business days for original payment methods, 5–7 business days for COD (bank transfer), and instantly for wallet credits.' },
+    { q: 'How long does a refund take?', a: 'Refunds are processed within 3–5 business days for original payment methods, and instantly for wallet credits.' },
     { q: 'Can I exchange a size?', a: 'Yes! Select the "Exchange Size" option in the return form and choose your preferred size. We\'ll ship the replacement after the pickup is completed.' },
     { q: 'Can I return sale items?', a: 'Final sale items, innerwear, and accessories are non-returnable. All other sale items follow the standard 7-day return policy.' },
     { q: 'How do I cancel a return?', a: 'Contact our support team within 24 hours of submitting the request to cancel. Once pickup is scheduled, cancellation may not be possible.' },
@@ -122,7 +122,7 @@ const ReturnsPage = () => {
   ];
 
   return (
-    <div className="bg-[hsl(var(--background))] min-h-screen text-[hsl(var(--foreground))] pt-[112px] sm:pt-[116px] lg:pt-[124px]">
+    <div className="bg-[hsl(var(--background))] min-h-screen text-[hsl(var(--foreground))]">
       <div className="max-w-[1000px] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 mb-6">

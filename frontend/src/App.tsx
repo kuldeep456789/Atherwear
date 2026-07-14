@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { useEffect } from 'react';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
+import ProductCountBanner from './components/layout/ProductCountBanner';
 import HomePage from './pages/HomePage';
 import ProductListPage from './pages/ProductListPage';
 import CollectionPage from './pages/CollectionPage';
@@ -38,6 +39,7 @@ function App() {
       <ScrollToTop />
       <div className="min-h-screen w-full flex flex-col bg-white dark:bg-zinc-950">
         <Navbar />
+        <ProductCountBanner />
 
         <main className="flex-grow w-full">
           <Routes>

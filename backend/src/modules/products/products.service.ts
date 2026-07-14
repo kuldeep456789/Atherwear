@@ -7,6 +7,7 @@ import { CreateReviewDto } from './dto/create-review.dto';
 import { Review } from './schemas/review.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { SEARCH_KEYWORDS, BROAD_CATEGORY_KEYWORDS } from '../cj/keywords';
 
 type ProductQuery = {
   categoryId?: string;
@@ -185,17 +186,64 @@ export class ProductsService {
     return normalized.length > 0 ? `products:${normalized.join(':')}` : 'products:all';
   }
 
+  private findBestKeyword(query: string): string | null {
+    const normalized = query.toLowerCase().trim().replace(/\s+/g, ' ');
+    if (!normalized) return null;
+
+    const allKeywords = [
+      ...BROAD_CATEGORY_KEYWORDS,
+      ...SEARCH_KEYWORDS.map(k => k.keyword),
+    ];
+    const uniqueKeywords = [...new Set(allKeywords)];
+
+    const exact = uniqueKeywords.find(k => k.toLowerCase() === normalized);
+    if (exact) return exact;
+
+    const keywordContains = uniqueKeywords.find(k => k.toLowerCase().includes(normalized));
+    if (keywordContains) return keywordContains;
+
+    const queryContains = uniqueKeywords.find(k => normalized.includes(k.toLowerCase()));
+    if (queryContains) return queryContains;
+
+    const queryWords = normalized.split(' ');
+    const wordMatch = uniqueKeywords.find(k => {
+      const kwWords = k.toLowerCase().split(' ');
+      return queryWords.some(qw => kwWords.some(kw => kw.includes(qw) || qw.includes(kw)));
+    });
+    if (wordMatch) return wordMatch;
+
+    return null;
+  }
+
   private async fetchFromCj(query: ProductQuery) {
     let cjProducts: any;
+    let usedKeyword = false;
 
     try {
-      cjProducts = query.categoryId
-        ? await this.cjService.getProductsByCategory(query.categoryId, query.pid, query)
-        : await this.cjService.getProducts(query);
+      if (query.q) {
+        const normalizedQuery = query.q.toLowerCase().trim().replace(/\s+/g, ' ');
+        const bestKeyword = this.findBestKeyword(normalizedQuery);
+        if (bestKeyword) {
+          const pageNum = Number(query.pageNum || query.page || 1);
+          const pageSize = Math.min(Number(query.pageSize || query.limit || 100), 100);
+          cjProducts = await this.cjService.searchProducts(bestKeyword, pageNum, pageSize);
+          usedKeyword = true;
+          console.log(`[Products] Keyword search: "${normalizedQuery}" -> matched keyword: "${bestKeyword}"`);
+        } else {
+          console.log(`[Products] No keyword match for "${normalizedQuery}", returning empty`);
+          return { products: [], source: 'cj', query: normalizedQuery, noMatch: true };
+        }
+      } else if (query.categoryId) {
+        cjProducts = await this.cjService.getProductsByCategory(query.categoryId, query.pid, query);
+      } else {
+        cjProducts = await this.cjService.getProducts(query);
+      }
     } catch (err: any) {
       console.error('[Products] CJ API failed:', err?.message ?? err);
       return { products: [] };
     }
+
+    if (!cjProducts) return { products: [] };
 
     const normalizedProducts = Array.isArray(cjProducts?.products) ? cjProducts.products : [];
 
@@ -219,7 +267,7 @@ export class ProductsService {
       )
       : afterGenderFilter;
 
-    const filteredProducts = query.q
+    const filteredProducts = query.q && !usedKeyword
       ? afterSubcategoryFilter.filter((product: Record<string, any>) => {
         const searchText = [
           product?.name,

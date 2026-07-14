@@ -167,7 +167,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[hsl(var(--background))] text-[hsl(var(--foreground))] pt-[112px] sm:pt-[116px] lg:pt-[124px]">
+    <div className="min-h-screen bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
       <div className="grid min-h-screen lg:grid-cols-[1.05fr_0.95fr]">
         {/* Left hero panel */}
         <section className="relative hidden overflow-hidden lg:block">

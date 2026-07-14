@@ -4,14 +4,10 @@ import { Heart } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toggleWishlist } from '../../store/slices/wishlistSlice';
 import type { RootState } from '../../store/store';
-import { getColorHex } from '../../utils/colorMap';
-import { getFirstProductImage, getProductId, getProductImages } from '../../lib/product';
+import { getFirstProductImage, getProductId } from '../../lib/product';
 import { formatINR } from '../../lib/currency';
-import DOMPurify from 'dompurify';
 
-const PLACEHOLDER_IMAGE =
-  'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="500" viewBox="0 0 400 500"><rect width="100%" height="100%" fill="%23f4f4f5"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="24" font-weight="900" fill="%23a1a1aa" letter-spacing="4">VASTRA</text></svg>';
-
+const PLACEHOLDER_IMAGE = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="500" viewBox="0 0 400 500"><rect width="100%" height="100%" fill="%23f4f4f5"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="24" font-weight="900" fill="%23a1a1aa" letter-spacing="4">VASTRA</text></svg>';
 
 interface ProductCardProps {
   product: {
@@ -25,38 +21,31 @@ interface ProductCardProps {
     sizes?: string[];
     tags?: string[];
     title?: string;
+    numReviews?: number;
+    averageRating?: number;
   };
   keyword?: string;
 }
 
-const ProductCard = ({ product, keyword }: ProductCardProps) => {
-  const [isHovered, setIsHovered] = useState(false);
+export const ProductCardSkeleton = () => (
+  <div className="w-full bg-white dark:bg-zinc-900 rounded-[14px] overflow-hidden animate-pulse">
+    <div className="aspect-[4/5] bg-zinc-100 dark:bg-zinc-800" />
+    <div className="p-4 pb-[18px] space-y-2.5">
+      <div className="h-3 w-16 bg-zinc-100 dark:bg-zinc-800 rounded" />
+      <div className="h-[18px] w-full bg-zinc-100 dark:bg-zinc-800 rounded" />
+      <div className="h-5 w-20 bg-zinc-100 dark:bg-zinc-800 rounded mt-1" />
+    </div>
+  </div>
+);
+
+const ProductCard = ({ product }: ProductCardProps) => {
   const [imageFailed, setImageFailed] = useState(false);
-  const [selectedSize, setSelectedSize] = useState('');
-  const [selectedColor, setSelectedColor] = useState('');
   const dispatch = useDispatch();
   const wishlistItems = useSelector((state: RootState) => state.wishlist.wishlistItems);
   const productId = getProductId(product) || product.name || 'product';
   const isWishlisted = wishlistItems.some((item: any) => item._id === productId);
 
-  const productImages = getProductImages(product);
-  // Brand placeholder image (inline SVG via data URI)
-  // const placeholderImage = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="500" viewBox="0 0 400 500"><rect width="100%" height="100%" fill="%23f4f4f5"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="24" font-weight="900" fill="%23a1a1aa" letter-spacing="4">VASTRA</text></svg>';
-
   const primaryImage = getFirstProductImage(product) || PLACEHOLDER_IMAGE;
-  const secondaryImage = productImages[1] || primaryImage;
-
-  const uniqueColors = product.colors || (product.variants
-    ? Array.from(new Set(product.variants.map((v) => v.color)))
-    : []);
-  const uniqueSizes = product.sizes || (product.variants
-    ? Array.from(new Set(product.variants.map((v) => v.size)))
-    : []);
-
-  const discountPercentage =
-    product.discountPrice && product.price > product.discountPrice
-      ? Math.round(((product.price - product.discountPrice) / product.price) * 100)
-      : 0;
 
   const handleWishlistClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -72,127 +61,48 @@ const ProductCard = ({ product, keyword }: ProductCardProps) => {
   };
 
   return (
-    <div
-      className="group flex flex-col w-full select-none border-r-2 border-b-2 border-black dark:border-white bg-[hsl(var(--card))] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:z-10 relative"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      {/* Image */}
-      <div className="relative aspect-[4/5] overflow-hidden bg-zinc-100 dark:bg-[#F4F4F2] dark:p-1.5 cursor-pointer">
-        <Link to={`/product/${productId}`} className="block h-full w-full">
+    <div className="group relative flex flex-col w-full bg-white dark:bg-zinc-900 rounded-[14px] border border-[#ececec] dark:border-zinc-800 overflow-hidden cursor-pointer transition-shadow duration-400 ease-out hover:shadow-[0_12px_35px_rgba(0,0,0,0.12)] dark:hover:shadow-[0_12px_35px_rgba(0,0,0,0.35)]">
+      <Link to={`/product/${productId}`} className="block w-full">
+        <div className="relative aspect-[4/5] overflow-hidden bg-zinc-50 dark:bg-zinc-800 rounded-t-[14px]">
           {imageFailed ? (
-            <div className="flex h-full w-full flex-col items-center justify-center bg-white dark:bg-black px-8 text-center">
-              <span className="mb-3 text-[11px] font-black uppercase tracking-[0.24em] text-zinc-400 dark:text-zinc-500">
-                VASTRA
-              </span>
-              <span className="line-clamp-3 text-xl font-black leading-tight text-black dark:text-white">
+            <div className="flex h-full w-full flex-col items-center justify-center bg-zinc-50 dark:bg-zinc-800 px-8 text-center">
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">VASTRA</span>
+              <span className="mt-2 line-clamp-3 text-lg font-bold leading-tight text-zinc-700 dark:text-zinc-300">
                 {product.title || product.name}
               </span>
             </div>
           ) : (
             <img
-              src={isHovered ? secondaryImage : primaryImage}
+              src={primaryImage}
               alt={product.name}
-              onError={() => {
-                if (primaryImage !== PLACEHOLDER_IMAGE) {
-                  setImageFailed(true);
-                }
-              }}
-              className="object-cover object-center w-full h-full transition-transform duration-500 ease-out group-hover:scale-105 dark:mix-blend-multiply"
+              loading="lazy"
+              onError={() => { if (primaryImage !== PLACEHOLDER_IMAGE) setImageFailed(true); }}
+              className="h-full w-full object-cover object-center transition-transform duration-[400ms] ease-out group-hover:scale-[1.06]"
             />
           )}
-        </Link>
 
-
-        {/* Sale badge — flat rectangle */}
-        {/* {discountPercentage > 0 && (
-          <span className="absolute top-0 left-0 bg-red-600 text-white text-[10px] font-black px-3 py-1.5 uppercase tracking-wider border-r-2 border-b-2 border-black dark:border-white">
-            SALE
-          </span>
-        )} */}
-
-        {/* Wishlist */}
-        <button
-          onClick={handleWishlistClick}
-          className={`absolute top-2 right-2 z-10 h-10 w-10 inline-flex items-center justify-center border-2 border-black dark:border-white bg-white dark:bg-black transition-colors cursor-pointer ${isWishlisted ? 'text-red-500' : 'text-black dark:text-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black'
+          <button
+            onClick={handleWishlistClick}
+            className={`absolute top-3 right-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md transition-all duration-200 hover:shadow-lg hover:scale-110 ${
+              isWishlisted
+                ? 'text-orange-500 shadow-orange-500/20'
+                : 'text-zinc-400 hover:text-orange-500'
             }`}
-          aria-label="Add to wishlist"
-        >
-          <Heart size={18} fill={isWishlisted ? 'currentColor' : 'none'} strokeWidth={2} />
-        </button>
-
-        {uniqueColors.length > 0 && (
-          <div className="absolute bottom-2 right-2 flex items-center gap-1 z-10">
-            {uniqueColors.slice(0, 3).map((color) => (
-              <div
-                key={color}
-                className="w-5 h-5 border-2 border-black dark:border-white"
-                style={{ backgroundColor: getColorHex(color) }}
-                title={color}
-              />
-            ))}
-            {uniqueColors.length > 3 && (
-              <span className="text-[10px] text-white font-black bg-black px-1.5 py-0.5 border-2 border-black">+{uniqueColors.length - 3}</span>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Variant Selectors — inline like Stynra */}
-      <div className="flex border-t-2 border-black dark:border-white">
-        <select
-          value={selectedSize}
-          onChange={(e) => setSelectedSize(e.target.value)}
-          className="w-1/2 border-r-2 border-black dark:border-white bg-[hsl(var(--card))] text-[hsl(var(--foreground))] px-3 py-3 text-xs font-bold uppercase tracking-wider appearance-none cursor-pointer focus:outline-none hover:bg-[hsl(var(--secondary))] transition-colors"
-        >
-          <option value="">SIZE</option>
-          {uniqueSizes.map((size) => (
-            <option key={size} value={size}>{size}</option>
-          ))}
-        </select>
-        <select
-          value={selectedColor}
-          onChange={(e) => setSelectedColor(e.target.value)}
-          className="w-1/2 bg-[hsl(var(--card))] text-[hsl(var(--foreground))] px-3 py-3 text-xs font-bold uppercase tracking-wider appearance-none cursor-pointer focus:outline-none hover:bg-[hsl(var(--secondary))] transition-colors"
-        >
-          <option value="">COLOR</option>
-          {uniqueColors.map((color) => (
-            <option key={color} value={color}>{color.toUpperCase()}</option>
-          ))}
-        </select>
-      </div>
-
-      {/* Product Info */}
-      <div className="flex flex-col gap-1 p-4">
-        {/* Title */}
-        <Link to={`/product/${productId}`}>
-          {keyword ? (
-            <h3
-              className="text-base font-bold text-[hsl(var(--foreground))] line-clamp-2 leading-tight hover:underline transition-colors uppercase tracking-wide"
-              dangerouslySetInnerHTML={{
-                __html: DOMPurify.sanitize((product.title || product.name).replace(new RegExp(`(${keyword})`, 'gi'), '<mark class="bg-yellow-300 text-black px-1 font-black">$1</mark>'))
-              }}
-            />
-          ) : (
-            <h3 className="text-base font-bold text-[hsl(var(--foreground))] line-clamp-2 leading-tight hover:underline transition-colors uppercase tracking-wide">
-              {product.title || product.name}
-            </h3>
-          )}
-        </Link>
-
-        {/* Pricing */}
-        <div className="flex items-center gap-2 mt-1 font-mono">
-          {product.discountPrice && product.discountPrice < product.price ? (
-            <>
-              <span className="text-xl font-black text-[hsl(var(--foreground))]">{formatINR(product.discountPrice)}</span>
-              <span className="text-base text-zinc-400 line-through">{formatINR(product.price)}</span>
-              <span className="text-sm font-black text-red-600">-{discountPercentage}%</span>
-            </>
-          ) : (
-            <span className="text-xl font-black text-[hsl(var(--foreground))]">{formatINR(product.price)}</span>
-          )}
+            aria-label="Add to wishlist"
+          >
+            <Heart size={18} fill={isWishlisted ? 'currentColor' : 'none'} strokeWidth={2} />
+          </button>
         </div>
-      </div>
+      </Link>
+
+      <Link to={`/product/${productId}`} className="flex flex-col px-4 py-[14px] flex-1 space-y-1">
+        <h3 className="text-base font-medium text-gray-900 dark:text-white line-clamp-2 leading-snug">
+          {product.title || product.name}
+        </h3>
+        <div className="text-base font-medium text-gray-900 dark:text-white">
+          {formatINR(product.discountPrice && product.discountPrice < product.price ? product.discountPrice : product.price)}
+        </div>
+      </Link>
     </div>
   );
 };

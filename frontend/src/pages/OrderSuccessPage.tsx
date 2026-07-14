@@ -39,26 +39,24 @@ const OrderSuccessPage = () => {
   const { data: order, isLoading, error } = useGetOrderDetailsQuery(id);
 
   if (isLoading) return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-50 dark:bg-[#0F0F10] pt-[112px] sm:pt-[116px] lg:pt-[124px]">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-50 dark:bg-[#0F0F10]">
       <div className="w-12 h-12 border-4 border-zinc-900 dark:border-white border-t-transparent rounded-full animate-spin" />
     </div>
   );
 
   if (error || !order) return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-[#0F0F10] pt-[112px] sm:pt-[116px] lg:pt-[124px] text-red-500">
+    <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-[#0F0F10] text-red-500">
       Failed to load order. <Link to="/" className="underline ml-2 font-semibold">Go Home</Link>
     </div>
   );
 
   const status = statusConfig[order.status] || statusConfig.pending;
   const isPaid = order.paymentStatus === 'paid';
-  const paymentMethodLabel = order.paymentProvider === 'COD' ? 'CASH ON DELIVERY' : 'RAZORPAY SECURE';
-  const paymentStatusLabel = order.paymentProvider === 'COD'
-    ? (isPaid ? 'PAYMENT COLLECTED' : 'PAYMENT PENDING')
-    : (isPaid ? 'PAYMENT CAPTURED' : 'PAYMENT PENDING');
+  const paymentMethodLabel = 'RAZORPAY SECURE';
+  const paymentStatusLabel = isPaid ? 'PAYMENT CAPTURED' : 'PAYMENT PENDING';
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-[#0F0F10] pt-[112px] sm:pt-[116px] lg:pt-[124px]">
+    <div className="min-h-screen bg-zinc-50 dark:bg-[#0F0F10]">
       <div className="mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
         {/* Success Banner */}
         <div className="text-center mb-10 animate-fadeIn">

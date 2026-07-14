@@ -13,7 +13,7 @@ const ContactPage = () => {
   };
 
   return (
-    <div className="bg-[hsl(var(--background))] min-h-screen text-[hsl(var(--foreground))] uppercase pt-[112px] sm:pt-[116px] lg:pt-[124px]">
+    <div className="bg-[hsl(var(--background))] min-h-screen text-[hsl(var(--foreground))] uppercase">
       {/* Breadcrumbs */}
       <div className="w-full border-b-2 border-black dark:border-white px-6 sm:px-10 py-4 flex items-center text-xs font-bold tracking-widest text-zinc-500">
         <Link to="/" className="hover:text-[hsl(var(--foreground))] transition-colors">HOME</Link>

@@ -71,7 +71,7 @@ const OrderItemRow = ({ productId, quantity }: { productId: string; quantity: nu
 };
 
 const Skeleton = () => (
-  <div className="min-h-screen bg-zinc-50 dark:bg-[#0F0F10] pt-[112px] sm:pt-[116px] lg:pt-[124px]">
+  <div className="min-h-screen bg-zinc-50 dark:bg-[#0F0F10]">
     <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
       <div className="animate-pulse space-y-6">
         <div className="h-5 w-72 bg-zinc-200 dark:bg-zinc-800 rounded" />
@@ -106,7 +106,7 @@ const OrderTrackingPage = () => {
 
     if (isForbidden) {
       return (
-        <div className="min-h-screen bg-zinc-50 dark:bg-[#0F0F10] pt-[112px] sm:pt-[116px] lg:pt-[124px] flex items-center justify-center">
+        <div className="min-h-screen bg-zinc-50 dark:bg-[#0F0F10] flex items-center justify-center">
           <div className="text-center px-6 py-16 max-w-md">
             <div className="relative inline-flex items-center justify-center w-20 h-20 mb-6">
               <div className="absolute inset-0 bg-red-100 dark:bg-red-950/30 rounded-full" />
@@ -123,7 +123,7 @@ const OrderTrackingPage = () => {
     }
 
     return (
-      <div className="min-h-screen bg-zinc-50 dark:bg-[#0F0F10] pt-[112px] sm:pt-[116px] lg:pt-[124px] flex items-center justify-center">
+      <div className="min-h-screen bg-zinc-50 dark:bg-[#0F0F10] flex items-center justify-center">
         <div className="text-center px-6 py-16 max-w-md">
           <div className="relative inline-flex items-center justify-center w-20 h-20 mb-6">
             <div className="absolute inset-0 bg-zinc-200/50 dark:bg-zinc-800/50 rounded-full" />
@@ -142,7 +142,7 @@ const OrderTrackingPage = () => {
 
   const currentStepIndex = STEP_INDEX[order.status] ?? 0;
   const status = statusConfig[order.status] || statusConfig.pending;
-  const paymentLabel = order.paymentProvider === 'COD' ? 'Cash on Delivery' : 'Razorpay Secure';
+  const paymentLabel = 'Razorpay Secure';
   const isPaid = order.paymentStatus === 'paid';
   const itemCount = order.items?.reduce((a: number, i: any) => a + i.quantity, 0) || 0;
   const totalItemsPrice = order.totalAmount || 0;
@@ -152,7 +152,7 @@ const OrderTrackingPage = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: loaded ? 1 : 0 }}
       transition={{ duration: 0.4 }}
-      className="min-h-screen bg-zinc-50 dark:bg-[#0F0F10] pt-[112px] sm:pt-[116px] lg:pt-[124px]"
+      className="min-h-screen bg-zinc-50 dark:bg-[#0F0F10]"
     >
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-6 lg:py-10">
 
@@ -456,8 +456,8 @@ const RecommendedSection = ({ productId }: { productId?: string }) => {
           View All <ArrowRight size={14} strokeWidth={2} />
         </Link>
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {related.slice(0, 4).map((product: any) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+        {related.slice(0, 5).map((product: any) => (
           <ProductCard key={product.pid || product._id} product={product} />
         ))}
       </div>

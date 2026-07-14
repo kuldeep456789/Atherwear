@@ -88,7 +88,7 @@ const ProductListPage = () => {
   const tabs = isNewArrivals ? ['MEN', 'WOMEN'] : ['MEN', 'WOMEN'];
 
   return (
-    <div className="bg-[hsl(var(--background))] min-h-screen text-[hsl(var(--foreground))] uppercase pt-[112px] sm:pt-[116px] lg:pt-[124px]">
+    <div className="bg-[hsl(var(--background))] min-h-screen text-[hsl(var(--foreground))] uppercase">
       {/* Breadcrumbs */}
       <div className="w-full border-b-2 border-black dark:border-white px-6 sm:px-10 py-4 flex justify-between items-center text-xs font-bold tracking-widest text-zinc-500">
         <div className="flex gap-2 items-center">
@@ -144,15 +144,9 @@ const ProductListPage = () => {
       <div className="max-w-[1920px] mx-auto">
         {/* Loading */}
         {isLoading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 border-t-2 border-l-2 border-black dark:border-white">
-            {[...Array(9)].map((_, i) => (
-              <div key={i} className="border-r-2 border-b-2 border-black dark:border-white p-0">
-                <div className="aspect-[4/5] shimmer" />
-                <div className="p-4 space-y-2">
-                  <div className="h-4 shimmer w-3/4" />
-                  <div className="h-4 shimmer w-1/2" />
-                </div>
-              </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+            {[...Array(10)].map((_, i) => (
+              <div key={i} className="aspect-[4/5] bg-zinc-100 dark:bg-zinc-800 rounded-2xl animate-pulse" />
             ))}
           </div>
         ) : error ? (
@@ -170,12 +164,11 @@ const ProductListPage = () => {
         ) : (
           <>
             {/* BORDER-COLLAPSE GRID */}
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 border-t-2 border-l-2 border-black dark:border-white">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
               {paginatedProducts.map((product: any, index: number) => (
                 <ProductCard
                   key={product.pid || product._id || product.id || `${product.title || product.name || 'product'}-${index}`}
                   product={product}
-                  keyword={keyword}
                 />
               ))}
             </div>

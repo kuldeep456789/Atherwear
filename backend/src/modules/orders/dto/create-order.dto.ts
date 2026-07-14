@@ -4,5 +4,5 @@ export class CreateOrderDto {
     quantity: number;
   }>;
   totalAmount: number;
-  paymentMethod?: 'Razorpay' | 'COD';
+  paymentMethod?: 'Razorpay';
 }

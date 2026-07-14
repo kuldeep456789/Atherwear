@@ -47,8 +47,8 @@ export class PaymentsService {
       throw new BadRequestException('Order is already paid');
     }
 
-    if (order.paymentProvider === 'COD') {
-      throw new BadRequestException('Cash on Delivery orders do not require online payment');
+    if (order.paymentProvider !== 'Razorpay') {
+      throw new BadRequestException('Unsupported payment method');
     }
 
     const amountPaise = Math.round(Number(order.totalAmount) * 100);

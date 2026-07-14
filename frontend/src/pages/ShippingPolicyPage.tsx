@@ -11,7 +11,7 @@ const couriers = [
 
 const ShippingPolicyPage = () => {
   return (
-    <div className="bg-[hsl(var(--background))] min-h-screen text-[hsl(var(--foreground))] pt-[112px] sm:pt-[116px] lg:pt-[124px]">
+    <div className="bg-[hsl(var(--background))] min-h-screen text-[hsl(var(--foreground))]">
       <div className="max-w-[1000px] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 mb-6">

@@ -59,21 +59,13 @@ const PlaceOrderPage = () => {
         productId: item._id,
         quantity: item.qty,
       }));
-      const normalizedPaymentMethod = cart.paymentMethod === 'COD' ? 'COD' : 'Razorpay';
-
       const res = await createOrder({
         items,
         totalAmount: cart.totalPrice,
-        paymentMethod: normalizedPaymentMethod,
+        paymentMethod: 'Razorpay',
       }).unwrap();
 
       const orderId = res.order._id;
-
-      if (normalizedPaymentMethod === 'COD') {
-        dispatch(clearCartItems());
-        navigate(`/order/${orderId}`);
-        return;
-      }
 
       const razorpayRes = await createRazorpayOrder(orderId).unwrap();
 
@@ -138,7 +130,7 @@ const PlaceOrderPage = () => {
   const isProcessing = isLoading || isRazorpayLoading || isPaymentLoading;
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-[#0F0F10] pt-[112px] sm:pt-[116px] lg:pt-[124px]">
+    <div className="min-h-screen bg-zinc-50 dark:bg-[#0F0F10]">
       <div className="mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
         <CheckoutSteps step1 step2 step3 />
 
@@ -187,14 +179,8 @@ const PlaceOrderPage = () => {
               </div>
               <div className="px-6 sm:px-8 py-5">
                 <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
-                  {cart.paymentMethod === 'COD' ? (
-                    <svg className="w-5 h-5 text-zinc-600 dark:text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                  ) : (
-                    <CreditCard size={18} className="text-zinc-600 dark:text-zinc-400" strokeWidth={1.5} />
-                  )}
-                  <span className="text-[15px] font-semibold text-zinc-900 dark:text-white">
-                    {cart.paymentMethod === 'COD' ? 'Cash on Delivery' : 'Razorpay Secure'}
-                  </span>
+                  <CreditCard size={18} className="text-zinc-600 dark:text-zinc-400" strokeWidth={1.5} />
+                  <span className="text-[15px] font-semibold text-zinc-900 dark:text-white">Razorpay Secure</span>
                 </div>
               </div>
             </div>

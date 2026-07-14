@@ -116,7 +116,7 @@ const CartPage = () => {
   const couponList = Object.entries(COUPONS).map(([code, def]) => ({ code, desc: def.desc, min: def.min }));
 
   return (
-    <div className="bg-[hsl(var(--background))] min-h-screen text-[hsl(var(--foreground))] pt-[112px] sm:pt-[116px] lg:pt-[124px]">
+    <div className="bg-[hsl(var(--background))] min-h-screen text-[hsl(var(--foreground))]">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-10">
         {cartItems.length === 0 ? (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-16 max-w-lg mx-auto">
@@ -273,7 +273,7 @@ const CartPage = () => {
                 {recommendedProducts.length > 0 && (
                   <div className="mt-10 pt-8 border-t border-zinc-200 dark:border-zinc-800">
                     <h2 className="text-[18px] font-bold tracking-tight mb-5">You May Also Like</h2>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
                       {recommendedProducts.map((product: any) => (
                         <ProductCard key={product._id} product={product} />
                       ))}

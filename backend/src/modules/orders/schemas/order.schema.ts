@@ -28,7 +28,7 @@ export class Order {
   @Prop({ required: true, default: 'pending' })
   status: string;
 
-  @Prop({ required: true, enum: ['Razorpay', 'COD'], default: 'Razorpay' })
+  @Prop({ required: true, default: 'Razorpay' })
   paymentProvider: string;
 
   @Prop({ required: true, enum: ['unpaid', 'paid', 'pending'], default: 'unpaid' })

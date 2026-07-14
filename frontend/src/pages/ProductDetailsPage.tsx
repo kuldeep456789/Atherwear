@@ -79,7 +79,7 @@ const ProductDetailsPage = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[hsl(var(--background))] pt-[112px] sm:pt-[116px] lg:pt-[124px]">
+      <div className="min-h-screen bg-[hsl(var(--background))]">
         <div className="max-w-[1500px] mx-auto px-4 lg:px-7 flex flex-col lg:flex-row lg:gap-6 xl:gap-8">
           <div className="w-full lg:w-[48%] flex gap-1.5 lg:gap-2">
             <div className="hidden lg:flex flex-col gap-1.5">
@@ -264,7 +264,7 @@ const ProductDetailsPage = () => {
   });
 
   return (
-    <div className="bg-[hsl(var(--background))] min-h-screen text-[hsl(var(--foreground))] font-sans uppercase pb-24 lg:pb-0 pt-[112px] sm:pt-[116px] lg:pt-[124px]">
+    <div className="bg-[hsl(var(--background))] min-h-screen text-[hsl(var(--foreground))] font-sans uppercase pb-24 lg:pb-0">
       {/* Breadcrumbs */}
       <div className="w-full border-b-2 border-black dark:border-white px-6 sm:px-10 py-4">
         <div className="flex gap-2 items-center text-xs font-bold tracking-widest text-zinc-500">
@@ -665,7 +665,7 @@ const ProductDetailsPage = () => {
               YOU MAY ALSO LIKE
             </h2>
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 border-t-2 border-l-2 border-black dark:border-white">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
             {relatedProducts.map((item: any) => (
               <ProductCard key={item._id} product={item} />
             ))}
@@ -681,7 +681,7 @@ const ProductDetailsPage = () => {
               RECENTLY VIEWED
             </h2>
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 border-t-2 border-l-2 border-black dark:border-white">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
             {recentItemsToDisplay.map((item: any) => (
               <ProductCard key={item._id} product={item} />
             ))}

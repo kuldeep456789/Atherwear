@@ -5,7 +5,7 @@ import type { RootState } from '../store/store';
 import { savePaymentMethod } from '../store/slices/cartSlice';
 import CheckoutSteps from '../components/checkout/CheckoutSteps';
 import OrderSummarySidebar from '../components/checkout/OrderSummarySidebar';
-import { CreditCard, Wallet, Truck, ShieldCheck, Building, Smartphone, Landmark } from 'lucide-react';
+import { CreditCard, ShieldCheck, Smartphone, Landmark } from 'lucide-react';
 
 const paymentOptions = [
   {
@@ -20,13 +20,6 @@ const paymentOptions = [
         <Landmark size={20} strokeWidth={1.5} />
       </div>
     ),
-  },
-  {
-    value: 'COD',
-    label: 'Cash on Delivery',
-    sub: 'Pay when your order is delivered to your doorstep',
-    icon: Truck,
-    icons: <Truck size={20} strokeWidth={1.5} />,
   },
 ];
 
@@ -49,7 +42,7 @@ const PaymentPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-[#0F0F10] pt-[112px] sm:pt-[116px] lg:pt-[124px]">
+    <div className="min-h-screen bg-zinc-50 dark:bg-[#0F0F10]">
       <div className="mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
         <CheckoutSteps step1 step2 />
 
