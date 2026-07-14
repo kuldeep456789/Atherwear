@@ -7,6 +7,7 @@ import {
 import axios, { AxiosRequestConfig } from 'axios';
 import { RedisService } from '../redis/redis.service';
 import { isProductAllowed, isCategoryAllowed, BLOCKED } from './category.mapper';
+import { SEARCH_KEYWORDS, BROAD_CATEGORY_KEYWORDS } from './keywords';
 
 const DEFAULT_SIZES = ['S', 'M', 'L', 'XL'];
 const DEFAULT_COLORS = ['Black'];
@@ -206,6 +207,83 @@ export class CjService {
     return product;
   }
 
+  async searchProducts(keyword: string, pageNum = 1, pageSize = 100) {
+    const query: Record<string, string> = {
+      pageNum: String(pageNum),
+      pageSize: String(pageSize),
+      keyword,
+    };
+    return this.getProducts(query);
+  }
+
+  async crawlAllByKeywords(): Promise<any[]> {
+    const allProducts: any[] = [];
+    const seenPids = new Set<string>();
+    const allKeywords = [
+      ...BROAD_CATEGORY_KEYWORDS.map(k => ({ keyword: k, gender: 'Unisex' as const })),
+      ...SEARCH_KEYWORDS.map(k => ({ keyword: k.keyword, gender: k.gender })),
+    ];
+
+    console.log(`[CJ] Starting keyword crawl with ${allKeywords.length} keywords...`);
+
+    for (const { keyword, gender } of allKeywords) {
+      let pageNum = 1;
+      let consecutiveEmpty = 0;
+
+      while (true) {
+        try {
+          const response = await this.searchProducts(keyword, pageNum, 100);
+          const products = response?.products || [];
+
+          if (products.length === 0) {
+            consecutiveEmpty++;
+            if (consecutiveEmpty >= 2 || pageNum > 5) break;
+            pageNum++;
+            continue;
+          }
+
+          consecutiveEmpty = 0;
+
+          for (const product of products) {
+            const pid = String(product?.pid || product?.id || '');
+            if (!pid || seenPids.has(pid)) continue;
+            seenPids.add(pid);
+
+            const check = isProductAllowed(product);
+            if (!check.allowed) continue;
+
+            // Override gender if keyword is explicit
+            if (gender !== 'Unisex') {
+              check.gender = gender;
+              check.collectionType = gender;
+            }
+
+            allProducts.push({
+              ...product,
+              _gender: check.gender,
+              _category: check.subcategoryName,
+              _collectionType: check.collectionType,
+            });
+          }
+
+          if (products.length < 100 || pageNum >= 10) break;
+          pageNum++;
+        } catch (e: any) {
+          console.warn(`[CJ] Keyword search failed for "${keyword}" page ${pageNum}:`, e.message);
+          break;
+        }
+      }
+
+      if (allProducts.length >= 20000) {
+        console.log(`[CJ] Reached 20,000 product limit, stopping keyword crawl`);
+        break;
+      }
+    }
+
+    console.log(`[CJ] Keyword crawl complete. Total unique products: ${allProducts.length}`);
+    return allProducts;
+  }
+
   private async enrichWithVariants(product: any, pid: string): Promise<any> {
     const variantUrl = `/v1/product/variant/query?pid=${pid}`;
     console.log(`[CJ] GET ${variantUrl}`);
@@ -266,7 +344,7 @@ export class CjService {
     };
   }
 
-  private readonly CJ_IGNORE_PARAMS = new Set(['minPrice', 'maxPrice', 'minRating', 'sort', 'colors', 'sizes', 'q', 'keyword', 'collectionType', 'gender', 'subcategoryName']);
+  private readonly CJ_IGNORE_PARAMS = new Set(['minPrice', 'maxPrice', 'minRating', 'sort', 'colors', 'sizes', 'q', 'collectionType', 'gender', 'subcategoryName']);
   private readonly CJ_PARAM_MAP: Record<string, string> = {};
 
   private filterCjParams(query: Record<string, string | undefined>): Record<string, string> {
@@ -556,11 +634,20 @@ export class CjService {
       return null;
     }
 
-    const check = isProductAllowed(product);
-    if (!check.allowed) {
-      return null;
+    // Use keyword-crawl metadata if available, otherwise classify now
+    let gender = product._gender;
+    let subcategoryName = product._category;
+    let collectionType = product._collectionType;
+
+    if (!gender) {
+      const check = isProductAllowed(product);
+      if (!check.allowed) {
+        return null;
+      }
+      gender = check.gender;
+      subcategoryName = check.subcategoryName;
+      collectionType = check.collectionType;
     }
-    const { gender, subcategoryName, collectionType } = check;
 
     const images = [
       product?.productImage,
