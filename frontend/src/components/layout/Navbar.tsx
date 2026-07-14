@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { ShoppingBag, Heart, UserRound, X, Search, Menu, Package, MapPin, Settings, LogOut, Clock, TrendingUp, Loader2, HelpCircle } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -32,16 +32,9 @@ const navItems = [
   { to: '/collections/women', label: 'Women' },
 ];
 
-const extraLinks = [
-  { to: '/account', label: 'My Orders', icon: Package },
-  { to: '/account?tab=profile', label: 'Profile', icon: UserRound },
-  { to: '/account?tab=wishlist', label: 'Wishlist', icon: Heart },
-  { to: '/account?tab=addresses', label: 'Addresses', icon: MapPin },
-  { to: '/account?tab=settings', label: 'Settings', icon: Settings },
-];
-
 const Navbar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch();
   const cartItems = useSelector((state: RootState) => state.cart.cartItems);
   const cartCount = cartItems.reduce((acc: number, item: any) => acc + item.qty, 0);
@@ -205,17 +198,19 @@ const Navbar = () => {
     );
   };
 
+  const isActive = (path: string) => location.pathname.startsWith(path);
+
   return (
     <>
-      <header className={`fixed top-0 left-0 right-0 z-50 w-full bg-white dark:bg-zinc-950 dark:text-zinc-100 text-[#111111] transition-all duration-300 font-sans ${scrolled ? 'shadow-md' : 'shadow-none'}`}>
-        <div className="flex items-center h-[80px] max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
+      <header className={`fixed top-0 left-0 right-0 z-50 w-full bg-white dark:bg-[#111111] text-zinc-900 dark:text-zinc-100 transition-all duration-300 font-sans border-b border-zinc-200 dark:border-zinc-800 ${scrolled ? 'shadow-lg shadow-black/5 dark:shadow-white/5' : 'shadow-none'}`}>
+        <div className="flex items-center h-[88px] max-w-[1920px] mx-auto px-6 sm:px-8 lg:px-12">
           {/* Mobile menu toggle */}
           <button
-            className="lg:hidden flex items-center justify-center w-10 h-10 mr-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors cursor-pointer"
+            className="lg:hidden flex items-center justify-center w-11 h-11 mr-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors cursor-pointer"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle menu"
           >
-            {mobileMenuOpen ? <X className="h-5 w-5" strokeWidth={1.5} /> : <Menu className="h-5 w-5" strokeWidth={1.5} />}
+            {mobileMenuOpen ? <X className="h-6 w-6" strokeWidth={1.5} /> : <Menu className="h-6 w-6" strokeWidth={1.5} />}
           </button>
 
           {/* Left - Logo */}
@@ -224,21 +219,29 @@ const Navbar = () => {
           </Link>
 
           {/* Center - Nav Links (Desktop) */}
-          <nav className="hidden lg:flex items-center gap-1 ml-10">
+          <nav className="hidden lg:flex items-center gap-[36px] ml-14">
             {navItems.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
-                className="relative px-5 py-2 text-sm font-medium tracking-wider text-zinc-700 dark:text-zinc-300 hover:text-black dark:hover:text-white transition-colors duration-200 group"
+                className={`relative text-[17px] font-bold tracking-wider transition-colors duration-200 group ${
+                  isActive(item.to)
+                    ? 'text-black dark:text-white'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white'
+                }`}
               >
                 {item.label}
-                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-[#C9A227] group-hover:w-full transition-all duration-300 ease-out" />
+                <span className={`absolute -bottom-[6px] left-0 h-[3px] rounded-full transition-all duration-300 ease-out ${
+                  isActive(item.to)
+                    ? 'w-full bg-black dark:bg-white'
+                    : 'w-0 bg-black dark:bg-white group-hover:w-full'
+                }`} />
               </Link>
             ))}
           </nav>
 
           {/* Right - Actions */}
-          <div className="flex items-center gap-2 sm:gap-3 ml-auto">
+          <div className="flex items-center gap-1 sm:gap-2 lg:gap-3 ml-auto">
             {/* Desktop Search Bar */}
             <div ref={searchContainerRef} className="hidden md:block relative">
               <motion.form
@@ -247,8 +250,8 @@ const Navbar = () => {
                 animate={searchFocused ? { scaleX: 1.05 } : { scaleX: 1 }}
                 transition={{ duration: 0.2 }}
               >
-                <div className={`flex items-center rounded-full border transition-all duration-200 h-[48px] ${searchFocused ? 'border-[#C9A227] shadow-md bg-white dark:bg-zinc-900' : 'border-zinc-300 dark:border-zinc-600 bg-zinc-50 dark:bg-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-500'}`}>
-                  <Search className="ml-4 mr-2 h-4 w-4 text-zinc-400 shrink-0" strokeWidth={1.5} />
+                <div className={`flex items-center rounded-[25px] border transition-all duration-200 h-[50px] ${searchFocused ? 'border-black dark:border-white shadow-md bg-white dark:bg-zinc-900' : 'border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-500'}`}>
+                  <Search className="ml-5 mr-3 h-5 w-5 text-zinc-400 shrink-0" strokeWidth={1.5} />
                   <input
                     ref={searchInputRef}
                     type="text"
@@ -256,15 +259,15 @@ const Navbar = () => {
                     onChange={(e) => { setSearchQuery(e.target.value); setSelectedSuggestionIdx(-1); }}
                     onFocus={() => setSearchFocused(true)}
                     placeholder={SEARCH_PLACEHOLDERS[placeholderIdx]}
-                    className="flex-1 bg-transparent text-sm text-zinc-800 dark:text-white placeholder:text-zinc-400 focus:outline-none min-w-[160px] max-w-[200px] lg:min-w-[200px]"
+                    className="flex-1 bg-transparent text-[15px] text-zinc-800 dark:text-white placeholder:text-zinc-400 focus:outline-none min-w-[180px] max-w-[220px] lg:min-w-[220px]"
                   />
                   {searchQuery && (
                     <button
                       type="button"
                       onClick={() => setSearchQuery('')}
-                      className="mr-2 p-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-full transition-colors cursor-pointer"
+                      className="mr-2 p-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-full transition-colors cursor-pointer"
                     >
-                      <X className="h-3.5 w-3.5 text-zinc-400" strokeWidth={2} />
+                      <X className="h-4 w-4 text-zinc-400" strokeWidth={2} />
                     </button>
                   )}
                 </div>
@@ -353,7 +356,7 @@ const Navbar = () => {
                                 onMouseEnter={() => setSelectedSuggestionIdx(i)}
                                 className={`flex items-center gap-3 px-4 py-2.5 transition-colors ${selectedSuggestionIdx === i ? 'bg-zinc-100 dark:bg-zinc-800' : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50'}`}
                               >
-                                <div className="w-10 h-12 shrink-0 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 overflow-hidden">
+                                <div className="w-10 h-12 shrink-0 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 overflow-hidden rounded">
                                   {p.images?.[0] && (
                                     <img src={p.images[0]} alt="" className="w-full h-full object-cover" />
                                   )}
@@ -392,23 +395,23 @@ const Navbar = () => {
 
             {/* Mobile Search Trigger */}
             <button
-              className="md:hidden flex items-center justify-center w-10 h-10 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors cursor-pointer"
+              className="md:hidden flex items-center justify-center w-11 h-11 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors cursor-pointer"
               onClick={() => setMobileSearchOpen(true)}
               aria-label="Search"
             >
-              <Search className="h-5 w-5" strokeWidth={1.5} />
+              <Search className="h-6 w-6" strokeWidth={1.5} />
             </button>
 
             {/* Theme Toggle */}
-            <div className="flex items-center justify-center w-10 h-10">
+            <div className="flex items-center justify-center w-11 h-11 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors cursor-pointer">
               <ThemeToggle />
             </div>
 
             {/* Wishlist */}
-            <Link to="/wishlist" className="relative flex items-center justify-center w-10 h-10 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors">
-              <Heart className="h-5 w-5" strokeWidth={1.5} />
+            <Link to="/wishlist" className="relative flex items-center justify-center w-11 h-11 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors group">
+              <Heart className="h-6 w-6 text-zinc-600 dark:text-zinc-400 group-hover:scale-105 transition-transform duration-200" strokeWidth={1.5} />
               {wishlistCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 h-4 w-4 bg-[#C9A227] text-white text-[9px] font-bold flex items-center justify-center rounded-full">
+                <span className="absolute -top-0.5 -right-0.5 h-[20px] w-[20px] bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full shadow-sm">
                   {wishlistCount}
                 </span>
               )}
@@ -418,7 +421,7 @@ const Navbar = () => {
             <div className="relative hidden sm:block" ref={profileRef}>
               <button
                 onClick={() => setProfileOpen(!profileOpen)}
-                className="relative flex items-center justify-center w-10 h-10 rounded-full transition-all duration-200 cursor-pointer hover:shadow-lg hover:shadow-[#C9A227]/20 hover:scale-105 hover:-translate-y-0.5 group dark:hover:bg-zinc-800"
+                className="relative flex items-center justify-center w-11 h-11 rounded-full transition-all duration-200 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 group"
                 style={{ backgroundColor: userInfo ? '#111111' : 'transparent' }}
                 aria-label="Profile"
               >
@@ -428,9 +431,8 @@ const Navbar = () => {
                     {(userInfo.lastName?.[0] || '')}
                   </span>
                 ) : (
-                  <UserRound className="h-5 w-5 text-zinc-700 group-hover:text-[#C9A227] transition-colors duration-200" strokeWidth={1.5} />
+                  <UserRound className="h-6 w-6 text-zinc-600 dark:text-zinc-400 group-hover:scale-105 transition-all duration-200" strokeWidth={1.5} />
                 )}
-                <span className="absolute inset-0 rounded-full ring-1 ring-transparent group-hover:ring-[#C9A227]/40 transition-all duration-300" />
               </button>
 
               <AnimatePresence>
@@ -447,7 +449,7 @@ const Navbar = () => {
                       <>
                         <div className="px-5 py-4 bg-gradient-to-br from-zinc-50 to-white dark:from-zinc-800 dark:to-zinc-900 border-b border-zinc-100 dark:border-zinc-800">
                           <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">
-                            Hello, {userInfo.firstName || userDisplayName} 👋
+                            Hello, {userInfo.firstName || userDisplayName}
                           </p>
                           <p className="text-xs text-zinc-500 mt-0.5 truncate">{userInfo.email}</p>
                         </div>
@@ -465,7 +467,7 @@ const Navbar = () => {
                               onClick={() => setProfileOpen(false)}
                               className="flex items-center gap-3 mx-2 my-0.5 px-3 py-2.5 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-black dark:hover:text-white rounded-xl transition-all duration-200 group/item"
                             >
-                              <Icon className="h-4 w-4 text-zinc-400 group-hover/item:text-[#C9A227] transition-colors duration-200" strokeWidth={1.5} />
+                              <Icon className="h-4 w-4 text-zinc-400 group-hover/item:text-zinc-600 transition-colors duration-200" strokeWidth={1.5} />
                               {label}
                             </Link>
                           ))}
@@ -532,12 +534,12 @@ const Navbar = () => {
             {/* Cart */}
             <button
               onClick={() => setMiniCartOpen(true)}
-              className="relative flex items-center justify-center w-10 h-10 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors cursor-pointer"
+              className="relative flex items-center justify-center w-11 h-11 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors group cursor-pointer"
               aria-label="Open cart"
             >
-              <ShoppingBag className="h-5 w-5" strokeWidth={1.5} />
+              <ShoppingBag className="h-6 w-6 text-zinc-600 dark:text-zinc-400 group-hover:scale-105 transition-transform duration-200" strokeWidth={1.5} />
               {cartCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 h-4 w-4 bg-[#111111] text-white text-[9px] font-bold flex items-center justify-center rounded-full">
+                <span className="absolute -top-0.5 -right-0.5 h-[20px] w-[20px] bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full shadow-sm">
                   {cartCount}
                 </span>
               )}
@@ -547,11 +549,11 @@ const Navbar = () => {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="lg:hidden bg-white dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-800 shadow-lg max-h-[calc(100vh-80px)] overflow-y-auto">
-            <div className="px-4 py-5 space-y-1">
+          <div className="lg:hidden bg-white dark:bg-[#111111] border-t border-zinc-200 dark:border-zinc-800 shadow-lg max-h-[calc(100vh-88px)] overflow-y-auto">
+            <div className="px-6 py-6 space-y-1">
               {/* Profile section at top */}
               {userInfo ? (
-                <div className="mb-4 p-4 bg-zinc-50 dark:bg-zinc-900 rounded-2xl">
+                <div className="mb-5 p-4 bg-zinc-50 dark:bg-zinc-900 rounded-2xl">
                   <div className="flex items-center gap-3">
                     <div className="w-11 h-11 rounded-full bg-[#111111] flex items-center justify-center text-sm font-bold text-white uppercase shrink-0">
                       {(userInfo.firstName?.[0] || userInfo.email?.[0] || 'U').toUpperCase()}
@@ -564,7 +566,7 @@ const Navbar = () => {
                   </div>
                 </div>
               ) : (
-                <div className="mb-4 p-4 bg-zinc-50 dark:bg-zinc-900 rounded-2xl">
+                <div className="mb-5 p-4 bg-zinc-50 dark:bg-zinc-900 rounded-2xl">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-11 h-11 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center">
                       <UserRound className="h-5 w-5 text-zinc-500" strokeWidth={1.5} />
@@ -600,7 +602,7 @@ const Navbar = () => {
                   key={item.to}
                   to={item.to}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block px-4 py-3 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-black dark:hover:text-white rounded-lg transition-colors"
+                  className="block px-4 py-3 text-[17px] font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-black dark:hover:text-white rounded-lg transition-colors"
                 >
                   {item.label}
                 </Link>
@@ -625,7 +627,7 @@ const Navbar = () => {
                       onClick={() => setMobileMenuOpen(false)}
                       className="flex items-center gap-3 px-4 py-3 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-lg transition-colors"
                     >
-                      <Icon className="h-4 w-4 text-zinc-400" strokeWidth={1.5} />
+                      <Icon className="h-5 w-5 text-zinc-400" strokeWidth={1.5} />
                       {label}
                     </Link>
                   ))}
@@ -633,7 +635,7 @@ const Navbar = () => {
                     onClick={() => { dispatch(logout()); setMobileMenuOpen(false); }}
                     className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors cursor-pointer"
                   >
-                    <LogOut className="h-4 w-4" strokeWidth={1.5} />
+                    <LogOut className="h-5 w-5" strokeWidth={1.5} />
                     Logout
                   </button>
                 </>
@@ -650,7 +652,7 @@ const Navbar = () => {
                       onClick={() => setMobileMenuOpen(false)}
                       className="flex items-center gap-3 px-4 py-3 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-lg transition-colors"
                     >
-                      <Icon className="h-4 w-4 text-zinc-400" strokeWidth={1.5} />
+                      <Icon className="h-5 w-5 text-zinc-400" strokeWidth={1.5} />
                       {label}
                     </Link>
                   ))}
@@ -668,20 +670,20 @@ const Navbar = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-white dark:bg-zinc-950 md:hidden"
+            className="fixed inset-0 z-[100] bg-white dark:bg-[#111111] md:hidden"
           >
             <div className="flex flex-col h-full">
               {/* Search header */}
-              <div className="flex items-center gap-3 px-4 py-4 border-b border-zinc-200 dark:border-zinc-800">
-                <form onSubmit={(e) => { e.preventDefault(); doSearchRefValue(searchQuery); }} className="flex-1 flex items-center rounded-full border border-zinc-300 dark:border-zinc-600 bg-zinc-50 dark:bg-zinc-800 h-[48px]">
-                  <Search className="ml-4 mr-2 h-4 w-4 text-zinc-400 shrink-0" strokeWidth={1.5} />
+              <div className="flex items-center gap-3 px-6 py-4 border-b border-zinc-200 dark:border-zinc-800">
+                <form onSubmit={(e) => { e.preventDefault(); doSearchRefValue(searchQuery); }} className="flex-1 flex items-center rounded-[25px] border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 h-[50px]">
+                  <Search className="ml-5 mr-3 h-5 w-5 text-zinc-400 shrink-0" strokeWidth={1.5} />
                   <input
                     autoFocus
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search products..."
-                    className="flex-1 bg-transparent text-sm text-zinc-800 dark:text-white placeholder:text-zinc-400 focus:outline-none pr-2"
+                    className="flex-1 bg-transparent text-[15px] text-zinc-800 dark:text-white placeholder:text-zinc-400 focus:outline-none pr-2"
                   />
                   {searchQuery && (
                     <button type="button" onClick={() => setSearchQuery('')} className="mr-2 p-1 cursor-pointer">
@@ -695,7 +697,7 @@ const Navbar = () => {
               </div>
 
               {/* Search content */}
-              <div className="flex-1 overflow-y-auto px-4 py-4">
+              <div className="flex-1 overflow-y-auto px-6 py-4">
                 {debouncedQuery.length >= 2 ? (
                   isSearchFetching ? (
                     <div className="flex justify-center py-8">
@@ -710,7 +712,7 @@ const Navbar = () => {
                           onClick={() => { setMobileSearchOpen(false); setSearchQuery(''); }}
                           className="flex items-center gap-3"
                         >
-                          <div className="w-16 h-20 shrink-0 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 overflow-hidden">
+                          <div className="w-16 h-20 shrink-0 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 overflow-hidden rounded-lg">
                             {p.images?.[0] && <img src={p.images[0]} alt="" className="w-full h-full object-cover" />}
                           </div>
                           <div className="flex-1 min-w-0">
@@ -722,7 +724,7 @@ const Navbar = () => {
                       ))}
                       <button
                         onClick={() => doSearchRefValue(searchQuery)}
-                        className="w-full py-3 text-center text-sm font-medium text-zinc-500 hover:text-black bg-zinc-50 rounded-lg transition-colors cursor-pointer"
+                        className="w-full py-3 text-center text-sm font-medium text-zinc-500 hover:text-black bg-zinc-50 dark:bg-zinc-800 rounded-lg transition-colors cursor-pointer"
                       >
                         View all results
                       </button>
@@ -744,7 +746,7 @@ const Navbar = () => {
                             <button
                               key={s}
                               onClick={() => { setSearchQuery(s); doSearchRefValue(s); }}
-                              className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-zinc-700 hover:bg-zinc-50 rounded-lg transition-colors cursor-pointer"
+                              className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-lg transition-colors cursor-pointer"
                             >
                               <Clock className="h-4 w-4 text-zinc-400 shrink-0" strokeWidth={1.5} />
                               <span className="truncate">{s}</span>
@@ -763,7 +765,7 @@ const Navbar = () => {
                           <button
                             key={s}
                             onClick={() => { setSearchQuery(s); doSearchRefValue(s); }}
-                            className="px-4 py-2 text-sm font-medium text-zinc-700 bg-zinc-50 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
+                            className="px-4 py-2 text-sm font-medium text-zinc-700 bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-full transition-colors cursor-pointer"
                           >
                             {s}
                           </button>
@@ -779,7 +781,7 @@ const Navbar = () => {
                             key={item.to}
                             to={item.to}
                             onClick={() => setMobileSearchOpen(false)}
-                            className="flex items-center gap-3 px-3 py-2.5 text-sm text-zinc-700 hover:bg-zinc-50 rounded-lg transition-colors"
+                            className="flex items-center gap-3 px-3 py-2.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-lg transition-colors"
                           >
                             <Search className="h-4 w-4 text-zinc-400 shrink-0" strokeWidth={1.5} />
                             {item.label}

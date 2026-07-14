@@ -7,25 +7,25 @@ const ThemeToggle = () => {
   return (
     <button
       onClick={toggleTheme}
-      className="relative flex items-center justify-center w-10 h-10 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors duration-200 cursor-pointer"
+      className="relative flex items-center justify-center w-full h-full rounded-full transition-colors duration-200 cursor-pointer"
       aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
     >
-      <div className="relative w-[22px] h-[22px]">
+      <div className="relative w-6 h-6 flex items-center justify-center">
         <Sun
-          size={20}
+          size={22}
           strokeWidth={1.5}
-          className={`absolute inset-0 transition-all duration-300 ${
+          className={`absolute transition-all duration-300 ${
             theme === 'dark'
               ? 'opacity-0 rotate-90 scale-0'
-              : 'opacity-100 rotate-0 scale-100 text-zinc-700'
+              : 'opacity-100 rotate-0 scale-100 text-zinc-600'
           }`}
         />
         <Moon
-          size={18}
+          size={20}
           strokeWidth={1.5}
-          className={`absolute inset-0 transition-all duration-300 ${
+          className={`absolute transition-all duration-300 ${
             theme === 'dark'
-              ? 'opacity-100 rotate-0 scale-100 text-zinc-100'
+              ? 'opacity-100 rotate-0 scale-100 text-zinc-400'
               : 'opacity-0 -rotate-90 scale-0'
           }`}
         />

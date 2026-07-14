@@ -23,6 +23,22 @@ const EXCLUDED_CATEGORY_IDS = new Set([
   '2043943887814762497',
   '2043294797236301825',
   '2606121220391623700',
+  '2075130484984541185',
+]);
+
+const EXCLUDED_PRODUCT_PIDS = new Set([
+  '2607130752441623600',
+  '2607130905271619800',
+  '2075876029409300482',
+  '2046802660565475329',
+  '2502151121241601900',
+  '2043934021520044033',
+  '2043944570651648002',
+  '2043945824983830529',
+  '2043943887814762497',
+  '2043294797236301825',
+  '2606121220391623700',
+  '2075130484984541185',
 ]);
 
 @Injectable()
@@ -526,6 +542,19 @@ export class CjService {
       return null;
     }
 
+    const pid = String(
+      product?.pid ??
+      product?.id ??
+      product?.productId ??
+      product?.productPid ??
+      product?.product_id ??
+      product?.productCode ??
+      ''
+    );
+    if (EXCLUDED_PRODUCT_PIDS.has(pid)) {
+      return null;
+    }
+
     const check = isProductAllowed(product);
     if (!check.allowed) {
       return null;
@@ -560,15 +589,6 @@ export class CjService {
       .filter(Boolean);
 
     const uniqueImages = Array.from(new Set(images));
-    const pid = String(
-      product?.pid ??
-      product?.id ??
-      product?.productId ??
-      product?.productPid ??
-      product?.product_id ??
-      product?.productCode ??
-      ''
-    );
     const name =
       product?.productNameEn ??
       product?.productName ??
@@ -585,7 +605,6 @@ export class CjService {
       Array.isArray(product?.variants) && product.variants.length
         ? product.variants
         : colors.flatMap((color: string) => sizes.map((size: string) => ({ color, size, stock: 999 })));
-    const categoryId = product?.categoryId ?? product?.category ?? '';
     const categoryName =
       product?.categoryName ??
       product?.categoryThirdName ??

@@ -2,7 +2,7 @@ import { apiSlice } from './apiSlice';
 
 const PRODUCTS_URL = '/api/products';
 
-const EXCLUDED_CATEGORY_IDS = new Set([
+const EXCLUDED_IDS = new Set([
   '2607130752441623600',
   '2607130905271619800',
   '2075876029409300482',
@@ -14,11 +14,16 @@ const EXCLUDED_CATEGORY_IDS = new Set([
   '2043943887814762497',
   '2043294797236301825',
   '2606121220391623700',
+  '2075130484984541185',
 ]);
+
+const isExcluded = (p: any) =>
+  EXCLUDED_IDS.has(String(p?.pid ?? '')) ||
+  EXCLUDED_IDS.has(String(p?.categoryId ?? p?.category ?? ''));
 
 const filterExcluded = (products: any[]) =>
   Array.isArray(products)
-    ? products.filter((p: any) => !EXCLUDED_CATEGORY_IDS.has(String(p?.categoryId ?? p?.category ?? '')))
+    ? products.filter((p: any) => !isExcluded(p))
     : [];
 
 const transformListResponse = (response: any) => {
@@ -59,7 +64,7 @@ export const productApiSlice = apiSlice.injectEndpoints({
         url: `${PRODUCTS_URL}/${productId}`,
       }),
       transformResponse: (response: any) => {
-        if (response && EXCLUDED_CATEGORY_IDS.has(String(response?.categoryId ?? response?.category ?? ''))) {
+        if (response && isExcluded(response)) {
           return null;
         }
         return response;

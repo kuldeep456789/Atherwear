@@ -20,7 +20,7 @@ const Footer = () => {
             JOIN THE CLUB
           </h3>
         </div>
-        <div className="flex-1 px-6 py-7 sm:px-10 sm:py-9 md:px-12 md:py-11 flex items-center">
+        {/* <div className="flex-1 px-6 py-7 sm:px-10 sm:py-9 md:px-12 md:py-11 flex items-center">
           <form className="flex w-full border border-zinc-700 focus-within:border-[#C9A227] transition-colors duration-300" onSubmit={handleSubscribe}>
             <input
               type="email"
@@ -35,7 +35,7 @@ const Footer = () => {
           {subscribed && (
             <p className="text-[#C9A227] text-xs ml-3 font-black whitespace-nowrap animate-pulse">SUBSCRIBED ✓</p>
           )}
-        </div>
+        </div> */}
       </div>
 
       {/* Main footer grid — 4 columns */}

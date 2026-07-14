@@ -3,14 +3,14 @@ import { motion } from 'framer-motion';
 const VastraLogo = () => {
   return (
     <motion.div
-      className="flex items-center gap-3 cursor-pointer select-none"
-      whileHover={{ y: -4, scale: 1.05 }}
+      className="flex items-center gap-4 cursor-pointer select-none"
+      whileHover={{ y: -3, scale: 1.04 }}
       transition={{ duration: 0.25, ease: 'easeOut' }}
     >
       {/* Folded Fabric V Icon */}
       <motion.svg
-        width="38"
-        height="38"
+        width="48"
+        height="48"
         viewBox="0 0 38 38"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
@@ -87,7 +87,7 @@ const VastraLogo = () => {
 
       {/* VASTRA Text */}
       <motion.span
-        className="text-2xl font-black tracking-tighter"
+        className="text-[28px] font-black tracking-tighter"
         style={{ fontFamily: "'Outfit', 'Space Grotesk', sans-serif" }}
         initial={{ opacity: 0, x: -8 }}
         animate={{ opacity: 1, x: 0 }}
