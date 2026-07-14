@@ -11,10 +11,12 @@ const ITEMS_PER_PAGE = 10;
 const getCollectionFromPath = (pathname: string) =>
   pathname.includes('/men') ? 'Men' as const
     : pathname.includes('/women') ? 'Women' as const
+      : pathname.includes('/new-arrivals') ? undefined
       : undefined;
 
 const getActiveTabFromPath = (pathname: string) =>
-  pathname.includes('/men') ? 'MEN'
+  pathname.includes('/new-arrivals') ? 'ALL'
+    : pathname.includes('/men') ? 'MEN'
     : pathname.includes('/women') ? 'WOMEN'
       : 'ALL';
 
@@ -26,7 +28,8 @@ const ProductListPage = () => {
 
   const [page, setPage] = useState(1);
   const collectionType = getCollectionFromPath(location.pathname);
-  const [sortBy, setSortBy] = useState('Popularity');
+  const isNewArrivals = location.pathname.includes('/new-arrivals');
+  const [sortBy, setSortBy] = useState(isNewArrivals ? 'Newest' : 'Popularity');
   const [activeTab, setActiveTab] = useState(() => getActiveTabFromPath(location.pathname));
 
   useEffect(() => {
@@ -46,8 +49,9 @@ const ProductListPage = () => {
       ...(activeCategoryId ? { categoryId: activeCategoryId } : {}),
       ...(keyword ? { q: keyword } : {}),
       ...(collectionType ? { collectionType } : {}),
+      ...(isNewArrivals ? { sort: 'newest' } : {}),
       pageNum: 1,
-      pageSize: 80,
+      pageSize: 100,
     }
   );
 
@@ -63,6 +67,7 @@ const ProductListPage = () => {
   const sortedProducts = [...filteredProducts].sort((a: any, b: any) => {
     const aPrice = a.discountPrice || a.price;
     const bPrice = b.discountPrice || b.price;
+    if (sortBy === 'Newest') return 0;
     if (sortBy === 'Popularity') return b.numReviews - a.numReviews;
     if (sortBy === 'Price: Low to High') return aPrice - bPrice;
     if (sortBy === 'Price: High to Low') return bPrice - aPrice;
@@ -72,13 +77,15 @@ const ProductListPage = () => {
   const totalPages = Math.max(1, Math.ceil(sortedProducts.length / ITEMS_PER_PAGE));
   const paginatedProducts = sortedProducts.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
-  const pageTitle = keyword
+  const pageTitle = isNewArrivals
+    ? 'NEW ARRIVALS'
+    : keyword
     ? `Search: "${keyword}"`
     : collectionType
     ? `${collectionType} Collections`
     : 'Our Shop';
 
-  const tabs = ['MEN', 'WOMEN'];
+  const tabs = isNewArrivals ? ['MEN', 'WOMEN'] : ['MEN', 'WOMEN'];
 
   return (
     <div className="bg-[hsl(var(--background))] min-h-screen text-[hsl(var(--foreground))] uppercase">
@@ -126,6 +133,7 @@ const ProductListPage = () => {
             onChange={(e) => setSortBy(e.target.value)}
             className="h-full px-6 text-xs font-black tracking-widest uppercase bg-[hsl(var(--card))] text-[hsl(var(--foreground))] cursor-pointer focus:outline-none appearance-none"
           >
+            <option value="Newest">SORT: NEWEST</option>
             <option value="Popularity">SORT: POPULAR</option>
             <option value="Price: Low to High">SORT: PRICE ↑</option>
             <option value="Price: High to Low">SORT: PRICE ↓</option>

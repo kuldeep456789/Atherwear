@@ -73,7 +73,7 @@ const ProductCard = ({ product, keyword }: ProductCardProps) => {
 
   return (
     <div
-      className="group flex flex-col w-full select-none border-r-2 border-b-2 border-black dark:border-white"
+      className="group flex flex-col w-full select-none border-r-2 border-b-2 border-black dark:border-white bg-[hsl(var(--card))] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:z-10 relative"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
