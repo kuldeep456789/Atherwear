@@ -468,75 +468,77 @@ const ProductDetailsPage = () => {
 
         {/* Right — Details (sticky, 52%) */}
         <div className="w-full lg:w-[52%] lg:sticky lg:top-[130px] lg:self-start">
-          <div className="pt-4 lg:pt-6 space-y-6 lg:space-y-7">
+          <div className="pt-4 lg:pt-6">
             {collabTag && (
               <span className="text-[12px] font-medium text-zinc-500 tracking-[0.15em] uppercase">
                 VASTRA × {collabTag}
               </span>
             )}
 
-            <div className="max-w-[420px]">
-              <h1 className="text-[32px] sm:text-[42px] lg:text-[52px] font-bold leading-[1.1] tracking-tight normal-case">
-                {productName || 'Product'}
-              </h1>
-            </div>
+            {/* Title */}
+            <h1 className="text-[28px] sm:text-[34px] lg:text-[44px] font-bold leading-[1.15] max-w-[520px] line-clamp-3 normal-case">
+              {productName || 'Product'}
+            </h1>
 
-            {/* Rating */}
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1">
+            {/* Rating — 16px below title */}
+            <div className="flex items-center gap-2 mt-4 mb-6">
+              <div className="flex items-center gap-0.5">
                 {[1, 2, 3, 4, 5].map((s) => (
                   <Star
                     key={s}
-                    size={15}
+                    size={16}
                     strokeWidth={1.5}
                     fill={s <= Math.round(averageRatingVal) ? 'currentColor' : 'none'}
-                    className={s <= Math.round(averageRatingVal) ? 'text-amber-500' : 'text-zinc-200 dark:text-zinc-700'}
+                    className={s <= Math.round(averageRatingVal) ? 'text-amber-500' : 'text-zinc-300 dark:text-zinc-600'}
                   />
                 ))}
               </div>
               <span className="text-[15px] text-zinc-500 font-normal tracking-wide normal-case">
-                {Number(averageRatingVal).toFixed(1)} ({totalNumReviews})
+                {Number(averageRatingVal).toFixed(1)}
+              </span>
+              <span className="text-[14px] text-zinc-400 font-normal normal-case">
+                ({totalNumReviews})
               </span>
             </div>
 
-            {/* Price */}
-            <div className="flex items-baseline gap-4">
+            {/* Price — 24px below rating */}
+            <div className="flex items-baseline gap-4 mb-7">
               {product.discountPrice ? (
                 <>
-                  <span className="text-[40px] lg:text-[44px] font-bold tracking-tight">{formatINR(product.discountPrice)}</span>
+                  <span className="text-[44px] lg:text-[52px] font-bold tracking-tight">{formatINR(product.discountPrice)}</span>
                   <span className="text-xl text-zinc-400 line-through">{formatINR(product.price)}</span>
                   <span className="text-sm font-bold text-red-600 bg-red-50 dark:bg-red-950/30 px-3 py-1 rounded-md border border-red-600">
                     -{discountPct}%
                   </span>
                 </>
               ) : (
-                <span className="text-[40px] lg:text-[44px] font-bold tracking-tight">{formatINR(product.price)}</span>
+                <span className="text-[44px] lg:text-[52px] font-bold tracking-tight">{formatINR(product.price)}</span>
               )}
             </div>
 
             {errorMsg && (
-              <div className="bg-red-600 text-white p-4 text-xs font-bold tracking-wider rounded-lg">
+              <div className="bg-red-600 text-white p-4 text-xs font-bold tracking-wider rounded-lg mb-6">
                 {errorMsg}
               </div>
             )}
 
-            {/* Color */}
-            <div>
-              <p className="text-[14px] font-semibold tracking-[0.12em] uppercase mb-4">
+            {/* Color — 28px below price */}
+            <div className="mb-6">
+              <p className="text-[14px] font-semibold tracking-[0.12em] uppercase mb-2">
                 Color: <span className="text-zinc-500 capitalize font-normal normal-case">{selectedColor || 'Select'}</span>
               </p>
-              <div className="flex gap-3 flex-wrap">
+              <div className="flex gap-2 flex-wrap">
                 {colors.map((color: any) => (
                   <button
                     key={color}
                     onClick={() => setSelectedColor(color)}
-                    className={`flex flex-col items-center gap-1.5 transition-all duration-200 cursor-pointer group ${selectedColor === color ? '' : 'opacity-50 hover:opacity-100'}`}
+                    className={`flex flex-col items-center gap-0.5 transition-all duration-200 cursor-pointer group ${selectedColor === color ? '' : 'opacity-60 hover:opacity-100'}`}
                   >
                     <span
-                      className={`w-[36px] h-[36px] rounded-full border-2 transition-all duration-200 block ${
+                      className={`w-[28px] h-[28px] rounded-full transition-all duration-200 block shadow-inner ${
                         selectedColor === color
-                          ? 'border-[hsl(var(--foreground))] ring-2 ring-[hsl(var(--foreground))] ring-offset-2 ring-offset-[hsl(var(--background))] scale-110'
-                          : 'border-zinc-300 dark:border-zinc-600 group-hover:scale-110 group-hover:border-zinc-400 dark:group-hover:border-zinc-500'
+                          ? 'border-[2px] border-[hsl(var(--foreground))] ring-[2.5px] ring-[hsl(var(--foreground))] ring-offset-[1.5px] ring-offset-[hsl(var(--background))] scale-105'
+                          : 'border border-zinc-300 dark:border-zinc-600 group-hover:scale-105 group-hover:border-zinc-400 dark:group-hover:border-zinc-500'
                       }`}
                       style={{ backgroundColor: getColorHex(color) }}
                     />
@@ -548,25 +550,25 @@ const ProductDetailsPage = () => {
               </div>
             </div>
 
-            {/* Size */}
-            <div>
-              <div className="flex justify-between items-center mb-4">
+            {/* Size — 28px below color */}
+            <div className="mb-8">
+              <div className="flex justify-between items-center mb-3">
                 <p className="text-[14px] font-semibold tracking-[0.12em] uppercase">
                   Size: <span className="text-zinc-500 font-normal normal-case">{selectedSize || 'Select'}</span>
                 </p>
                 <button
                   onClick={() => setSizeGuideOpen(true)}
-                  className="text-[13px] text-zinc-500 underline underline-offset-2 cursor-pointer hover:text-[hsl(var(--foreground))] transition-colors font-medium"
+                  className="text-[12px] text-zinc-500 underline underline-offset-2 cursor-pointer hover:text-[hsl(var(--foreground))] transition-colors font-semibold"
                 >
                   SIZE GUIDE
                 </button>
               </div>
-              <div className="flex flex-wrap gap-2.5">
+              <div className="flex flex-wrap gap-2">
                 {sizes.map((size: any) => (
                   <button
                     key={size}
                     onClick={() => setSelectedSize(size)}
-                    className={`min-w-[60px] px-5 py-3.5 rounded-lg border text-sm font-semibold transition-all duration-200 cursor-pointer active:scale-[0.97] ${
+                    className={`min-w-[52px] h-[44px] px-3 rounded-lg border text-sm font-semibold transition-all duration-200 cursor-pointer active:scale-[0.97] ${
                       selectedSize === size
                         ? 'bg-[hsl(var(--foreground))] text-[hsl(var(--background))] border-[hsl(var(--foreground))] shadow-sm'
                         : 'bg-[hsl(var(--card))] text-[hsl(var(--foreground))] border-zinc-300 dark:border-zinc-600 hover:border-[hsl(var(--foreground))] hover:shadow-sm'
@@ -578,17 +580,17 @@ const ProductDetailsPage = () => {
               </div>
             </div>
 
-            {/* Actions */}
-            <div className="flex gap-2.5 pt-1">
+            {/* Actions — 32px below size */}
+            <div className="flex gap-2.5">
               <button
                 onClick={handleBuyNow}
-                className="flex-1 h-[56px] rounded-xl text-sm font-bold tracking-wider transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer bg-[hsl(var(--foreground))] text-[hsl(var(--background))] hover:opacity-85 active:scale-[0.98] shadow-sm hover:shadow-md"
+                className="flex-[48%] h-[54px] rounded-xl text-[15px] font-bold tracking-wider transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer bg-[hsl(var(--foreground))] text-[hsl(var(--background))] hover:opacity-90 active:scale-[0.98] shadow-sm hover:shadow-md"
               >
                 BUY NOW
               </button>
               <button
                 onClick={handleAddToCart}
-                className={`flex-1 h-[56px] rounded-xl text-sm font-bold tracking-wider transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer border-2 ${
+                className={`flex-[48%] h-[54px] rounded-xl text-[15px] font-bold tracking-wider transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer border-2 ${
                   isAdded
                     ? 'bg-green-600 text-white border-green-600'
                     : 'bg-[hsl(var(--card))] text-[hsl(var(--foreground))] border-zinc-300 dark:border-zinc-600 hover:border-[hsl(var(--foreground))] hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))] active:scale-[0.98]'
@@ -612,10 +614,10 @@ const ProductDetailsPage = () => {
                     })
                   )
                 }
-                className={`h-[56px] w-[56px] shrink-0 rounded-xl border-2 transition-all duration-200 flex items-center justify-center cursor-pointer active:scale-[0.97] ${
+                className={`w-[52px] h-[52px] shrink-0 rounded-xl border-2 transition-all duration-200 flex items-center justify-center cursor-pointer active:scale-[0.95] ${
                   isWishlisted
                     ? 'bg-red-600 text-white border-red-600'
-                    : 'bg-[hsl(var(--card))] text-[hsl(var(--foreground))] border-zinc-300 dark:border-zinc-600 hover:border-red-400 hover:text-red-500 hover:shadow-sm'
+                    : 'bg-[hsl(var(--card))] text-[hsl(var(--foreground))] border-zinc-300 dark:border-zinc-600 hover:border-red-400 hover:text-red-500 hover:scale-105 hover:shadow-sm'
                 }`}
               >
                 <Heart className="w-5 h-5" fill={isWishlisted ? 'currentColor' : 'none'} strokeWidth={2} />
@@ -623,21 +625,21 @@ const ProductDetailsPage = () => {
             </div>
 
             {/* Trust badges */}
-            <div className="grid grid-cols-3 gap-2 pt-1">
+            <div className="grid grid-cols-3 gap-2 mt-6">
               {[
                 { icon: Truck, label: 'FREE SHIPPING' },
                 { icon: RotateCcw, label: '14 DAY RETURNS' },
                 { icon: ShieldCheck, label: 'SECURE CHECKOUT' },
               ].map(({ icon: Icon, label }) => (
-                <div key={label} className="flex flex-col items-center justify-center text-center py-3.5 px-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-[hsl(var(--card))] min-h-[76px] transition-all duration-250 hover:-translate-y-0.5 hover:border-zinc-300 dark:hover:border-zinc-600 hover:shadow-md">
-                  <Icon className="w-5 h-5 mb-1.5 text-zinc-500 dark:text-zinc-400" strokeWidth={1.5} />
+                <div key={label} className="flex flex-col items-center justify-center text-center py-3 px-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-[hsl(var(--card))] min-h-[68px] transition-all duration-250 hover:-translate-y-0.5 hover:border-zinc-300 dark:hover:border-zinc-600 hover:shadow-md">
+                  <Icon className="w-4 h-4 mb-1 text-zinc-500 dark:text-zinc-400" strokeWidth={1.5} />
                   <span className="text-[9px] font-semibold tracking-wider leading-tight">{label}</span>
                 </div>
               ))}
             </div>
 
             {/* Description */}
-            <div className="pt-2">
+            <div className="mt-6">
               <h3 className="text-[14px] font-semibold tracking-[0.12em] uppercase mb-3">
                 Description
               </h3>

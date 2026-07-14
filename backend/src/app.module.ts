@@ -14,6 +14,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { CartModule } from './modules/cart/cart.module';
 import { WishlistModule } from './modules/wishlist/wishlist.module';
 import { OrdersModule } from './modules/orders/orders.module';
+import { ReturnsModule } from './modules/returns/returns.module';
 @Module({
   imports: [
     DatabaseModule,
@@ -27,6 +28,7 @@ import { OrdersModule } from './modules/orders/orders.module';
     CartModule,
     WishlistModule,
     OrdersModule,
+    ReturnsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

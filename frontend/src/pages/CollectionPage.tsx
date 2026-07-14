@@ -216,16 +216,16 @@ const CollectionPage = () => {
               <ChevronRight size={16} strokeWidth={2.5} />
             </button>
           )}
-          {/* Category Cards */}
+          {/* Category Tabs */}
           <div
             ref={scrollRef}
             onScroll={checkScroll}
-            className="flex items-center gap-2 sm:gap-3 py-4 overflow-x-auto hide-scrollbar touch-pan-x"
+            className="flex items-center gap-2 sm:gap-3 overflow-x-auto hide-scrollbar touch-pan-x py-3"
           >
             {categoriesLoading ? (
-              <div className="flex gap-3">
+              <div className="flex gap-4">
                 {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="w-[90px] sm:w-[100px] h-[90px] sm:h-[100px] rounded-xl bg-zinc-100 dark:bg-zinc-800 animate-pulse shrink-0" />
+                  <div key={i} className="h-[14px] w-[60px] bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse shrink-0" />
                 ))}
               </div>
             ) : (
@@ -238,24 +238,21 @@ const CollectionPage = () => {
                   <Link
                     key={tab._id}
                     to={gender ? `/collections/${gender}/${tabSlug}` : `/collections/${tabSlug}`}
-                    className={`group relative flex items-center justify-center min-w-[90px] sm:min-w-[100px] h-[90px] sm:h-[100px] rounded-xl border-2 shrink-0 transition-all duration-250 cursor-pointer ${
+                    className={`group relative shrink-0 py-2 px-2 text-[13px] sm:text-[15px] font-bold tracking-wider transition-all duration-200 cursor-pointer ${
                       isActive
-                        ? 'bg-[hsl(var(--foreground))] text-[hsl(var(--background))] border-[hsl(var(--foreground))] shadow-lg scale-[1.04]'
-                        : 'bg-[hsl(var(--card))] text-[hsl(var(--foreground))] border-transparent hover:border-zinc-300 dark:hover:border-zinc-600 hover:shadow-md hover:-translate-y-0.5 hover:scale-[1.04]'
+                        ? 'text-[hsl(var(--foreground))]'
+                        : 'text-zinc-400 dark:text-zinc-500 hover:text-[hsl(var(--foreground))]'
                     }`}
                   >
-                    <span className={`text-[11px] sm:text-[12px] font-bold tracking-wider leading-tight text-center px-2 ${
-                      isActive ? 'text-[hsl(var(--background))]' : 'text-[hsl(var(--foreground))]'
-                    }`}>
-                      {displayName.toUpperCase()}
-                    </span>
+                    {displayName.toUpperCase()}
                     {isActive && (
                       <motion.span
                         layoutId="activeTab"
-                        className="absolute -bottom-[2px] left-1/2 -translate-x-1/2 w-8 h-[3px] rounded-full bg-[hsl(var(--background))]"
+                        className="absolute -bottom-[2px] left-1/2 -translate-x-1/2 w-[calc(100%-16px)] h-[3px] rounded-full bg-[hsl(var(--foreground))]"
                         transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                       />
                     )}
+                    <span className="absolute -bottom-[2px] left-1/2 -translate-x-1/2 w-0 group-hover:w-[calc(100%-16px)] h-[3px] rounded-full bg-zinc-300 dark:bg-zinc-600 transition-all duration-300" />
                   </Link>
                 );
               })
@@ -265,7 +262,7 @@ const CollectionPage = () => {
               <div className="relative" ref={sortRef}>
                 <button
                   onClick={() => setSortOpen(!sortOpen)}
-                  className="flex items-center gap-2 h-[90px] sm:h-[100px] px-4 sm:px-5 text-[11px] font-bold tracking-wider text-zinc-500 dark:text-zinc-400 hover:text-[hsl(var(--foreground))] transition-colors cursor-pointer border-2 border-transparent rounded-xl hover:border-zinc-200 dark:hover:border-zinc-700 hover:bg-[hsl(var(--card))]"
+                  className="flex items-center gap-2 py-2 px-3 text-[13px] sm:text-[15px] font-bold tracking-wider text-zinc-400 dark:text-zinc-500 hover:text-[hsl(var(--foreground))] transition-colors cursor-pointer"
                 >
                   {sortOptions.find((o) => o.value === sortBy)?.label}
                   <ChevronDown size={13} strokeWidth={2.5} className={`transition-transform duration-200 ${sortOpen ? 'rotate-180' : ''}`} />

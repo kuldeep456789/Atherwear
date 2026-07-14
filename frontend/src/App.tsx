@@ -18,6 +18,8 @@ import FaqPage from './pages/FaqPage';
 import ContactPage from './pages/ContactPage';
 import TrackOrderPage from './pages/TrackOrderPage';
 import OrderTrackingPage from './pages/OrderTrackingPage';
+import ShippingPolicyPage from './pages/ShippingPolicyPage';
+import ReturnsPage from './pages/ReturnsPage';
 import PrivateRoute from './components/auth/PrivateRoute';
 
 
@@ -61,6 +63,8 @@ function App() {
             <Route path="/faq" element={<FaqPage />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/track-order" element={<TrackOrderPage />} />
+            <Route path="/shipping-policy" element={<ShippingPolicyPage />} />
+            <Route path="/returns" element={<ReturnsPage />} />
           </Routes>
         </main>
 
