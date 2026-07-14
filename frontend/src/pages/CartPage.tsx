@@ -139,10 +139,10 @@ const CartPage = () => {
           <h2 className="text-2xl font-extrabold uppercase tracking-wide mb-2">Your shopping bag is empty</h2>
           <p className="text-zinc-500 dark:text-zinc-400 mb-8 text-sm max-w-sm mx-auto">Looks like you haven't added anything to your cart yet. Explore our latest arrivals to find something you love!</p>
           <div className="flex justify-center gap-4">
-            <Link to="/men" className="bg-black text-white dark:bg-white dark:text-black px-6 py-3 text-xs font-extrabold tracking-widest hover:bg-zinc-800 dark:hover:bg-zinc-200 transition">
+            <Link to="/collections/men" className="bg-black text-white dark:bg-white dark:text-black px-6 py-3 text-xs font-extrabold tracking-widest hover:bg-zinc-800 dark:hover:bg-zinc-200 transition">
               SHOP MEN
             </Link>
-            <Link to="/women" className="bg-transparent border border-black text-black dark:border-white dark:text-white px-6 py-3 text-xs font-extrabold tracking-widest hover:bg-zinc-50 dark:hover:bg-zinc-900 transition">
+            <Link to="/collections/women" className="bg-transparent border border-black text-black dark:border-white dark:text-white px-6 py-3 text-xs font-extrabold tracking-widest hover:bg-zinc-50 dark:hover:bg-zinc-900 transition">
               SHOP WOMEN
             </Link>
           </div>

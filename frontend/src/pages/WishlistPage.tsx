@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Heart, ShoppingBag, Trash2 } from 'lucide-react';
 import { formatINR } from '../lib/currency';
@@ -7,6 +7,7 @@ import { toggleWishlist } from '../store/slices/wishlistSlice';
 import { addToCart } from '../store/slices/cartSlice';
 
 const WishlistPage = () => {
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const wishlistItems = useSelector((state: RootState) => state.wishlist.wishlistItems);
 
@@ -46,12 +47,12 @@ const WishlistPage = () => {
               Your wishlist is empty
             </h2>
             <p className="text-zinc-500 text-sm mb-8 max-w-sm mx-auto">Save items you love by tapping the heart icon. They'll stay here for when you're ready to buy.</p>
-            <Link
-              to="/men"
-              className="inline-block bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-8 py-3.5 text-xs font-extrabold tracking-widest hover:opacity-90 transition-opacity"
+            <button
+              onClick={() => navigate('/', { state: { scrollTo: 'men' } })}
+              className="inline-block bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-8 py-3.5 text-xs font-extrabold tracking-widest hover:opacity-90 transition-opacity cursor-pointer"
             >
               START SHOPPING
-            </Link>
+            </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

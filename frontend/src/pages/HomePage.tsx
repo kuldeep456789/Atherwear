@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowRight, BadgePercent, ShieldCheck, Truck, X, Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '../store/store';
@@ -8,15 +8,30 @@ import { useLoginMutation } from '../store/slices/userApiSlice';
 
 import { useGetProductsQuery } from '../store/slices/productApiSlice';
 import ProductCard from '../components/product/ProductCard';
+import Pagination from '../components/Pagination';
 import { getFirstProductImage } from '../lib/product';
-import { formatINR } from '../lib/currency';
+import { formatUSD } from '../lib/currency';
 
-const placeholderImage = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="500" viewBox="0 0 400 500"><rect width="100%" height="100%" fill="%23f4f4f5"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="24" font-weight="900" fill="%23a1a1aa" letter-spacing="4">VASTRA</text></svg>';
+const placeholderImage = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="800" viewBox="0 0 400 500"><rect width="100%" height="100%" fill="%23f4f4f5"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="24" font-weight="900" fill="%23a1a1aa" letter-spacing="4">AETHERWEAR</text></svg>';
+
+const ITEMS_PER_PAGE = 10;
 
 const HomePage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch();
   const userInfo = useSelector((state: RootState) => state.auth.userInfo);
+
+  useEffect(() => {
+    if (location.state?.scrollTo) {
+      const section = document.getElementById(location.state.scrollTo);
+      if (section) {
+        setTimeout(() => {
+          section.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    }
+  }, [location.state]);
 
   const [login, { isLoading: loginLoading }] = useLoginMutation();
 
@@ -27,7 +42,36 @@ const HomePage = () => {
     pageSize: 12,
   });
 
+  const { data: menData } = useGetProductsQuery({
+    collectionType: 'Men',
+    pageNum: 1,
+    pageSize: 80,
+  });
+
+  const { data: womenData } = useGetProductsQuery({
+    collectionType: 'Women',
+    pageNum: 1,
+    pageSize: 80,
+  });
+
   const newArrivals = Array.isArray(newArrivalsData?.products) ? newArrivalsData.products : [];
+  const menProducts = Array.isArray(menData?.products) ? menData.products : [];
+  const womenProducts = Array.isArray(womenData?.products) ? womenData.products : [];
+
+  const [menShowAll, setMenShowAll] = useState(false);
+  const [menPage, setMenPage] = useState(1);
+  const [womenShowAll, setWomenShowAll] = useState(false);
+  const [womenPage, setWomenPage] = useState(1);
+
+  const menTotalPages = Math.max(1, Math.ceil(menProducts.length / ITEMS_PER_PAGE));
+  const womenTotalPages = Math.max(1, Math.ceil(womenProducts.length / ITEMS_PER_PAGE));
+
+  const visibleMen = menShowAll
+    ? menProducts.slice((menPage - 1) * ITEMS_PER_PAGE, menPage * ITEMS_PER_PAGE)
+    : menProducts.slice(0, ITEMS_PER_PAGE);
+  const visibleWomen = womenShowAll
+    ? womenProducts.slice((womenPage - 1) * ITEMS_PER_PAGE, womenPage * ITEMS_PER_PAGE)
+    : womenProducts.slice(0, ITEMS_PER_PAGE);
 
   // For hero slideshow, use new arrivals images
   const heroImages = useMemo(() => {
@@ -111,7 +155,7 @@ const HomePage = () => {
             ) : (
               <img
                 src={img}
-                alt="VASTRA fashion collection"
+                alt="Aetherwear streetwear collection"
                 loading={idx === 0 ? 'eager' : 'lazy'}
                 onError={() => setHeroFailedImgs(prev => new Set(prev).add(idx))}
                 className="h-full w-full object-cover object-center"
@@ -123,21 +167,21 @@ const HomePage = () => {
         <div className="relative z-10 flex min-h-[calc(100vh-130px)] w-full max-w-[1920px] mx-auto px-6 sm:px-10 lg:px-16 py-16 items-end">
           <div className="w-full flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8 pb-10">
             <div className="max-w-3xl">
-              <p className="text-sm sm:text-base font-black tracking-[0.3em] text-[#C9A227] mb-4">PREMIUM MINIMAL FASHION</p>
+              {/* <p className="text-sm sm:text-base font-black tracking-[0.3em] text-red-500 mb-4">NEW SEASON DROP</p> */}
               <h1 className="text-[2.5rem] min-[375px]:text-5xl sm:text-7xl lg:text-[6rem] font-black leading-[0.85] tracking-tighter uppercase">
                 <span className="block sm:hidden whitespace-nowrap">VASTRA</span>
                 <span className="hidden sm:block">VASTRA</span>
               </h1>
-              <p className="mt-4 sm:mt-6 text-sm sm:text-base text-zinc-400 max-w-lg normal-case tracking-normal font-medium leading-relaxed">
-                Premium minimal fashion for the modern wardrobe. Timeless design, effortless style.
-              </p>
+              {/* <p className="mt-4 sm:mt-6 text-sm sm:text-base text-zinc-400 max-w-lg normal-case tracking-normal font-medium leading-relaxed">
+                Premium streetwear engineered for the modern rebel. Limited drops, infinite attitude.
+              </p> */}
               <div className="mt-8 sm:mt-10 flex flex-row gap-3 sm:gap-0 w-full sm:w-auto">
-                <Link to="/men" className="group/btn flex-1 sm:flex-initial justify-center inline-flex items-center gap-3 bg-white px-6 py-5 sm:px-14 sm:py-7 text-sm sm:text-lg font-black tracking-widest text-black transition-all duration-300 hover:bg-red-600 hover:text-white border-2 border-white relative overflow-hidden shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0">
+                <Link to="/collections/men" className="group/btn flex-1 sm:flex-initial justify-center inline-flex items-center gap-3 bg-white px-6 py-5 sm:px-14 sm:py-7 text-sm sm:text-lg font-black tracking-widest text-black transition-all duration-300 hover:bg-red-600 hover:text-white border-2 border-white relative overflow-hidden shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0">
                   <span className="relative z-10 flex items-center gap-3 whitespace-nowrap">
                     SHOP MEN <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300 group-hover/btn:translate-x-1" />
                   </span>
                 </Link>
-                <Link to="/women" className="group/btn flex-1 sm:flex-initial justify-center inline-flex items-center gap-3 px-6 py-5 sm:px-14 sm:py-7 text-sm sm:text-lg font-black tracking-widest text-white transition-all duration-300 hover:bg-white hover:text-black border-2 border-white sm:-ml-[2px] relative overflow-hidden shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0">
+                <Link to="/collections/women" className="group/btn flex-1 sm:flex-initial justify-center inline-flex items-center gap-3 px-6 py-5 sm:px-14 sm:py-7 text-sm sm:text-lg font-black tracking-widest text-white transition-all duration-300 hover:bg-white hover:text-black border-2 border-white sm:-ml-[2px] relative overflow-hidden shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0">
                   <span className="relative z-10 flex items-center gap-3 whitespace-nowrap">
                     SHOP WOMEN <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300 group-hover/btn:translate-x-1" />
                   </span>
@@ -178,7 +222,7 @@ const HomePage = () => {
       <section className="border-b-2 border-black dark:border-white bg-[hsl(var(--card))]">
         <div className="flex flex-col md:flex-row">
           {[
-            { icon: Truck, title: 'FREE SHIPPING', copy: `On orders above ${formatINR(399)}` },
+            { icon: Truck, title: 'FREE SHIPPING', copy: `On orders above ${formatUSD(399)}` },
             { icon: ShieldCheck, title: 'ORIGINAL QUALITY', copy: 'Checked fabrics & finishing' },
             { icon: BadgePercent, title: 'BUNDLE PRICING', copy: 'Buy 3 and save more' },
           ].map(({ icon: Icon, title, copy }, idx) => (
@@ -204,19 +248,113 @@ const HomePage = () => {
                 <p className="text-xs sm:text-sm font-black tracking-[0.25em] text-zinc-500 mb-2">FRESH DROPS</p>
                 <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-none">NEW ARRIVALS</h2>
               </div>
-
+              <Link
+                to="/new-arrivals"
+                className="hidden sm:inline-flex items-center gap-2 text-xs sm:text-sm font-black tracking-widest hover:underline underline-offset-4 transition-all group"
+              >
+                VIEW ALL <ArrowRight size={16} strokeWidth={2.5} className="group-hover:translate-x-1 transition-transform" />
+              </Link>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 border-t-2 border-l-2 border-black dark:border-white">
               {newArrivals.slice(0, 8).map((product: any) => (
                 <ProductCard key={product.pid || product._id} product={product} />
               ))}
             </div>
-
+            <div className="mt-8 text-center sm:hidden">
+              <Link
+                to="/new-arrivals"
+                className="inline-flex items-center gap-2 px-8 py-4 border-2 border-black dark:border-white text-xs font-black tracking-widest hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))] transition-colors"
+              >
+                VIEW ALL NEW ARRIVALS <ArrowRight size={14} strokeWidth={2.5} />
+              </Link>
+            </div>
           </div>
         </section>
       )}
 
+      {/* ───────── MEN'S COLLECTION ───────── */}
+      {menProducts.length > 0 && (
+        <section id="men" className="border-b-2 border-black dark:border-white">
+          <div className="max-w-[1920px] mx-auto px-6 sm:px-10 lg:px-16 py-12 sm:py-16 lg:py-20">
+            <div className="flex items-end justify-between mb-8 sm:mb-10">
+              <div>
+                <p className="text-xs sm:text-sm font-black tracking-[0.25em] text-zinc-500 mb-2">MEN'S DROP</p>
+                <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-none">MEN</h2>
+              </div>
+              <button
+                onClick={() => {
+                  setMenShowAll(!menShowAll);
+                  setMenPage(1);
+                }}
+                className="hidden sm:inline-flex items-center gap-2 text-xs sm:text-sm font-black tracking-widest hover:underline underline-offset-4 transition-all group cursor-pointer"
+              >
+                {menShowAll ? 'SHOW LESS' : 'ALL'} <ArrowRight size={16} strokeWidth={2.5} className="group-hover:translate-x-1 transition-transform" />
+              </button>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 border-t-2 border-l-2 border-black dark:border-white">
+              {visibleMen.map((product: any) => (
+                <ProductCard key={product.pid || product._id} product={product} />
+              ))}
+            </div>
+            {menShowAll && (
+              <Pagination currentPage={menPage} totalPages={menTotalPages} onPageChange={(p) => { setMenPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />
+            )}
+            <div className="mt-8 text-center sm:hidden">
+              <button
+                onClick={() => {
+                  setMenShowAll(!menShowAll);
+                  setMenPage(1);
+                }}
+                className="inline-flex items-center gap-2 px-8 py-4 border-2 border-black dark:border-white text-xs font-black tracking-widest hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))] transition-colors cursor-pointer"
+              >
+                {menShowAll ? 'SHOW LESS' : `ALL (${menProducts.length})`} <ArrowRight size={14} strokeWidth={2.5} />
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
 
+      {/* ───────── WOMEN'S COLLECTION ───────── */}
+      {womenProducts.length > 0 && (
+        <section id="women" className="border-b-2 border-black dark:border-white">
+          <div className="max-w-[1920px] mx-auto px-6 sm:px-10 lg:px-16 py-12 sm:py-16 lg:py-20">
+            <div className="flex items-end justify-between mb-8 sm:mb-10">
+              <div>
+                <p className="text-xs sm:text-sm font-black tracking-[0.25em] text-zinc-500 mb-2">WOMEN'S DROP</p>
+                <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-none">WOMEN</h2>
+              </div>
+              <button
+                onClick={() => {
+                  setWomenShowAll(!womenShowAll);
+                  setWomenPage(1);
+                }}
+                className="hidden sm:inline-flex items-center gap-2 text-xs sm:text-sm font-black tracking-widest hover:underline underline-offset-4 transition-all group cursor-pointer"
+              >
+                {womenShowAll ? 'SHOW LESS' : 'ALL'} <ArrowRight size={16} strokeWidth={2.5} className="group-hover:translate-x-1 transition-transform" />
+              </button>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 border-t-2 border-l-2 border-black dark:border-white">
+              {visibleWomen.map((product: any) => (
+                <ProductCard key={product.pid || product._id} product={product} />
+              ))}
+            </div>
+            {womenShowAll && (
+              <Pagination currentPage={womenPage} totalPages={womenTotalPages} onPageChange={(p) => { setWomenPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />
+            )}
+            <div className="mt-8 text-center sm:hidden">
+              <button
+                onClick={() => {
+                  setWomenShowAll(!womenShowAll);
+                  setWomenPage(1);
+                }}
+                className="inline-flex items-center gap-2 px-8 py-4 border-2 border-black dark:border-white text-xs font-black tracking-widest hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))] transition-colors cursor-pointer"
+              >
+                {womenShowAll ? 'SHOW LESS' : `ALL (${womenProducts.length})`} <ArrowRight size={14} strokeWidth={2.5} />
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
       {/* ── 10s LOGIN POPUP ── */}
       {showLoginPopup && !userInfo && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
