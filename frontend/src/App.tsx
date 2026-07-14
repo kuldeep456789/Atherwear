@@ -17,6 +17,7 @@ import AccountPage from './pages/AccountPage';
 import FaqPage from './pages/FaqPage';
 import ContactPage from './pages/ContactPage';
 import TrackOrderPage from './pages/TrackOrderPage';
+import OrderTrackingPage from './pages/OrderTrackingPage';
 import PrivateRoute from './components/auth/PrivateRoute';
 
 
@@ -56,6 +57,7 @@ function App() {
             <Route path="/payment" element={<PrivateRoute><PaymentPage /></PrivateRoute>} />
             <Route path="/placeorder" element={<PrivateRoute><PlaceOrderPage /></PrivateRoute>} />
             <Route path="/order/:id" element={<PrivateRoute><OrderSuccessPage /></PrivateRoute>} />
+            <Route path="/orders/:id" element={<PrivateRoute><OrderTrackingPage /></PrivateRoute>} />
             <Route path="/faq" element={<FaqPage />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/track-order" element={<TrackOrderPage />} />

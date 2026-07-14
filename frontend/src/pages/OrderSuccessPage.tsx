@@ -142,7 +142,7 @@ const OrderSuccessPage = () => {
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
           <Link
-            to={`/order/${order._id}`}
+            to={`/orders/${order._id}`}
             className="inline-flex items-center gap-2.5 h-[52px] px-8 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[15px] font-bold hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all duration-200 shadow-md hover:shadow-lg active:scale-[0.98]"
           >
             <FileText size={18} strokeWidth={2} />
@@ -150,6 +150,7 @@ const OrderSuccessPage = () => {
           </Link>
           <Link
             to="/"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             className="inline-flex items-center gap-2.5 h-[52px] px-8 rounded-xl border-2 border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 text-[15px] font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all duration-200 active:scale-[0.98]"
           >
             <ShoppingBag size={18} strokeWidth={2} />

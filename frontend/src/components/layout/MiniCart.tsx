@@ -1,5 +1,5 @@
 import { useDispatch, useSelector } from 'react-redux';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import type { RootState } from '../../store/store';
 import { addToCart, removeFromCart } from '../../store/slices/cartSlice';
 import type { CartItem } from '../../store/slices/cartSlice';
@@ -13,6 +13,7 @@ interface MiniCartProps {
 
 const MiniCart = ({ isOpen, onClose }: MiniCartProps) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { cartItems, totalPrice } = useSelector((state: RootState) => state.cart);
 
   const updateQty = (item: CartItem, delta: number) => {
@@ -77,7 +78,7 @@ const MiniCart = ({ isOpen, onClose }: MiniCartProps) => {
                 </p>
               </div>
               <button
-                onClick={onClose}
+                onClick={() => { onClose(); navigate('/'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                 className="px-8 py-4 bg-[hsl(var(--foreground))] text-[hsl(var(--background))] text-xs font-black tracking-widest border-2 border-black dark:border-white hover:bg-red-600 hover:text-white hover:border-red-600 transition-colors uppercase"
               >
                 Continue Shopping

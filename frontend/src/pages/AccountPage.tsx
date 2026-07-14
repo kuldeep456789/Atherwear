@@ -199,7 +199,7 @@ const AccountPage = () => {
                         return (
                           <Link
                             key={order._id}
-                            to={`/order/${order._id}`}
+                            to={`/orders/${order._id}`}
                             className="group block rounded-2xl border border-zinc-200 dark:border-[#2A2A2A] bg-white dark:bg-[#18181B] hover:border-zinc-300 dark:hover:border-zinc-600 hover:shadow-lg dark:hover:shadow-[0_8px_30px_rgba(0,0,0,0.4)] transition-all duration-250"
                           >
                             <div className="p-5 sm:p-6">
@@ -309,6 +309,7 @@ const AccountPage = () => {
                       <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                         <Link
                           to="/"
+                          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                           className="inline-flex items-center gap-2.5 h-[52px] px-8 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[15px] font-bold hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all duration-200 shadow-md hover:shadow-lg active:scale-[0.98]"
                         >
                           <ShoppingBag size={18} strokeWidth={2} />
@@ -458,6 +459,7 @@ const AccountPage = () => {
                           </div>
                           <Link
                             to="/"
+                            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                             className="inline-flex items-center gap-2.5 h-[48px] px-6 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[14px] font-semibold hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all duration-200 active:scale-[0.98] shadow-sm"
                           >
                             <ShoppingBag size={16} strokeWidth={2} />
