@@ -4,7 +4,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '../store/store';
 import CheckoutSteps from '../components/checkout/CheckoutSteps';
 import OrderSummarySidebar from '../components/checkout/OrderSummarySidebar';
-import { MapPin, CreditCard, Loader2 } from 'lucide-react';
+import { MapPin, CreditCard, ShoppingBag, Loader2, Pencil } from 'lucide-react';
 import { formatINR } from '../lib/currency';
 import { clearCartItems } from '../store/slices/cartSlice';
 import {
@@ -55,7 +55,6 @@ const PlaceOrderPage = () => {
     }
 
     try {
-      // Step 1: Create the order in our backend
       const items = cart.cartItems.map((item) => ({
         productId: item._id,
         quantity: item.qty,
@@ -68,8 +67,6 @@ const PlaceOrderPage = () => {
         paymentMethod: normalizedPaymentMethod,
       }).unwrap();
 
-      console.log('Order Response:', res);
-
       const orderId = res.order._id;
 
       if (normalizedPaymentMethod === 'COD') {
@@ -78,18 +75,14 @@ const PlaceOrderPage = () => {
         return;
       }
 
-      // Step 2: Create Razorpay order on backend (gets gateway order + key)
       const razorpayRes = await createRazorpayOrder(orderId).unwrap();
-      console.log('Razorpay Order Response:', razorpayRes);
 
-      // Step 3: Load the Razorpay checkout SDK
       const isScriptLoaded = await loadRazorpayScript();
       if (!isScriptLoaded) {
         setLocalError('Failed to load Razorpay checkout. Please check your internet connection and try again.');
         return;
       }
 
-      // Step 4: Open the Razorpay payment popup
       const options = {
         key: razorpayRes.keyId,
         amount: razorpayRes.gatewayOrder.amount,
@@ -97,8 +90,6 @@ const PlaceOrderPage = () => {
         name: 'VASTRA',
         description: `Order #${orderId}`,
         order_id: razorpayRes.gatewayOrder.id,
-
-        // Called by Razorpay after successful payment
         handler: async (response: any) => {
           try {
             await verifyRazorpayPayment({
@@ -107,7 +98,6 @@ const PlaceOrderPage = () => {
               razorpayPaymentId: response.razorpay_payment_id,
               razorpaySignature: response.razorpay_signature,
             }).unwrap();
-
             dispatch(clearCartItems());
             navigate(`/order/${orderId}`);
           } catch (err: any) {
@@ -118,46 +108,26 @@ const PlaceOrderPage = () => {
             );
           }
         },
-
         prefill: {
           name: userInfo ? `${userInfo.firstName} ${userInfo.lastName}`.trim() : '',
           email: userInfo?.email || '',
           contact: userInfo?.phone || '',
         },
-
-        notes: {
-          order_id: orderId,
-        },
-
-        theme: {
-          color: '#000000',
-        },
-
+        notes: { order_id: orderId },
+        theme: { color: '#000000' },
         modal: {
-          // User closed the payment popup without paying
           ondismiss: () => {
-            setLocalError(
-              'Payment was cancelled. Your order has been saved — you can complete payment from the order page.'
-            );
-            // Navigate to the unpaid order so user can retry later
+            setLocalError('Payment was cancelled. Your order has been saved — you can complete payment from the order page.');
             navigate(`/order/${orderId}`);
           },
         },
       };
 
-      console.log('Razorpay Options:', options);
-
       const rzp = new (window as any).Razorpay(options);
-
       rzp.on('payment.failed', (response: any) => {
         console.error('[Razorpay] Payment failed:', response.error);
-        console.log('Razorpay payment.failed payload:', response);
-        setLocalError(
-          response.error?.description ||
-          'Payment failed. Please try a different card or payment method.'
-        );
+        setLocalError(response.error?.description || 'Payment failed. Please try a different card or payment method.');
       });
-
       rzp.open();
     } catch (err: any) {
       console.error('Failed to place order:', err);
@@ -165,74 +135,112 @@ const PlaceOrderPage = () => {
     }
   };
 
+  const isProcessing = isLoading || isRazorpayLoading || isPaymentLoading;
+
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 py-8 sm:py-12">
-      <div className="container mx-auto px-4 sm:px-6 max-w-6xl">
-      <CheckoutSteps step1 step2 step3 />
+    <div className="min-h-screen bg-zinc-50 dark:bg-[#0F0F10] pt-[100px] sm:pt-[104px] lg:pt-[112px]">
+      <div className="mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+        <CheckoutSteps step1 step2 step3 />
 
-      {(error || localError) && (
-        <div className="mb-8 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 p-4 rounded-md text-sm font-semibold">
-          {localError || (error as any)?.data?.message || 'Failed to place order. Please try again.'}
-        </div>
-      )}
+        {localError && (
+          <div className="mb-6 rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 p-4 text-sm font-semibold">
+            {localError}
+          </div>
+        )}
 
-      <div className="flex flex-col lg:flex-row gap-12 lg:gap-24 mt-12">
-        {/* Left: Review Details */}
-        <div className="lg:w-3/5 space-y-12">
-          
-          <section>
-            <h2 className="text-2xl font-black uppercase tracking-widest mb-6 dark:text-white flex items-center gap-2">
-              <MapPin className="w-6 h-6" /> Shipping
-            </h2>
-            <div className="bg-gray-50 dark:bg-gray-900 p-6 rounded-md border border-gray-200 dark:border-gray-800 dark:text-gray-300 flex justify-between items-start">
-              <p className="text-sm leading-relaxed">
-                {cart.shippingAddress.address}<br />
-                {cart.shippingAddress.city}, {cart.shippingAddress.postalCode}<br />
-                {cart.shippingAddress.country}
-              </p>
-              <Link className="text-xs underline hover:text-black dark:hover:text-white shrink-0 ml-4" to="/shipping">Edit</Link>
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 xl:gap-12 mt-2">
+          {/* Left: Review Details */}
+          <div className="w-full lg:w-[65%] space-y-6">
+            {/* Shipping */}
+            <div className="rounded-2xl border border-zinc-200 dark:border-[#2A2A2A] bg-white dark:bg-[#18181B] overflow-hidden">
+              <div className="px-6 sm:px-8 py-5 flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800">
+                <h2 className="text-[18px] font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                  <MapPin size={18} className="text-zinc-400" strokeWidth={1.5} />
+                  Shipping Address
+                </h2>
+                <Link to="/shipping" className="flex items-center gap-1.5 text-[13px] font-medium text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">
+                  <Pencil size={14} strokeWidth={1.5} />
+                  Edit
+                </Link>
+              </div>
+              <div className="px-6 sm:px-8 py-5">
+                <p className="text-[15px] text-zinc-700 dark:text-zinc-300 leading-relaxed">
+                  {cart.shippingAddress.address}<br />
+                  {cart.shippingAddress.city}, {cart.shippingAddress.postalCode}<br />
+                  {cart.shippingAddress.country}<br />
+                  {cart.shippingAddress.phone && <span className="text-zinc-500 dark:text-zinc-400 text-sm">{cart.shippingAddress.phone}</span>}
+                </p>
+              </div>
             </div>
-          </section>
 
-          <section>
-            <h2 className="text-2xl font-black uppercase tracking-widest mb-6 dark:text-white flex items-center gap-2">
-              <CreditCard className="w-6 h-6" /> Payment
-            </h2>
-            <div className="bg-gray-50 dark:bg-gray-900 p-6 rounded-md border border-gray-200 dark:border-gray-800 dark:text-gray-300 flex justify-between items-center">
-              <p className="text-sm font-semibold">{cart.paymentMethod}</p>
-              <Link className="text-xs underline hover:text-black dark:hover:text-white" to="/payment">Edit</Link>
+            {/* Payment */}
+            <div className="rounded-2xl border border-zinc-200 dark:border-[#2A2A2A] bg-white dark:bg-[#18181B] overflow-hidden">
+              <div className="px-6 sm:px-8 py-5 flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800">
+                <h2 className="text-[18px] font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                  <CreditCard size={18} className="text-zinc-400" strokeWidth={1.5} />
+                  Payment Method
+                </h2>
+                <Link to="/payment" className="flex items-center gap-1.5 text-[13px] font-medium text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">
+                  <Pencil size={14} strokeWidth={1.5} />
+                  Edit
+                </Link>
+              </div>
+              <div className="px-6 sm:px-8 py-5">
+                <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
+                  {cart.paymentMethod === 'COD' ? (
+                    <svg className="w-5 h-5 text-zinc-600 dark:text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                  ) : (
+                    <CreditCard size={18} className="text-zinc-600 dark:text-zinc-400" strokeWidth={1.5} />
+                  )}
+                  <span className="text-[15px] font-semibold text-zinc-900 dark:text-white">
+                    {cart.paymentMethod === 'COD' ? 'Cash on Delivery' : 'Razorpay Secure'}
+                  </span>
+                </div>
+              </div>
             </div>
-          </section>
 
-        </div>
-
-        {/* Right: Summary + CTA */}
-        <div className="lg:w-2/5">
-          <OrderSummarySidebar
-            buttonText={
-              isLoading 
-                ? 'PLACING ORDER...' 
-                : isRazorpayLoading 
-                  ? 'GENERATING PAYMENT...' 
-                  : isPaymentLoading 
-                    ? 'VERIFYING...' 
-                    : 'PLACE ORDER'
-            }
-            buttonAction={placeOrderHandler}
-            disableButton={isLoading || isRazorpayLoading || isPaymentLoading || cart.totalPrice < 1}
-          />
-          {(isLoading || isRazorpayLoading || isPaymentLoading) && (
-            <div className="flex items-center justify-center gap-2 mt-4 text-sm text-gray-500 dark:text-gray-400">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              {isLoading 
-                ? 'Sending your order to our servers…' 
-                : isRazorpayLoading 
-                  ? 'Connecting to secure payment gateway…' 
-                  : 'Verifying payment signature…'}
+            {/* Items */}
+            <div className="rounded-2xl border border-zinc-200 dark:border-[#2A2A2A] bg-white dark:bg-[#18181B] overflow-hidden">
+              <div className="px-6 sm:px-8 py-5 border-b border-zinc-100 dark:border-zinc-800">
+                <h2 className="text-[18px] font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                  <ShoppingBag size={18} className="text-zinc-400" strokeWidth={1.5} />
+                  Items ({cart.cartItems.reduce((a, i) => a + i.qty, 0)})
+                </h2>
+              </div>
+              <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                {cart.cartItems.map((item) => (
+                  <div key={`${item._id}-${item.variant.size}-${item.variant.color}`} className="px-6 sm:px-8 py-4 flex items-center gap-4">
+                    <div className="w-[60px] h-[72px] shrink-0 rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                      <img src={item.image || undefined} alt={item.name} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[14px] font-semibold text-zinc-900 dark:text-white line-clamp-1">{item.name}</p>
+                      <p className="text-[12px] text-zinc-400 dark:text-zinc-500 mt-0.5 uppercase">
+                        {item.variant.color} &middot; {item.variant.size} &middot; Qty: {item.qty}
+                      </p>
+                    </div>
+                    <p className="text-[15px] font-bold text-zinc-900 dark:text-white shrink-0">{formatINR(item.price)}</p>
+                  </div>
+                ))}
+              </div>
             </div>
-          )}
+          </div>
+
+          {/* Right: Summary + CTA */}
+          <div className="w-full lg:w-[35%]">
+            <OrderSummarySidebar
+              buttonText={isProcessing ? 'Processing...' : 'Place Order'}
+              buttonAction={placeOrderHandler}
+              disableButton={isProcessing || cart.totalPrice < 1}
+            />
+            {isProcessing && (
+              <div className="flex items-center justify-center gap-2 mt-4 text-sm text-zinc-500 dark:text-zinc-400">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                {isLoading ? 'Sending your order…' : isRazorpayLoading ? 'Connecting to payment gateway…' : 'Verifying payment…'}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
       </div>
     </div>
   );

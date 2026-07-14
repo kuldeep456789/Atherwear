@@ -5,52 +5,30 @@ import type { RootState } from '../store/store';
 import { savePaymentMethod } from '../store/slices/cartSlice';
 import CheckoutSteps from '../components/checkout/CheckoutSteps';
 import OrderSummarySidebar from '../components/checkout/OrderSummarySidebar';
-import { CreditCard, Wallet, Truck, ShieldCheck } from 'lucide-react';
+import { CreditCard, Wallet, Truck, ShieldCheck, Building, Smartphone, Landmark } from 'lucide-react';
 
-const PaymentOption = ({
-  value, label, sub, icons, checked, onSelect,
-}: {
-  value: string; label: string; sub: string; icons: React.ReactNode;
-  checked: boolean; onSelect: (v: string) => void;
-}) => (
-  <label
-    className={`relative flex items-center gap-4 px-5 sm:px-6 py-5 cursor-pointer transition-colors border-2 ${checked
-      ? 'border-black dark:border-white'
-      : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600'
-      }`}
-  >
-    {checked && <span className="absolute left-0 top-0 h-full w-1 bg-red-600" />}
-
-    <input
-      type="radio"
-      name="paymentMethod"
-      value={value}
-      checked={checked}
-      onChange={(e) => onSelect(e.target.value)}
-      className="sr-only"
-    />
-
-    {/* Custom radio */}
-    <span
-      className={`shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${checked ? 'border-black dark:border-white' : 'border-zinc-300 dark:border-zinc-600'
-        }`}
-    >
-      {checked && <span className="w-2.5 h-2.5 rounded-full bg-black dark:bg-white" />}
-    </span>
-
-    <div className="flex flex-1 items-center justify-between gap-4">
-      <div>
-        <p className="text-sm sm:text-base font-black uppercase tracking-tight text-zinc-900 dark:text-white">
-          {label}
-        </p>
-        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 normal-case">{sub}</p>
+const paymentOptions = [
+  {
+    value: 'Razorpay',
+    label: 'Razorpay Secure',
+    sub: 'Pay via Credit Card, UPI, Net Banking & more',
+    icon: CreditCard,
+    icons: (
+      <div className="flex gap-2">
+        <CreditCard size={20} strokeWidth={1.5} />
+        <Smartphone size={20} strokeWidth={1.5} />
+        <Landmark size={20} strokeWidth={1.5} />
       </div>
-      <div className={`flex gap-2 shrink-0 transition-colors ${checked ? 'text-black dark:text-white' : 'text-zinc-300 dark:text-zinc-600'}`}>
-        {icons}
-      </div>
-    </div>
-  </label>
-);
+    ),
+  },
+  {
+    value: 'COD',
+    label: 'Cash on Delivery',
+    sub: 'Pay when your order is delivered to your doorstep',
+    icon: Truck,
+    icons: <Truck size={20} strokeWidth={1.5} />,
+  },
+];
 
 const PaymentPage = () => {
   const cart = useSelector((state: RootState) => state.cart);
@@ -71,56 +49,92 @@ const PaymentPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[hsl(var(--background))] text-[hsl(var(--foreground))] font-sans">
-      <div className="max-w-6xl mx-auto px-6 sm:px-10 py-10 sm:py-16">
-
+    <div className="min-h-screen bg-zinc-50 dark:bg-[#0F0F10] pt-[100px] sm:pt-[104px] lg:pt-[112px]">
+      <div className="mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
         <CheckoutSteps step1 step2 />
 
-        <div className="flex flex-col lg:flex-row gap-0 lg:gap-10 mt-8 border-2 border-black dark:border-white">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 xl:gap-12 mt-2">
 
           {/* ── Left: Payment options ── */}
-          <div className="lg:w-3/5 border-b-2 lg:border-b-0 lg:border-r-2 border-black dark:border-white">
+          <div className="w-full lg:w-[65%]">
+            <div className="rounded-2xl border border-zinc-200 dark:border-[#2A2A2A] bg-white dark:bg-[#18181B] overflow-hidden">
+              <div className="px-6 sm:px-8 pt-6 sm:pt-8 pb-4 border-b border-zinc-100 dark:border-zinc-800">
+                <span className="text-[12px] font-semibold uppercase tracking-[0.2em] text-zinc-400 dark:text-zinc-500">
+                  Step 02 / 03
+                </span>
+                <h1 className="mt-2 text-[28px] sm:text-[32px] font-bold text-zinc-900 dark:text-white tracking-tight">
+                  Payment Method
+                </h1>
+                <p className="mt-1 text-[15px] text-zinc-500 dark:text-zinc-400">
+                  Choose how you'd like to pay
+                </p>
+              </div>
 
-            <div className="px-6 sm:px-10 py-8 border-b-2 border-black dark:border-white">
-              <span className="text-[10px] font-black uppercase tracking-[0.25em] text-red-600">
-                Step 02 / 03
-              </span>
-              <h1 className="mt-2 text-3xl sm:text-4xl font-black uppercase tracking-tighter leading-none">
-                Payment Method
-              </h1>
-              <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400 normal-case">
-                Choose how you'd like to pay
-              </p>
-            </div>
+              <div className="px-6 sm:px-8 py-6 space-y-4">
+                {paymentOptions.map((option) => {
+                  const Icon = option.icon;
+                  const isSelected = paymentMethod === option.value;
+                  return (
+                    <button
+                      key={option.value}
+                      onClick={() => setPaymentMethod(option.value)}
+                      className={`relative w-full flex items-center gap-5 px-5 sm:px-6 py-5 rounded-xl border-2 transition-all duration-200 text-left cursor-pointer group ${
+                        isSelected
+                          ? 'border-zinc-900 dark:border-white bg-zinc-50 dark:bg-zinc-900/50 shadow-sm'
+                          : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-[#18181B] hover:border-zinc-300 dark:hover:border-zinc-600 hover:shadow-sm'
+                      }`}
+                    >
+                      {/* Radio indicator */}
+                      <span className={`shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
+                        isSelected ? 'border-zinc-900 dark:border-white' : 'border-zinc-300 dark:border-zinc-600'
+                      }`}>
+                        {isSelected && (
+                          <span className="w-2.5 h-2.5 rounded-full bg-zinc-900 dark:bg-white animate-fadeIn" />
+                        )}
+                      </span>
 
-            <div className="px-6 sm:px-10 py-8 space-y-4">
-              <PaymentOption
-                value="Razorpay"
-                label="Razorpay Secure"
-                sub="Credit card, UPI, net banking"
-                icons={<><CreditCard size={18} strokeWidth={1.75} /><Wallet size={18} strokeWidth={1.75} /></>}
-                checked={paymentMethod === 'Razorpay'}
-                onSelect={setPaymentMethod}
-              />
-              <PaymentOption
-                value="COD"
-                label="Cash on Delivery"
-                sub="Pay when your order is delivered"
-                icons={<Truck size={18} strokeWidth={1.75} />}
-                checked={paymentMethod === 'COD'}
-                onSelect={setPaymentMethod}
-              />
-            </div>
+                      {/* Icon */}
+                      <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 ${
+                        isSelected
+                          ? 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-900'
+                          : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 group-hover:bg-zinc-200 dark:group-hover:bg-zinc-700'
+                      }`}>
+                        <Icon size={20} strokeWidth={1.5} />
+                      </div>
 
-            {/* Reassurance strip */}
-            <div className="flex items-center gap-2 px-6 sm:px-10 py-5 border-t-2 border-black dark:border-white">
-              <ShieldCheck size={14} className="text-zinc-400 dark:text-zinc-500 shrink-0" strokeWidth={2} />
-              <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
-                Every transaction is encrypted end-to-end
-              </p>
+                      {/* Label + Sub */}
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-[15px] font-bold tracking-tight transition-colors ${
+                          isSelected ? 'text-zinc-900 dark:text-white' : 'text-zinc-700 dark:text-zinc-300'
+                        }`}>
+                          {option.label}
+                        </p>
+                        <p className="text-[13px] text-zinc-500 dark:text-zinc-400 mt-0.5">{option.sub}</p>
+                      </div>
+
+                      {/* Icons */}
+                      <div className={`shrink-0 transition-colors ${
+                        isSelected ? 'text-zinc-600 dark:text-zinc-300' : 'text-zinc-300 dark:text-zinc-600'
+                      }`}>
+                        {option.icons}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Reassurance */}
+              <div className="flex items-center gap-2.5 px-6 sm:px-8 py-4 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/30">
+                <ShieldCheck size={16} className="text-emerald-500 shrink-0" strokeWidth={2} />
+                <p className="text-[12px] font-medium text-zinc-500 dark:text-zinc-400">
+                  Every transaction is encrypted end-to-end with 256-bit SSL security
+                </p>
+              </div>
             </div>
           </div>
-          <div className="lg:w-2/5 px-6 sm:px-10 py-8">
+
+          {/* ── Right: Order Summary ── */}
+          <div className="w-full lg:w-[35%]">
             <OrderSummarySidebar
               buttonText="Continue to Review"
               buttonAction={submitHandler}
@@ -131,4 +145,5 @@ const PaymentPage = () => {
     </div>
   );
 };
+
 export default PaymentPage;
