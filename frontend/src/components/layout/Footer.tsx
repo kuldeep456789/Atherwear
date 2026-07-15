@@ -1,16 +1,7 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, MapPin, Phone } from 'lucide-react';
 
 const Footer = () => {
-  const [subscribed, setSubscribed] = useState(false);
-
-  const handleSubscribe = (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubscribed(true);
-    setTimeout(() => setSubscribed(false), 3000);
-  };
-
   return (
     <footer className="bg-black text-white font-sans uppercase w-full">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-zinc-800">

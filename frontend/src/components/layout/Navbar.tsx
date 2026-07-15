@@ -64,9 +64,9 @@ const Navbar = () => {
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const suggestionListRef = useRef<any[]>([]);
-  const doSearchRef = useRef<(q: string) => void>();
+  const doSearchRef = useRef<((q: string) => void) | undefined>(undefined);
   const profileRef = useRef<HTMLDivElement>(null);
 
   // Scroll shadow

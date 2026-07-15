@@ -1,23 +1,15 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { X, Eye, EyeOff, Mail, Lock, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useDispatch, useSelector } from 'react-redux';
+import { Link, useLocation } from 'react-router-dom';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useSelector } from 'react-redux';
 import type { RootState } from '../store/store';
-import { setCredentials } from '../store/slices/authSlice';
-import { useLoginMutation } from '../store/slices/userApiSlice';
 
 import { useGetProductsQuery } from '../store/slices/productApiSlice';
 import ProductCard from '../components/product/ProductCard';
-import Pagination from '../components/Pagination';
 
-
-
-const ITEMS_PER_PAGE = 10;
 
 const HomePage = () => {
-  const navigate = useNavigate();
   const location = useLocation();
-  const dispatch = useDispatch();
   const userInfo = useSelector((state: RootState) => state.auth.userInfo);
 
   useEffect(() => {
@@ -31,15 +23,7 @@ const HomePage = () => {
     }
   }, [location.state]);
 
-  const [login, { isLoading: loginLoading }] = useLoginMutation();
-
   // Dynamic section queries
-  const { data: newArrivalsData } = useGetProductsQuery({
-    sort: 'newest',
-    pageNum: 1,
-    pageSize: 100,
-  });
-
   const { data: menData } = useGetProductsQuery({
     collectionType: 'Men',
     pageNum: 1,
@@ -52,7 +36,6 @@ const HomePage = () => {
     pageSize: 80,
   });
 
-  const newArrivals = Array.isArray(newArrivalsData?.products) ? newArrivalsData.products : [];
   const menProducts = Array.isArray(menData?.products) ? menData.products : [];
   const womenProducts = Array.isArray(womenData?.products) ? womenData.products : [];
 
@@ -68,21 +51,6 @@ const HomePage = () => {
   const [carouselIdx, setCarouselIdx] = useState(0);
   const carouselRef = useRef<HTMLDivElement>(null);
 
-  const [menShowAll, setMenShowAll] = useState(false);
-  const [menPage, setMenPage] = useState(1);
-  const [womenShowAll, setWomenShowAll] = useState(false);
-  const [womenPage, setWomenPage] = useState(1);
-
-  const menTotalPages = Math.max(1, Math.ceil(menProducts.length / ITEMS_PER_PAGE));
-  const womenTotalPages = Math.max(1, Math.ceil(womenProducts.length / ITEMS_PER_PAGE));
-
-  const visibleMen = menShowAll
-    ? menProducts.slice((menPage - 1) * ITEMS_PER_PAGE, menPage * ITEMS_PER_PAGE)
-    : menProducts.slice(0, ITEMS_PER_PAGE);
-  const visibleWomen = womenShowAll
-    ? womenProducts.slice((womenPage - 1) * ITEMS_PER_PAGE, womenPage * ITEMS_PER_PAGE)
-    : womenProducts.slice(0, ITEMS_PER_PAGE);
-
   const heroImages = [
     'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1920&q=80',
     'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=1920&q=80',
@@ -94,12 +62,6 @@ const HomePage = () => {
   const [currentHeroIdx, setCurrentHeroIdx] = useState(0);
   const [showLoginPopup, setShowLoginPopup] = useState(false);
   const [countdown, setCountdown] = useState(10);
-
-  // Popup form state
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [loginError, setLoginError] = useState('');
 
   useEffect(() => {
     const heroTimer = setInterval(() => {
@@ -128,23 +90,6 @@ const HomePage = () => {
     const t = setTimeout(() => setCountdown((c) => c - 1), 1000);
     return () => clearTimeout(t);
   }, [showLoginPopup, countdown]);
-
-  const handlePopupLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoginError('');
-    if (!email.trim() || !password.trim()) {
-      setLoginError('Email and password are required.');
-      return;
-    }
-    try {
-      const result = await login({ email, password }).unwrap();
-      dispatch(setCredentials({ ...result.user, accessToken: result.accessToken }));
-      setShowLoginPopup(false);
-      navigate('/');
-    } catch {
-      setLoginError('Invalid email or password.');
-    }
-  };
 
   return (
     <div className="w-full bg-[hsl(var(--background))] text-[hsl(var(--foreground))] font-sans uppercase">
