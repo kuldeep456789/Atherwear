@@ -34,7 +34,7 @@ export const WOMEN_ALLOWED = [
   "jeans",
   "jackets",
   "jacket",
-  "co-ords",
+  // "co-ords",
   "sweatshirts",
   "sweatshirt",
   "hoodies",
@@ -182,7 +182,10 @@ export const CATEGORY_BLOCKED = [
   "soil",
   "fertilizer",
   "pest control",
-  "slippers"
+  "slippers",
+  "short-sleeves",
+  "couple&parent -child jackets",
+  "ladies short sleeve"
 ];
 
 const normalizeCategoryText = (value: string) =>

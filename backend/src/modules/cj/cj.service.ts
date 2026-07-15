@@ -96,7 +96,7 @@ export class CjService {
       headers: await this.authHeaders(),
     });
 
-    const normalized = this.normalizeProductResponse(response);
+    const normalized = this.normalizeProductResponse(response, query);
     await this.redisService.setJson(cacheKey, normalized, 60 * 60 * 24); // Cache for 24 hours
     return normalized;
   }
@@ -246,11 +246,12 @@ export class CjService {
     return product;
   }
 
-  async searchProducts(keyword: string, pageNum = 1, pageSize = 100) {
+  async searchProducts(keyword: string, pageNum = 1, pageSize = 100, hint?: any) {
     const query: Record<string, string> = {
       pageNum: String(pageNum),
       pageSize: String(pageSize),
       keyword,
+      ...hint,
     };
     return this.getProducts(query);
   }
@@ -271,7 +272,11 @@ export class CjService {
 
       while (true) {
         try {
-          const response = await this.searchProducts(keyword, pageNum, 100);
+          const response = await this.searchProducts(keyword, pageNum, 100, {
+            _gender: gender,
+            _category: category,
+            _collectionType: gender,
+          });
           const products = response?.products || [];
 
           if (products.length === 0) {
@@ -573,9 +578,9 @@ export class CjService {
     }
   }
 
-  private normalizeProductResponse(response: any) {
+  private normalizeProductResponse(response: any, query?: Record<string, any>) {
     const products = this.extractList(response)
-      .map((product: any) => this.normalizeProduct(product))
+      .map((product: any) => this.normalizeProduct(product, query))
       .filter(Boolean);
 
     return {
@@ -710,7 +715,7 @@ export class CjService {
     );
   }
 
-  private normalizeProduct(product: any) {
+  private normalizeProduct(product: any, query?: Record<string, any>) {
     const categoryId = String(product?.categoryId ?? product?.category ?? '');
     if (EXCLUDED_CATEGORY_IDS.has(categoryId)) {
       return null;
@@ -730,9 +735,9 @@ export class CjService {
     }
 
     // Use keyword-crawl metadata if available, otherwise classify now
-    let gender = product._gender;
-    let subcategoryName = product._category;
-    let collectionType = product._collectionType;
+    let gender = product._gender || query?._gender;
+    let subcategoryName = product._category || query?._category;
+    let collectionType = product._collectionType || query?._collectionType;
 
     if (!gender) {
       const check = isProductAllowed(product);
