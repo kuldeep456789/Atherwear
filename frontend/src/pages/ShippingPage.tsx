@@ -163,21 +163,6 @@ const ShippingPage = () => {
                 <button type="submit" id="submit-shipping" className="hidden">Submit</button>
               </form>
             </div>
-
-            {/* Trust Badges */}
-            <div className="grid grid-cols-3 gap-3 mt-6">
-              {[
-                { icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>, label: 'Secure Checkout', sub: '256-bit SSL' },
-                { icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>, label: 'Easy Returns', sub: '30-day policy' },
-                { icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}><path d="M5 12h14M12 5l7 7-7 7"/></svg>, label: 'Free Shipping', sub: `On ${formatINR(5000)}+` },
-              ].map((badge, idx) => (
-                <div key={idx} className="flex flex-col items-center text-center gap-1.5 py-4 px-2 rounded-xl border border-zinc-200 dark:border-[#2A2A2A] bg-white dark:bg-[#18181B] hover:shadow-md dark:hover:shadow-[0_4px_20px_rgba(0,0,0,0.3)] transition-all duration-250">
-                  <span className="text-zinc-400 dark:text-zinc-500">{badge.icon}</span>
-                  <p className="text-[11px] font-bold tracking-wider text-zinc-700 dark:text-zinc-300">{badge.label}</p>
-                  <p className="text-[10px] text-zinc-400 dark:text-zinc-500">{badge.sub}</p>
-                </div>
-              ))}
-            </div>
           </div>
 
           {/* ── Right: Order Summary ── */}

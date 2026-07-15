@@ -7,7 +7,8 @@ import type { CartItem } from '../store/slices/cartSlice';
 import { toggleWishlist } from '../store/slices/wishlistSlice';
 import { useGetRelatedProductsQuery } from '../store/slices/productApiSlice';
 import ProductCard from '../components/product/ProductCard';
-import { Trash2, ShoppingBag, Heart, Percent, Truck, ShieldCheck, RotateCcw, Check, Plus, Minus, Tag, X, ChevronRight, Star } from 'lucide-react';
+import { Trash2, ShoppingBag, Heart, Percent, Truck, ShieldCheck, RotateCcw, Check, Tag, X, ChevronRight, Star } from 'lucide-react';
+import QuantitySelector from '../components/QuantitySelector';
 import { formatINR } from '../lib/currency';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -226,22 +227,15 @@ const CartPage = () => {
                         {/* Bottom row: qty + actions */}
                         <div className="flex items-center justify-between mt-4">
                           {/* Quantity Pill Selector */}
-                          <div className="flex items-center border border-zinc-300 dark:border-zinc-600 rounded-full bg-[hsl(var(--background))] overflow-hidden">
-                            <button
-                              onClick={() => item.qty > 1 && addToCartHandler(item, item.qty - 1)}
-                              disabled={item.qty <= 1}
-                              className={`w-9 h-9 flex items-center justify-center transition-colors duration-150 ${item.qty <= 1 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer text-zinc-600 dark:text-zinc-400'}`}
-                            >
-                              <Minus size={14} strokeWidth={2} />
-                            </button>
-                            <span className="w-10 text-center text-[14px] font-semibold select-none">{item.qty}</span>
-                            <button
-                              onClick={() => addToCartHandler(item, item.qty + 1)}
-                              className="w-9 h-9 flex items-center justify-center hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors duration-150 cursor-pointer text-zinc-600 dark:text-zinc-400"
-                            >
-                              <Plus size={14} strokeWidth={2} />
-                            </button>
-                          </div>
+                          <QuantitySelector
+                            value={item.qty}
+                            min={1}
+                            max={99}
+                            onDecrement={() => item.qty > 1 && addToCartHandler(item, item.qty - 1)}
+                            onIncrement={() => addToCartHandler(item, item.qty + 1)}
+                            onChange={(qty) => addToCartHandler(item, qty)}
+                            className="border border-zinc-300 dark:border-zinc-600 rounded-full bg-[hsl(var(--background))] overflow-hidden h-9 px-1"
+                          />
 
                           {/* Actions */}
                           <div className="flex items-center gap-2">
@@ -412,21 +406,6 @@ const CartPage = () => {
                   >
                     Proceed to Checkout
                   </button>
-                </div>
-
-                {/* Delivery Benefits */}
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { icon: Truck, label: 'Free Shipping', sub: 'On orders above ₹999' },
-                    { icon: RotateCcw, label: 'Easy Returns', sub: '14-day return policy' },
-                    { icon: ShieldCheck, label: 'Secure', sub: '100% secure checkout' },
-                  ].map(({ icon: Icon, label, sub }) => (
-                    <div key={label} className="bg-[hsl(var(--card))] border border-zinc-200 dark:border-zinc-800 rounded-xl p-3.5 text-center transition-all duration-200 hover:shadow-sm">
-                      <Icon size={18} strokeWidth={1.5} className="mx-auto mb-1.5 text-zinc-500" />
-                      <span className="text-[10px] font-bold block leading-tight">{label}</span>
-                      <span className="text-[9px] text-zinc-400 mt-0.5 block leading-tight">{sub}</span>
-                    </div>
-                  ))}
                 </div>
               </div>
             </div>

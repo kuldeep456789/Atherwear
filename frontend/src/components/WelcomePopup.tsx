@@ -70,21 +70,6 @@ const WelcomePopup = () => {
             <div className="flex-1 h-px bg-zinc-200 dark:bg-zinc-700" />
           </div>
 
-          {/* Perks */}
-          <div className="grid grid-cols-3 gap-3 mb-6">
-            {[
-              { icon: Truck, label: 'Free shipping', sub: `On orders over ${formatINR(5000)}` },
-              { icon: RefreshCw, label: 'Easy returns', sub: '30-day return policy' },
-              { icon: Shield, label: 'Secure', sub: '256-bit encrypted' },
-            ].map((perk) => (
-              <div key={perk.label} className="flex flex-col items-center gap-1.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 px-2 py-3">
-                <perk.icon size={16} className="text-zinc-700 dark:text-zinc-300" />
-                <span className="text-[9px] font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300">{perk.label}</span>
-                <span className="text-[8px] text-zinc-400 dark:text-zinc-500">{perk.sub}</span>
-              </div>
-            ))}
-          </div>
-
           {/* CTA */}
           <button
             onClick={handleCreateAccount}

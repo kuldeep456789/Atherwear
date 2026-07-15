@@ -3,8 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import type { RootState } from '../../store/store';
 import { addToCart, removeFromCart } from '../../store/slices/cartSlice';
 import type { CartItem } from '../../store/slices/cartSlice';
-import { X, ShoppingBag, Plus, Minus, Trash2, ArrowRight, ShoppingCart } from 'lucide-react';
+import { X, ShoppingBag, Trash2, ArrowRight, ShoppingCart } from 'lucide-react';
 import { formatINR } from '../../lib/currency';
+import QuantitySelector from '../QuantitySelector';
 
 interface MiniCartProps {
   isOpen: boolean;
@@ -23,6 +24,10 @@ const MiniCart = ({ isOpen, onClose }: MiniCartProps) => {
     } else {
       dispatch(addToCart({ ...item, qty: newQty }));
     }
+  };
+
+  const setQty = (item: CartItem, qty: number) => {
+    dispatch(addToCart({ ...item, qty }));
   };
 
   const removeItem = (item: CartItem) => {
@@ -124,23 +129,15 @@ const MiniCart = ({ isOpen, onClose }: MiniCartProps) => {
 
                     <div className="flex items-center justify-between mt-3">
                       {/* Qty Controls */}
-                      <div className="flex items-center border-2 border-black dark:border-white">
-                        <button
-                          onClick={() => updateQty(item, -1)}
-                          className="w-8 h-8 flex items-center justify-center hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))] transition-colors cursor-pointer border-r-2 border-black dark:border-white"
-                        >
-                          <Minus size={12} strokeWidth={2.5} />
-                        </button>
-                        <span className="w-8 h-8 flex items-center justify-center text-xs font-black">
-                          {item.qty}
-                        </span>
-                        <button
-                          onClick={() => updateQty(item, 1)}
-                          className="w-8 h-8 flex items-center justify-center hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))] transition-colors cursor-pointer border-l-2 border-black dark:border-white"
-                        >
-                          <Plus size={12} strokeWidth={2.5} />
-                        </button>
-                      </div>
+                      <QuantitySelector
+                        value={item.qty}
+                        min={1}
+                        max={99}
+                        onDecrement={() => updateQty(item, -1)}
+                        onIncrement={() => updateQty(item, 1)}
+                        onChange={(qty) => setQty(item, qty)}
+                        className="border-2 border-black dark:border-white h-8"
+                      />
 
                       {/* Price + Remove */}
                       <div className="flex items-center gap-3">

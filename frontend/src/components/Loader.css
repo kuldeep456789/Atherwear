@@ -1,7 +1,7 @@
 .vastra-loader-overlay {
   position: fixed;
   inset: 0;
-  background: #0b0b0b;
+  background: transparent;
   display: flex;
   flex-direction: column;
   align-items: center;
