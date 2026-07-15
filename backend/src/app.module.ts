@@ -10,6 +10,7 @@ import { CjModule } from './modules/cj/cj.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { ProductsModule } from './modules/products/products.module';
 
+import { AdminModule } from './modules/admin/admin.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CartModule } from './modules/cart/cart.module';
 import { WishlistModule } from './modules/wishlist/wishlist.module';
@@ -24,6 +25,7 @@ import { ReturnsModule } from './modules/returns/returns.module';
     CategoriesModule,
     ProductsModule,
 
+    AdminModule,
     AuthModule,
     CartModule,
     WishlistModule,

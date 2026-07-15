@@ -16,6 +16,9 @@ export class User {
 
   @Prop({ trim: true, sparse: true })
   phone?: string;
+
+  @Prop({ default: 'customer' })
+  role: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

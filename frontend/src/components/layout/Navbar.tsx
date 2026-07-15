@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { ShoppingBag, Heart, UserRound, X, Search, Menu, Package, MapPin, Settings, LogOut, Clock, TrendingUp, Loader2, HelpCircle } from 'lucide-react';
+import { ShoppingBag, Heart, UserRound, X, Search, Menu, Package, MapPin, Settings, LogOut, Clock, TrendingUp, Loader2, HelpCircle, Shield } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { RootState } from '../../store/store';
@@ -472,6 +472,16 @@ const Navbar = () => {
                           ))}
                         </div>
                         <div className="border-t border-zinc-100 py-1">
+                          {userInfo?.role === 'admin' && (
+                            <Link
+                              to="/admin"
+                              onClick={() => setProfileOpen(false)}
+                              className="flex items-center gap-3 mx-2 my-0.5 px-3 py-2.5 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-black dark:hover:text-white rounded-xl transition-all duration-200 group/item"
+                            >
+                              <Shield className="h-4 w-4 text-zinc-400 group-hover/item:text-zinc-600 transition-colors duration-200" strokeWidth={1.5} />
+                              Admin Panel
+                            </Link>
+                          )}
                           <button
                             onClick={() => { dispatch(logout()); setProfileOpen(false); }}
                             className="w-full flex items-center gap-3 mx-2 my-0.5 px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl transition-all duration-200 cursor-pointer"

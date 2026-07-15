@@ -60,7 +60,7 @@ export class UsersService {
       name: trimmedName,
       email: user.email,
       phone: user.phone,
-      role: 'customer',
+      role: user.role || 'customer',
     };
   }
 }
