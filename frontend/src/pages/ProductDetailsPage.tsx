@@ -8,6 +8,7 @@ import type { RootState } from '../store/store';
 import { ShoppingBag, Heart, Star, Check, ChevronRight, ChevronLeft, X, ZoomIn, SendHorizonal, ThumbsUp, Share2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Loader from '../components/Loader';
+import WishlistLoginPopup from '../components/WishlistLoginPopup';
 import { getColorHex } from '../utils/colorMap';
 import { getProductImages, getProductId } from '../lib/product';
 import { formatINR } from '../lib/currency';
@@ -61,6 +62,26 @@ const ProductDetailsPage = () => {
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
   const [helpfulVotes, setHelpfulVotes] = useState<Record<number, boolean>>({});
   const reviewRef = useRef<HTMLDivElement>(null);
+  const [showWishlistPopup, setShowWishlistPopup] = useState(false);
+
+  const handleWishlistToggle = () => {
+    if (!userInfo) {
+      setShowWishlistPopup(true);
+      return;
+    }
+    dispatch(
+      toggleWishlist({
+        _id: productId,
+        name: product.name,
+        price: product.price,
+        discountPrice: product.discountPrice,
+        image: getProductImages(product)[0] || '',
+      })
+    );
+    if (!isWishlisted) {
+      toast.success('Added to your Wishlist');
+    }
+  };
 
   useEffect(() => {
     setSelectedImage(0);
@@ -181,9 +202,9 @@ const ProductDetailsPage = () => {
 
   const colorVariantImages = selectedColor && product.variants
     ? product.variants
-        .filter((v: any) => v.color === selectedColor)
-        .map((v: any) => v.variantImage || v.image || '')
-        .filter(Boolean)
+      .filter((v: any) => v.color === selectedColor)
+      .map((v: any) => v.variantImage || v.image || '')
+      .filter(Boolean)
     : [];
 
   const displayImages = [...new Set([
@@ -299,11 +320,10 @@ const ProductDetailsPage = () => {
                   <button
                     key={i}
                     onClick={() => setSelectedImage(i)}
-                    className={`w-[80px] h-[110px] rounded-xl overflow-hidden cursor-pointer transition-all duration-200 border-2 flex-shrink-0 hover:scale-105 ${
-                      selectedImage === i
+                    className={`w-[80px] h-[110px] rounded-xl overflow-hidden cursor-pointer transition-all duration-200 border-2 flex-shrink-0 hover:scale-105 ${selectedImage === i
                         ? 'border-black dark:border-white'
                         : 'border-transparent opacity-60 hover:opacity-100'
-                    }`}
+                      }`}
                   >
                     <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" />
                   </button>
@@ -358,21 +378,12 @@ const ProductDetailsPage = () => {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        dispatch(
-                          toggleWishlist({
-                            _id: productId,
-                            name: product.name,
-                            price: product.price,
-                            discountPrice: product.discountPrice,
-                            image: getProductImages(product)[0] || '',
-                          })
-                        );
+                        handleWishlistToggle();
                       }}
-                      className={`w-9 h-9 rounded-full flex items-center justify-center backdrop-blur-sm transition-all duration-200 cursor-pointer active:scale-90 ${
-                        isWishlisted
+                      className={`w-9 h-9 rounded-full flex items-center justify-center backdrop-blur-sm transition-all duration-200 cursor-pointer active:scale-90 ${isWishlisted
                           ? 'bg-red-600 text-white shadow-md'
                           : 'bg-white/80 dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300 shadow-sm hover:bg-white dark:hover:bg-zinc-800'
-                      }`}
+                        }`}
                       aria-label="Wishlist"
                     >
                       <Heart className="w-[18px] h-[18px]" fill={isWishlisted ? 'currentColor' : 'none'} strokeWidth={1.5} />
@@ -431,11 +442,10 @@ const ProductDetailsPage = () => {
                     <button
                       key={i}
                       onClick={() => setSelectedImage(i)}
-                      className={`flex-shrink-0 w-16 h-20 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
-                        selectedImage === i
+                      className={`flex-shrink-0 w-16 h-20 rounded-lg overflow-hidden border-2 transition-all duration-200 ${selectedImage === i
                           ? 'border-black dark:border-white'
                           : 'border-transparent opacity-60 hover:opacity-100'
-                      }`}
+                        }`}
                     >
                       <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" />
                     </button>
@@ -511,11 +521,10 @@ const ProductDetailsPage = () => {
                     <button
                       key={color}
                       onClick={() => setSelectedColor(color)}
-                      className={`w-[28px] h-[28px] rounded-full border transition-all duration-200 cursor-pointer hover:scale-105 flex items-center justify-center ${
-                        selectedColor === color
+                      className={`w-[28px] h-[28px] rounded-full border transition-all duration-200 cursor-pointer hover:scale-105 flex items-center justify-center ${selectedColor === color
                           ? 'border-black dark:border-white'
                           : 'border-zinc-300 dark:border-zinc-600'
-                      }`}
+                        }`}
                       style={{ backgroundColor: getColorHex(color) }}
                       title={color}
                     >
@@ -545,11 +554,10 @@ const ProductDetailsPage = () => {
                     <button
                       key={size}
                       onClick={() => setSelectedSize(size)}
-                      className={`w-14 h-[42px] rounded-[10px] border text-[15px] font-medium transition-all duration-200 cursor-pointer active:scale-[0.97] ${
-                        selectedSize === size
+                      className={`w-14 h-[42px] rounded-[10px] border text-[15px] font-medium transition-all duration-200 cursor-pointer active:scale-[0.97] ${selectedSize === size
                           ? 'bg-black dark:bg-white text-white dark:text-black border-black dark:border-white'
                           : 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white border-[#d9d9d9] dark:border-zinc-600 hover:border-black dark:hover:border-white hover:bg-[#fafafa] dark:hover:bg-zinc-800'
-                      }`}
+                        }`}
                     >
                       {size}
                     </button>
@@ -567,11 +575,10 @@ const ProductDetailsPage = () => {
                 </button>
                 <button
                   onClick={handleAddToCart}
-                  className={`flex-1 h-14 rounded-xl text-sm font-bold tracking-wider transition-all duration-200 cursor-pointer border-2 active:scale-[0.98] ${
-                    isAdded
+                  className={`flex-1 h-14 rounded-xl text-sm font-bold tracking-wider transition-all duration-200 cursor-pointer border-2 active:scale-[0.98] ${isAdded
                       ? 'bg-green-600 text-white border-green-600'
                       : 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white border-zinc-300 dark:border-zinc-700 hover:border-black dark:hover:border-white hover:shadow-sm'
-                  }`}
+                    }`}
                 >
                   {isAdded ? (
                     <span className="flex items-center justify-center gap-2"><Check size={16} strokeWidth={3} /> ADDED</span>
@@ -580,22 +587,11 @@ const ProductDetailsPage = () => {
                   )}
                 </button>
                 <button
-                  onClick={() =>
-                    dispatch(
-                      toggleWishlist({
-                        _id: productId,
-                        name: product.name,
-                        price: product.price,
-                        discountPrice: product.discountPrice,
-                        image: getProductImages(product)[0] || '',
-                      })
-                    )
-                  }
-                  className={`w-14 h-14 shrink-0 rounded-xl border-2 flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-[0.95] ${
-                    isWishlisted
+                  onClick={handleWishlistToggle}
+                  className={`w-14 h-14 shrink-0 rounded-xl border-2 flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-[0.95] ${isWishlisted
                       ? 'bg-red-600 text-white border-red-600'
                       : 'bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 hover:border-red-400 hover:text-red-500 hover:shadow-sm'
-                  }`}
+                    }`}
                   aria-label="Wishlist"
                 >
                   <Heart size={20} fill={isWishlisted ? 'currentColor' : 'none'} strokeWidth={2} />
@@ -831,6 +827,19 @@ const ProductDetailsPage = () => {
           </button>
         </div>
       </div>
+
+      {showWishlistPopup && (
+        <WishlistLoginPopup
+          product={{
+            _id: productId,
+            name: product.name,
+            price: product.price,
+            discountPrice: product.discountPrice,
+            image: getProductImages(product)[0] || '',
+          }}
+          onClose={() => setShowWishlistPopup(false)}
+        />
+      )}
 
       {/* Image Lightbox */}
       <div

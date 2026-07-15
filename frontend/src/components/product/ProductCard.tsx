@@ -6,6 +6,8 @@ import { toggleWishlist } from '../../store/slices/wishlistSlice';
 import type { RootState } from '../../store/store';
 import { getFirstProductImage, getProductId } from '../../lib/product';
 import { formatINR } from '../../lib/currency';
+import toast from 'react-hot-toast';
+import WishlistLoginPopup from '../WishlistLoginPopup';
 
 const PLACEHOLDER_IMAGE = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="500" viewBox="0 0 400 500"><rect width="100%" height="100%" fill="%23f4f4f5"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="24" font-weight="900" fill="%23a1a1aa" letter-spacing="4">VASTRA</text></svg>';
 
@@ -42,7 +44,9 @@ export const ProductCardSkeleton = () => (
 
 const ProductCard = ({ product }: ProductCardProps) => {
   const [imageFailed, setImageFailed] = useState(false);
+  const [showWishlistPopup, setShowWishlistPopup] = useState(false);
   const dispatch = useDispatch();
+  const userInfo = useSelector((state: RootState) => state.auth.userInfo);
   const wishlistItems = useSelector((state: RootState) => state.wishlist.wishlistItems);
   const productId = getProductId(product) || product.name || 'product';
   const isWishlisted = wishlistItems.some((item: any) => item._id === productId);
@@ -51,6 +55,10 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
   const handleWishlistClick = (e: React.MouseEvent) => {
     e.preventDefault();
+    if (!userInfo) {
+      setShowWishlistPopup(true);
+      return;
+    }
     dispatch(
       toggleWishlist({
         _id: productId,
@@ -60,6 +68,9 @@ const ProductCard = ({ product }: ProductCardProps) => {
         image: primaryImage,
       })
     );
+    if (!isWishlisted) {
+      toast.success('Added to your Wishlist');
+    }
   };
 
   return (
@@ -112,6 +123,19 @@ const ProductCard = ({ product }: ProductCardProps) => {
           )}
         </div>
       </Link>
+
+      {showWishlistPopup && (
+        <WishlistLoginPopup
+          product={{
+            _id: productId,
+            name: product.name,
+            price: product.price,
+            discountPrice: product.discountPrice,
+            image: primaryImage,
+          }}
+          onClose={() => setShowWishlistPopup(false)}
+        />
+      )}
     </div>
   );
 };
