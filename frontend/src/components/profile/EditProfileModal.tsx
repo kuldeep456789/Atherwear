@@ -1,0 +1,204 @@
+import { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import { X, Eye, EyeOff, Loader2, User, Mail, Phone, Calendar, Users2, Image } from 'lucide-react';
+import { useUpdateProfileMutation } from '../../store/slices/userApiSlice';
+import { setCredentials } from '../../store/slices/authSlice';
+import type { UserInfo } from '../../store/slices/authSlice';
+import toast from 'react-hot-toast';
+
+interface EditProfileModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  user: UserInfo;
+}
+
+const EditProfileModal = ({ isOpen, onClose, user }: EditProfileModalProps) => {
+  const dispatch = useDispatch();
+  const [updateProfile, { isLoading }] = useUpdateProfileMutation();
+
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone] = useState(user.phone || '');
+  const [gender, setGender] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
+  const [avatar, setAvatar] = useState('');
+
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (isOpen && user) {
+      setName(user.firstName && user.lastName ? `${user.firstName} ${user.lastName}`.trim() : user.name || '');
+      setEmail(user.email);
+      setGender(user.gender || '');
+      setDateOfBirth(user.dateOfBirth ? user.dateOfBirth.split('T')[0] : '');
+      setAvatar(user.avatar || '');
+      setErrors({});
+    }
+  }, [isOpen, user]);
+
+  const validate = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!name.trim()) newErrors.name = 'Name is required';
+    if (!email.trim()) newErrors.email = 'Email is required';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) newErrors.email = 'Please enter a valid email address';
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async () => {
+    if (!validate()) return;
+
+    try {
+      const res = await updateProfile({ name: name.trim(), email, gender: gender || undefined, dateOfBirth: dateOfBirth || undefined, avatar: avatar || undefined }).unwrap();
+      dispatch(setCredentials({ ...user, ...res.user, accessToken: user.accessToken }));
+      toast.success('Profile updated successfully.');
+      onClose();
+    } catch (err: any) {
+      toast.error(err?.data?.message || 'Unable to update profile. Please try again.');
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-lg bg-white dark:bg-[#18181B] rounded-2xl border border-zinc-200 dark:border-[#2A2A2A] shadow-2xl animate-fadeIn">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-200 dark:border-[#2A2A2A]">
+          <h2 className="text-xl font-bold text-zinc-900 dark:text-white">Edit Profile</h2>
+          <button onClick={onClose} className="w-9 h-9 rounded-xl flex items-center justify-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all">
+            <X size={20} strokeWidth={1.5} />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="px-6 py-5 space-y-5 max-h-[65vh] overflow-y-auto">
+          {/* Full Name */}
+          <div>
+            <label className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">Full Name</label>
+            <div className="relative">
+              <User size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" strokeWidth={1.5} />
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className={`w-full h-[48px] pl-10 pr-4 rounded-xl border ${errors.name ? 'border-red-400 dark:border-red-500' : 'border-zinc-200 dark:border-[#2A2A2A]'} bg-zinc-50 dark:bg-[#0F0F10] text-zinc-900 dark:text-white text-[15px] outline-none focus:ring-2 focus:ring-zinc-900/20 dark:focus:ring-white/20 transition-all`}
+                placeholder="John Doe"
+              />
+            </div>
+            {errors.name && <p className="mt-1 text-[13px] text-red-500">{errors.name}</p>}
+          </div>
+
+          {/* Email (read-only) */}
+          <div>
+            <label className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">Email Address</label>
+            <div className="relative">
+              <Mail size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" strokeWidth={1.5} />
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className={`w-full h-[48px] pl-10 pr-4 rounded-xl border ${errors.email ? 'border-red-400 dark:border-red-500' : 'border-zinc-200 dark:border-[#2A2A2A]'} bg-zinc-50 dark:bg-[#0F0F10] text-zinc-900 dark:text-white text-[15px] outline-none focus:ring-2 focus:ring-zinc-900/20 dark:focus:ring-white/20 transition-all`}
+                placeholder="john@example.com"
+              />
+            </div>
+            {errors.email && <p className="mt-1 text-[13px] text-red-500">{errors.email}</p>}
+          </div>
+
+          {/* Mobile Number (read-only) */}
+          <div>
+            <label className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">Mobile Number</label>
+            <div className="relative">
+              <Phone size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" strokeWidth={1.5} />
+              <input
+                type="text"
+                value={phone}
+                disabled
+                className="w-full h-[48px] pl-10 pr-4 rounded-xl border border-zinc-200 dark:border-[#2A2A2A] bg-zinc-100 dark:bg-zinc-900 text-zinc-500 dark:text-zinc-400 text-[15px] cursor-not-allowed"
+              />
+            </div>
+            <p className="mt-1 text-[12px] text-zinc-400 dark:text-zinc-500">Verified phone number cannot be changed.</p>
+          </div>
+
+          {/* Profile Picture URL */}
+          <div>
+            <label className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">Profile Picture URL (optional)</label>
+            <div className="relative">
+              <Image size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" strokeWidth={1.5} />
+              <input
+                type="text"
+                value={avatar}
+                onChange={(e) => setAvatar(e.target.value)}
+                className="w-full h-[48px] pl-10 pr-4 rounded-xl border border-zinc-200 dark:border-[#2A2A2A] bg-zinc-50 dark:bg-[#0F0F10] text-zinc-900 dark:text-white text-[15px] outline-none focus:ring-2 focus:ring-zinc-900/20 dark:focus:ring-white/20 transition-all"
+                placeholder="https://example.com/avatar.jpg"
+              />
+            </div>
+          </div>
+
+          {/* Gender */}
+          <div>
+            <label className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">Gender (optional)</label>
+            <div className="relative">
+              <Users2 size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" strokeWidth={1.5} />
+              <select
+                value={gender}
+                onChange={(e) => setGender(e.target.value)}
+                className="w-full h-[48px] pl-10 pr-4 rounded-xl border border-zinc-200 dark:border-[#2A2A2A] bg-zinc-50 dark:bg-[#0F0F10] text-zinc-900 dark:text-white text-[15px] outline-none focus:ring-2 focus:ring-zinc-900/20 dark:focus:ring-white/20 transition-all appearance-none"
+              >
+                <option value="">Prefer not to say</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Date of Birth */}
+          <div>
+            <label className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">Date of Birth (optional)</label>
+            <div className="relative">
+              <Calendar size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" strokeWidth={1.5} />
+              <input
+                type="date"
+                value={dateOfBirth}
+                onChange={(e) => setDateOfBirth(e.target.value)}
+                max={new Date().toISOString().split('T')[0]}
+                className="w-full h-[48px] pl-10 pr-4 rounded-xl border border-zinc-200 dark:border-[#2A2A2A] bg-zinc-50 dark:bg-[#0F0F10] text-zinc-900 dark:text-white text-[15px] outline-none focus:ring-2 focus:ring-zinc-900/20 dark:focus:ring-white/20 transition-all"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-zinc-200 dark:border-[#2A2A2A]">
+          <button
+            onClick={onClose}
+            disabled={isLoading}
+            className="h-[48px] px-6 rounded-xl border-2 border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 text-[15px] font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all duration-200 active:scale-[0.98] disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={isLoading}
+            className="h-[48px] px-6 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[15px] font-semibold hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all duration-200 active:scale-[0.98] shadow-sm disabled:opacity-50 flex items-center gap-2"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 size={18} className="animate-spin" />
+                Saving...
+              </>
+            ) : (
+              'Save Changes'
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default EditProfileModal;

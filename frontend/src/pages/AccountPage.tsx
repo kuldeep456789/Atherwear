@@ -9,6 +9,8 @@ import { useGetUserOrdersQuery } from '../store/slices/orderApiSlice';
 import { Package, User, MapPin, Heart, Settings, LogOut, ChevronRight, ShoppingBag, Clock, CheckCircle, XCircle, Trash2, Plus, Pencil, Bell, Shield, Moon, Sun, Mail, Phone, MapPinHouse, CreditCard, Gift, Truck, RotateCcw, Star } from 'lucide-react';
 import { formatINR } from '../lib/currency';
 import { useTheme } from '../context/ThemeContext';
+import EditProfileModal from '../components/profile/EditProfileModal';
+import ChangePasswordModal from '../components/profile/ChangePasswordModal';
 
 const tabs = [
   { id: 'orders', label: 'Orders', icon: Package },
@@ -36,6 +38,8 @@ const AccountPage = () => {
   const [page, setPage] = useState(1);
   const [fadeKey, setFadeKey] = useState(0);
   const prevTabRef = useRef(activeTab);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   const { data: allOrders = [], isLoading: ordersLoading } = useGetUserOrdersQuery(undefined);
 
@@ -103,7 +107,7 @@ const AccountPage = () => {
               </div>
             </div>
             {/* Edit button */}
-            <button className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm font-semibold transition-all duration-200 border border-white/10 hover:border-white/20 active:scale-[0.97]">
+            <button onClick={() => setShowEditModal(true)} className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm font-semibold transition-all duration-200 border border-white/10 hover:border-white/20 active:scale-[0.97]">
               <Pencil size={15} strokeWidth={1.5} />
               Edit Profile
             </button>
@@ -355,11 +359,11 @@ const AccountPage = () => {
                     </div>
                     <div className="px-6 sm:px-8 pb-6 sm:pb-8 pt-4">
                       <div className="flex flex-wrap gap-3">
-                        <button className="inline-flex items-center gap-2.5 h-[50px] px-6 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[15px] font-semibold hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all duration-200 active:scale-[0.98] shadow-sm">
+                        <button onClick={() => setShowEditModal(true)} className="inline-flex items-center gap-2.5 h-[50px] px-6 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[15px] font-semibold hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all duration-200 active:scale-[0.98] shadow-sm">
                           <Pencil size={16} strokeWidth={2} />
                           Edit Profile
                         </button>
-                        <button className="inline-flex items-center gap-2.5 h-[50px] px-6 rounded-xl border-2 border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 text-[15px] font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all duration-200 active:scale-[0.98]">
+                        <button onClick={() => setShowPasswordModal(true)} className="inline-flex items-center gap-2.5 h-[50px] px-6 rounded-xl border-2 border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 text-[15px] font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all duration-200 active:scale-[0.98]">
                           Change Password
                         </button>
                       </div>
@@ -538,11 +542,11 @@ const AccountPage = () => {
                     </div>
                     <div className="px-6 sm:px-8 pb-6 sm:pb-8 pt-4">
                       <div className="flex flex-wrap gap-3">
-                        <button className="inline-flex items-center gap-2 h-[50px] px-6 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[15px] font-semibold hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all duration-200 active:scale-[0.98] shadow-sm">
+                        <button onClick={() => setShowEditModal(true)} className="inline-flex items-center gap-2 h-[50px] px-6 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[15px] font-semibold hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all duration-200 active:scale-[0.98] shadow-sm">
                           <Pencil size={16} strokeWidth={2} />
                           Edit Profile
                         </button>
-                        <button className="inline-flex items-center gap-2 h-[50px] px-6 rounded-xl border-2 border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 text-[15px] font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all duration-200 active:scale-[0.98]">
+                        <button onClick={() => setShowPasswordModal(true)} className="inline-flex items-center gap-2 h-[50px] px-6 rounded-xl border-2 border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 text-[15px] font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all duration-200 active:scale-[0.98]">
                           Change Password
                         </button>
                       </div>
@@ -659,6 +663,11 @@ const AccountPage = () => {
           </main>
         </div>
       </div>
+
+
+      {/* Modals */}
+      <EditProfileModal isOpen={showEditModal} onClose={() => setShowEditModal(false)} user={userInfo} />
+      <ChangePasswordModal isOpen={showPasswordModal} onClose={() => setShowPasswordModal(false)} />
     </div>
   );
 };

@@ -16,6 +16,7 @@ import { CartModule } from './modules/cart/cart.module';
 import { WishlistModule } from './modules/wishlist/wishlist.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { ReturnsModule } from './modules/returns/returns.module';
+import { UsersModule } from './modules/users/users.module';
 @Module({
   imports: [
     DatabaseModule,
@@ -27,6 +28,7 @@ import { ReturnsModule } from './modules/returns/returns.module';
 
     AdminModule,
     AuthModule,
+    UsersModule,
     CartModule,
     WishlistModule,
     OrdersModule,

@@ -5,7 +5,7 @@ import { useGetProductDetailsQuery, useCreateReviewMutation } from '../store/sli
 import { addToCart } from '../store/slices/cartSlice';
 import { toggleWishlist } from '../store/slices/wishlistSlice';
 import type { RootState } from '../store/store';
-import { ShoppingBag, Heart, Star, Check, ChevronRight, ChevronLeft, X, ZoomIn, SendHorizonal, ThumbsUp, Share2 } from 'lucide-react';
+import { ShoppingBag, Heart, Star, Check, ChevronRight, ChevronLeft, X, ZoomIn, SendHorizontal, ThumbsUp, Share2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Loader from '../components/Loader';
 import WishlistLoginPopup from '../components/WishlistLoginPopup';
@@ -696,7 +696,7 @@ const ProductDetailsPage = () => {
                   <button type="submit" disabled={isReviewLoading}
                     className="mt-2 w-full bg-[hsl(var(--foreground))] text-[hsl(var(--background))] py-3 text-xs font-black tracking-widest border-2 border-black dark:border-white hover:bg-red-600 hover:text-white hover:border-red-600 transition-colors flex items-center justify-center gap-2 cursor-pointer uppercase"
                   >
-                    <SendHorizonal size={14} strokeWidth={2.5} /> {isReviewLoading ? 'Submitting...' : 'Submit Review'}
+                    <SendHorizontal size={14} strokeWidth={2.5} /> {isReviewLoading ? 'Submitting...' : 'Submit Review'}
                   </button>
                 </form>
               ) : (

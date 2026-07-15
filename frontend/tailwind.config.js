@@ -1,23 +1,3 @@
-/** @type {import('tailwindcss').Config} */
-export default {
-  darkMode: 'class',
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
-  theme: {
-    extend: {
-      colors: {
-        brand: {
-          dark: '#000000',
-          light: '#ffffff',
-        }
-      },
-      fontFamily: {
-        sans: ['"Space Grotesk"', 'Inter', 'sans-serif'],
-        mono: ['"JetBrains Mono"', 'monospace'],
-      }
-    },
-  },
-  plugins: [],
-}
+// Tailwind CSS v4 — configuration is done in src/index.css via @theme and @variant
+// This file is kept as an empty stub to prevent tooling warnings.
+export default {};

@@ -5,6 +5,7 @@ export interface UserInfo {
   _id: string;
   firstName: string;
   lastName: string;
+  name?: string;
   email: string;
   phone?: string;
   role: string;
@@ -12,6 +13,8 @@ export interface UserInfo {
   profileImage?: string;
   provider?: string;
   isVerified?: boolean;
+  gender?: string;
+  dateOfBirth?: string;
   accessToken?: string;
 }
 

@@ -19,6 +19,15 @@ export class User {
 
   @Prop({ default: 'customer' })
   role: string;
+
+  @Prop({ trim: true })
+  avatar?: string;
+
+  @Prop({ trim: true })
+  gender?: string;
+
+  @Prop()
+  dateOfBirth?: Date;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

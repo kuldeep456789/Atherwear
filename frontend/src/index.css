@@ -1,6 +1,17 @@
 @import "tailwindcss";
 
+/* ── Tailwind v4: dark mode via .dark class ── */
+@variant dark (&:where(.dark, .dark *));
+
 @theme {
+  /* Font families */
+  --font-family-sans: "Space Grotesk", "Inter", sans-serif;
+  --font-family-mono: "JetBrains Mono", monospace;
+
+  /* Brand colors */
+  --color-brand-dark: #000000;
+  --color-brand-light: #ffffff;
+
   /* Global theme mappings */
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
