@@ -41,8 +41,11 @@ export class CjController {
   }
 
   @Post('crawl-keywords')
-  async crawlKeywords() {
-    const products = await this.cjService.crawlAllByKeywords();
-    return { total: products.length, products };
+  crawlKeywords() {
+    // Run asynchronously in the background so the request doesn't hang
+    this.cjService.crawlAllByKeywords().catch(err => {
+      console.error('[CJ] Background crawl failed:', err);
+    });
+    return { message: 'Keyword crawl started in the background. Check backend terminal for progress and Navbar for the live count.' };
   }
 }

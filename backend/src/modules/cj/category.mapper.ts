@@ -1,23 +1,58 @@
 export const MEN_ALLOWED = [
   "shirts",
+  "shirt",
   "t-shirts",
+  "t-shirt",
   "oversized",
   "polo",
   "jeans",
   "cargo",
   "shorts",
   "jackets",
+  "jacket",
   "hoodies",
+  "hoodie",
+  "sweatshirts",
+  "sweatshirt",
+  "trousers",
+  "trouser",
+  "pants",
+  "pant",
+  "joggers",
+  "jogger",
+  "blazer",
+  "sweater"
 ];
 
 export const WOMEN_ALLOWED = [
-  // "dresses",
-  // "tops",
-  // "shirts",
-  // "jeans",
-  // "jackets",
-  // "co-ords",
-  // "wholesale-tops-sets"
+  "dresses",
+  "dress",
+  "tops",
+  "top",
+  "shirts",
+  "shirt",
+  "jeans",
+  "jackets",
+  "jacket",
+  "co-ords",
+  "sweatshirts",
+  "sweatshirt",
+  "hoodies",
+  "hoodie",
+  "blouses",
+  "blouse",
+  "shorts",
+  "skirts",
+  "skirt",
+  "trousers",
+  "trouser",
+  "pants",
+  "pant",
+  "leggings",
+  "legging",
+  "cardigan",
+  "cardigans",
+  "wholesale-tops-sets"
 ];
 
 export const BLOCKED = [
@@ -28,7 +63,6 @@ export const BLOCKED = [
   "kitchen",
   "storage",
   "watch",
-  "home",
   "furniture",
   "chair",
   "table",
@@ -76,8 +110,6 @@ export const BLOCKED = [
   "fitness",
   "yoga",
   "camping",
-  "outdoor",
-  "party",
   "decoration",
   "christmas",
   "halloween",
@@ -178,6 +210,40 @@ export function isCategoryAllowed(categoryName: string): boolean {
     MEN_ALLOWED.some(cat => name.includes(normalizeCategoryText(cat))) ||
     WOMEN_ALLOWED.some(cat => name.includes(normalizeCategoryText(cat)))
   );
+}
+
+// Lightweight blocker used during keyword crawl.
+// Only rejects products that are CLEARLY not clothing (shoes, electronics, pets, etc).
+// Does NOT require whitelist matches — the search keyword already guarantees clothing.
+export function isHardBlocked(product: any): boolean {
+  const name = String(product?.productNameEn ?? product?.productName ?? product?.nameEn ?? product?.name ?? '').toLowerCase();
+  const categoryName = String(product?.categoryName ?? product?.categoryThirdName ?? product?.categorySecondName ?? product?.categoryFirstName ?? '').toLowerCase();
+  const combined = `${name} ${categoryName}`;
+
+  const hardBlockWords = [
+    'shoe', 'shoes', 'sneaker', 'sneakers', 'sandal', 'sandals', 'slipper', 'slippers', 'heel', 'heels', 'boot', 'boots', 'footwear',
+    'electronic', 'electronics', 'phone', 'phones', 'laptop', 'laptops', 'tablet', 'tablets', 'computer', 'computers', 'cable', 'cables', 'charger', 'chargers',
+    'power bank', 'power banks', 'headphone', 'headphones', 'earphone', 'earphones', 'speaker', 'speakers', 'camera', 'cameras',
+    'pet', 'pets', 'dog', 'dogs', 'cat', 'cats', 'bird', 'birds', 'fish', 'fishes',
+    'furniture', 'sofa', 'sofas', 'chair', 'chairs', 'table', 'tables', 'bed', 'beds', 'mattress', 'mattresses',
+    'kitchen', 'cookware', 'utensil', 'utensils', 'appliance', 'appliances',
+    'toy', 'toys', 'puzzle', 'puzzles', 'gaming', 'video game', 'video games',
+    'car', 'cars', 'motorcycle', 'motorcycles', 'automotive', 'tire', 'tires',
+    'tool', 'tools', 'drill', 'drills', 'hammer', 'hammers', 'wrench', 'wrenches', 'hardware',
+    'watch', 'watches', 'jewelry', 'ring', 'rings', 'necklace', 'necklaces', 'bracelet', 'bracelets',
+    'beauty', 'skincare', 'makeup', 'cosmetic', 'cosmetics', 'perfume', 'perfumes',
+    'medicine', 'medicines', 'supplement', 'supplements', 'health',
+    'food', 'foods', 'drink', 'drinks', 'grocery', 'groceries',
+    'book', 'books', 'stationery', 'school supply', 'school supplies',
+    'plant', 'plants', 'seed', 'seeds', 'soil', 'garden',
+    'luggage', 'suitcase', 'suitcases', 'backpack', 'backpacks', 'bag', 'bags',
+    'pillow', 'pillows', 'curtain', 'curtains', 'towel', 'towels', 'rug', 'rugs', 'mat', 'mats', 'bedding',
+  ];
+
+  return hardBlockWords.some(word => {
+    const regex = new RegExp(`\\b${word}\\b`, 'i');
+    return regex.test(combined);
+  });
 }
 
 export function isProductAllowed(product: any): { allowed: boolean; gender: string; subcategoryName: string; collectionType: string } {

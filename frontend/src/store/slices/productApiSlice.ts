@@ -97,6 +97,12 @@ export const productApiSlice = apiSlice.injectEndpoints({
       providesTags: ['Product'],
       keepUnusedDataFor: 30,
     }),
+    getProductCount: builder.query({
+      query: () => ({
+        url: '/api/cj/product-count',
+      }),
+      keepUnusedDataFor: 300,
+    }),
   }),
 });
 
@@ -105,5 +111,6 @@ export const {
   useGetProductDetailsQuery,
   useGetRelatedProductsQuery,
   useGetProductsByCategoryQuery,
-  useCreateReviewMutation 
+  useCreateReviewMutation,
+  useGetProductCountQuery,
 } = productApiSlice;

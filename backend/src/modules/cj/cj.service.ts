@@ -6,8 +6,8 @@ import {
 } from '@nestjs/common';
 import axios, { AxiosRequestConfig } from 'axios';
 import { RedisService } from '../redis/redis.service';
-import { isProductAllowed, isCategoryAllowed, BLOCKED } from './category.mapper';
-import { SEARCH_KEYWORDS, BROAD_CATEGORY_KEYWORDS } from './keywords';
+import { isProductAllowed, isCategoryAllowed, isHardBlocked, BLOCKED } from './category.mapper';
+import { SEARCH_KEYWORDS, BROAD_CATEGORY_KEYWORDS_WITH_GENDER } from './keywords';
 
 const PRODUCT_COUNT_CACHE_KEY = 'cj:product_count';
 const PRODUCT_COUNT_TTL = 60 * 60 * 24;
@@ -52,7 +52,7 @@ export class CjService {
     'https://developers.cjdropshipping.com/api2.0';
   private readonly accessTokenCacheKey = 'cj:access_token';
   private readonly accessTokenTtlSeconds = 60 * 60 * 23;
-  private readonly requestDelayMs = 250;
+  private readonly requestDelayMs = 500; // 2 requests/sec to speed up fetch but stay under limit
   private accessTokenCache: { token: string; expiresAt: number } | null = null;
   private requestQueue: Promise<void> = Promise.resolve();
 
@@ -71,6 +71,10 @@ export class CjService {
   }
 
   async getProducts(query: Record<string, string | undefined> = {}) {
+    const cacheKey = `cj:products:list:${JSON.stringify(query)}`;
+    const cached = await this.redisService.getJson<any>(cacheKey);
+    if (cached) return cached;
+
     const url = `/v1/product/list${this.buildSearch(query)}`;
     console.log(`[CJ] GET ${url}`);
     const response = await this.scheduleRequest(url, {
@@ -78,7 +82,9 @@ export class CjService {
       headers: await this.authHeaders(),
     });
 
-    return this.normalizeProductResponse(response);
+    const normalized = this.normalizeProductResponse(response);
+    await this.redisService.setJson(cacheKey, normalized, 60 * 60 * 24); // Cache for 24 hours
+    return normalized;
   }
 
   async getAllProducts(categoryId?: string) {
@@ -142,19 +148,29 @@ export class CjService {
   }
 
   async getCategories() {
+    const cacheKey = `cj:categories`;
+    const cached = await this.redisService.getJson<any>(cacheKey);
+    if (cached) return cached;
+
     console.log('[CJ] GET /v1/product/getCategory');
     const response = await this.scheduleRequest('/v1/product/getCategory', {
       method: 'GET',
       headers: await this.authHeaders(),
     });
 
-    return this.normalizeCategoryResponse(response);
+    const normalized = this.normalizeCategoryResponse(response);
+    await this.redisService.setJson(cacheKey, normalized, 60 * 60 * 24 * 7); // Cache for 7 days
+    return normalized;
   }
 
   async getProductsByCategory(categoryId: string, pid?: string, query: Record<string, string | undefined> = {}) {
     if (!categoryId) {
       throw new BadRequestException('categoryId query parameter is required');
     }
+
+    const cacheKey = `cj:products:cat:${categoryId}:pid:${pid || 'none'}:q:${JSON.stringify(query)}`;
+    const cached = await this.redisService.getJson<any>(cacheKey);
+    if (cached) return cached;
 
     // Only forward CJ-relevant params (same filtering as buildSearch)
     const cjQuery = this.filterCjParams(query);
@@ -171,13 +187,19 @@ export class CjService {
       headers: await this.authHeaders(),
     });
 
-    return this.normalizeProductResponse(response);
+    const normalized = this.normalizeProductResponse(response);
+    await this.redisService.setJson(cacheKey, normalized, 60 * 60 * 24);
+    return normalized;
   }
 
   async getProductById(pid: string) {
     if (!pid) {
       throw new BadRequestException('product id is required');
     }
+
+    const cacheKey = `cj:product:id:${pid}`;
+    const cached = await this.redisService.getJson<any>(cacheKey);
+    if (cached) return cached;
 
     const url = `/v1/product/list?pid=${pid}`;
     console.log(`[CJ] GET ${url}`);
@@ -200,11 +222,13 @@ export class CjService {
     // Enrich with variant details (real colors, sizes, variant images) from CJ variant endpoint
     try {
       const enriched = await this.enrichWithVariants(product, pid);
+      await this.redisService.setJson(cacheKey, enriched, 60 * 60 * 24);
       return enriched;
     } catch (err: any) {
       console.warn(`[CJ] Variant enrichment failed for ${pid}, returning base product:`, err?.message ?? err);
     }
 
+    await this.redisService.setJson(cacheKey, product, 60 * 60 * 24);
     return product;
   }
 
@@ -221,13 +245,13 @@ export class CjService {
     const allProducts: any[] = [];
     const seenPids = new Set<string>();
     const allKeywords = [
-      ...BROAD_CATEGORY_KEYWORDS.map(k => ({ keyword: k, gender: 'Unisex' as const })),
-      ...SEARCH_KEYWORDS.map(k => ({ keyword: k.keyword, gender: k.gender })),
+      ...BROAD_CATEGORY_KEYWORDS_WITH_GENDER,
+      ...SEARCH_KEYWORDS.map(k => ({ keyword: k.keyword, gender: k.gender, category: k.category })),
     ];
 
     console.log(`[CJ] Starting keyword crawl with ${allKeywords.length} keywords...`);
 
-    for (const { keyword, gender } of allKeywords) {
+    for (const { keyword, gender, category } of allKeywords) {
       let pageNum = 1;
       let consecutiveEmpty = 0;
 
@@ -249,21 +273,13 @@ export class CjService {
             const pid = String(product?.pid || product?.id || '');
             if (!pid || seenPids.has(pid)) continue;
             seenPids.add(pid);
-
-            const check = isProductAllowed(product);
-            if (!check.allowed) continue;
-
-            // Override gender if keyword is explicit
-            if (gender !== 'Unisex') {
-              check.gender = gender;
-              check.collectionType = gender;
-            }
+            if (isHardBlocked(product)) continue;
 
             allProducts.push({
               ...product,
-              _gender: check.gender,
-              _category: check.subcategoryName,
-              _collectionType: check.collectionType,
+              _gender: gender,
+              _category: category ?? 'Other',
+              _collectionType: gender,
             });
           }
 
@@ -461,8 +477,8 @@ export class CjService {
     } catch (error: any) {
       const status = error?.response?.status;
 
-      if (status === 429 && attempt < 3) {
-        const retryDelay = 1000 * Math.pow(2, attempt);
+      if (status === 429 && attempt < 5) {
+        const retryDelay = 2000 * Math.pow(2, attempt); // 2s, 4s, 8s, 16s, 32s
         console.warn('[CJ] RATE LIMITED, retrying', {
           url: `${this.baseUrl}${path}`,
           attempt: attempt + 1,

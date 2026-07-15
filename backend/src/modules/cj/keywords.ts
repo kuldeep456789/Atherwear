@@ -1,6 +1,3 @@
-// Keyword combinations for CJ Dropshipping product fetching.
-// Style × Product combinations generate hundreds of search terms
-// to build a large, diverse clothing catalog.
 
 const MEN_STYLES = [
   'oversized', 'regular fit', 'slim fit', 'relaxed fit', 'baggy',
@@ -17,7 +14,7 @@ const MEN_FABRICS = [
 const MEN_PRODUCTS = [
   't shirt', 'shirt', 'jeans', 'cargo pants', 'hoodie', 'jacket',
   'blazer', 'joggers', 'trousers', 'shorts', 'sweater', 'sweatshirt',
-  'knitwear', 'co ord set', 'ethnic wear',
+  'knitwear', 'ethnic wear',
 ];
 
 const WOMEN_PRODUCTS = [
@@ -82,7 +79,7 @@ function mapProductToCategory(product: string): string {
   if (p.includes('sweatshirt')) return 'Sweatshirts';
   if (p.includes('sweater') || p.includes('knitwear') || p.includes('cardigan')) return 'Sweaters & Knitwear';
   if (p.includes('jacket') || p.includes('blazer') || p.includes('winter')) return 'Jackets & Blazers';
-  if (p.includes('co ord') || p.includes('coord') || p.includes('set')) return 'Co-Ord Sets';
+  // if (p.includes('co ord') || p.includes('coord') || p.includes('set')) return 'Co-Ord Sets';
   if (p.includes('ethnic') || p.includes('kurta') || p.includes('lehenga')) return 'Ethnic Wear';
   if (p.includes('legging')) return 'Leggings';
   if (p.includes('palazzo')) return 'Palazzo';
@@ -97,7 +94,8 @@ export const SEARCH_KEYWORDS: SearchKeyword[] = [
   ...generateWomenKeywords(),
 ];
 
-export const BROAD_CATEGORY_KEYWORDS = [
+// Backward-compat alias used by products.service.ts
+export const BROAD_CATEGORY_KEYWORDS: string[] = [
   'men clothing', "men's clothing", 'men fashion',
   'women clothing', "women's clothing", 'women fashion',
   'men streetwear', 'women streetwear',
@@ -106,4 +104,30 @@ export const BROAD_CATEGORY_KEYWORDS = [
   'new collection men', 'new collection women',
   'summer collection men', 'summer collection women',
   'winter collection men', 'winter collection women',
+];
+export const BROAD_CATEGORY_KEYWORDS_WITH_GENDER: SearchKeyword[] = [
+  // Men broad
+  { keyword: 'men clothing', gender: 'Men', category: 'Other' },
+  { keyword: "men's clothing", gender: 'Men', category: 'Other' },
+  { keyword: 'men fashion', gender: 'Men', category: 'Other' },
+  { keyword: 'men streetwear', gender: 'Men', category: 'Other' },
+  { keyword: 'men casual wear', gender: 'Men', category: 'Other' },
+  { keyword: 'men formal wear', gender: 'Men', category: 'Other' },
+  { keyword: 'new collection men', gender: 'Men', category: 'Other' },
+  { keyword: 'summer collection men', gender: 'Men', category: 'Other' },
+  { keyword: 'winter collection men', gender: 'Men', category: 'Other' },
+  { keyword: 'men apparel', gender: 'Men', category: 'Other' },
+  { keyword: 'men outfits', gender: 'Men', category: 'Other' },
+  // Women broad
+  { keyword: 'women clothing', gender: 'Women', category: 'Other' },
+  { keyword: "women's clothing", gender: 'Women', category: 'Other' },
+  { keyword: 'women fashion', gender: 'Women', category: 'Other' },
+  { keyword: 'women streetwear', gender: 'Women', category: 'Other' },
+  { keyword: 'women casual wear', gender: 'Women', category: 'Other' },
+  { keyword: 'women formal wear', gender: 'Women', category: 'Other' },
+  { keyword: 'new collection women', gender: 'Women', category: 'Other' },
+  { keyword: 'summer collection women', gender: 'Women', category: 'Other' },
+  { keyword: 'winter collection women', gender: 'Women', category: 'Other' },
+  { keyword: 'women apparel', gender: 'Women', category: 'Other' },
+  { keyword: 'women outfits', gender: 'Women', category: 'Other' },
 ];
