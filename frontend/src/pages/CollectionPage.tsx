@@ -37,14 +37,23 @@ const matchesCollection = (name: string, gender: string, group = '') => {
   const normalized = `${name} ${group}`.toLowerCase();
 
   if (gender === 'men') {
-    return /\b(men|men's|male)\b/i.test(normalized);
+    // Match "men", "man", "male", "mens" but NOT "women/woman"
+    return /\b(men|man|male|mens)\b/i.test(normalized) && !/\b(women|woman|female|womens)\b/i.test(normalized);
   }
 
   if (gender === 'women') {
-    return /\b(women|women's|female)\b/i.test(normalized);
+    // Match "women", "woman", "female", "womens"
+    return /\b(women|woman|female|womens)\b/i.test(normalized);
   }
 
   return true;
+};
+
+// Client-side gender filter — strict match on collectionType or gender field
+const matchesProductGender = (product: any, gender: string): boolean => {
+  if (!gender) return true;
+  const ct = String(product?.collectionType ?? product?.gender ?? '').toLowerCase().trim();
+  return ct === gender.toLowerCase();
 };
 
 const ITEMS_PER_PAGE = 10;
@@ -124,7 +133,13 @@ const CollectionPage = () => {
           ? (data as any).records
           : [];
 
-  const sortedProducts = [...productsFromResponse];
+  // Strictly filter products by gender — applied on ALL tab (no subcategory)
+  // This prevents women's products showing in men's collection and vice versa
+  const genderFilteredProducts = !categoryId && normalizedGender
+    ? productsFromResponse.filter((p: any) => matchesProductGender(p, normalizedGender))
+    : productsFromResponse;
+
+  const sortedProducts = [...genderFilteredProducts];
 
   const filteredTabs = Array.isArray(collectionTabs)
     ? collectionTabs.filter((tab: any) => cleanCategoryName(tab.name).toUpperCase() !== 'ALL')
@@ -241,7 +256,7 @@ const CollectionPage = () => {
                 >
                   ALL{' '}
                   <span className="text-xs font-medium text-gray-500">
-                    ({productsFromResponse.length})
+                    ({isLoading ? '...' : sortedProducts.length})
                   </span>
                   {!normalizedSubcategory && (
                     <motion.span

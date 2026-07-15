@@ -196,21 +196,51 @@ export class ProductsService {
     ];
     const uniqueKeywords = [...new Set(allKeywords)];
 
+    // 1. Exact match
     const exact = uniqueKeywords.find(k => k.toLowerCase() === normalized);
     if (exact) return exact;
 
-    const keywordContains = uniqueKeywords.find(k => k.toLowerCase().includes(normalized));
-    if (keywordContains) return keywordContains;
+    // 2. Keyword contains query as a whole phrase
+    const regexQuery = new RegExp(`\\b${this.escapeRegex(normalized)}\\b`, 'i');
+    const keywordContainsWord = uniqueKeywords.find(k => regexQuery.test(k));
+    if (keywordContainsWord) return keywordContainsWord;
 
-    const queryContains = uniqueKeywords.find(k => normalized.includes(k.toLowerCase()));
-    if (queryContains) return queryContains;
-
-    const queryWords = normalized.split(' ');
-    const wordMatch = uniqueKeywords.find(k => {
-      const kwWords = k.toLowerCase().split(' ');
-      return queryWords.some(qw => kwWords.some(kw => kw.includes(qw) || qw.includes(kw)));
+    // 3. Query contains keyword as a whole phrase
+    const queryContainsKeywordWord = uniqueKeywords.find(k => {
+      const regexK = new RegExp(`\\b${this.escapeRegex(k)}\\b`, 'i');
+      return regexK.test(normalized);
     });
-    if (wordMatch) return wordMatch;
+    if (queryContainsKeywordWord) return queryContainsKeywordWord;
+
+    // 4. Score-based word intersection (partial match)
+    const queryWords = normalized.split(' ');
+    
+    let bestMatch: string | null = null;
+    let bestScore = 0;
+
+    for (const k of uniqueKeywords) {
+      const kwWords = k.toLowerCase().split(' ');
+      let score = 0;
+      
+      for (const qw of queryWords) {
+        if (kwWords.includes(qw)) {
+          score += 2; // Exact word match
+        } else if (kwWords.some(kw => kw.includes(qw) && qw.length > 3)) {
+          score += 1; // Partial word match for words > 3 chars
+        }
+      }
+
+      // Penalize keywords that have too many extra words not in the query
+      // so we pick the most concise relevant keyword
+      score -= (kwWords.length * 0.1);
+
+      if (score > bestScore && score >= 2) { // Require at least one exact word match or multiple partials
+        bestScore = score;
+        bestMatch = k;
+      }
+    }
+
+    if (bestMatch) return bestMatch;
 
     return null;
   }

@@ -260,35 +260,42 @@ export function isProductAllowed(product: any): { allowed: boolean; gender: stri
   if (CATEGORY_BLOCKED.some(word => searchText.includes(normalizeCategoryText(word)) || normalizeCategoryText(categoryName).includes(normalizeCategoryText(word)))) {
     return { allowed: false, gender: '', subcategoryName: '', collectionType: '' };
   }
+
   const matchesAny = (allowedList: string[]) => {
     return allowedList.some(cat => searchText.includes(normalizeCategoryText(cat)) || normalizeCategoryText(categoryName).includes(normalizeCategoryText(cat)));
   };
+
+  // Check explicit gender signals in name/category
+  const hasWomenSignal = /\b(women|woman|womens|ladies|lady|girl|girls|female)\b/i.test(`${name} ${categoryName}`);
+  const hasMenSignal = /\b(men|man|mens|male|gents|boys)\b/i.test(`${name} ${categoryName}`) && !hasWomenSignal;
 
   let collectionType = '';
   let gender = 'Unisex';
   let subcategoryName = 'Other';
 
-  if (matchesAny(MEN_ALLOWED) || (searchText.includes('men') && !searchText.includes('women'))) {
-    collectionType = 'Men';
-    gender = 'Men';
-    if (searchText.includes('shirt') || searchText.includes('tshirt') || searchText.includes('tee')) subcategoryName = 'T-Shirts & Shirts';
-    else if (searchText.includes('jacket') || searchText.includes('hoodie')) subcategoryName = 'Jackets & Hoodies';
-    else if (searchText.includes('jean') || searchText.includes('cargo') || searchText.includes('pant')) subcategoryName = 'Bottoms';
-    else if (searchText.includes('short')) subcategoryName = 'Shorts';
-  } else if (matchesAny(WOMEN_ALLOWED) || searchText.includes('women') || searchText.includes('lady') || searchText.includes('girl')) {
+  // PRIORITY: Women signal comes first to avoid "women's shirts" being classified as Men
+  if (hasWomenSignal || (!hasMenSignal && matchesAny(WOMEN_ALLOWED) && !searchText.includes('men') && (searchText.includes('women') || searchText.includes('female') || searchText.includes('lady')))) {
     collectionType = 'Women';
     gender = 'Women';
     if (searchText.includes('dress') || searchText.includes('skirt')) subcategoryName = 'Dresses & Skirts';
     else if (searchText.includes('top') || searchText.includes('shirt') || searchText.includes('coord')) subcategoryName = 'Tops & Shirts';
     else if (searchText.includes('jacket') || searchText.includes('suit')) subcategoryName = 'Jackets & Suits';
     else if (searchText.includes('jean') || searchText.includes('pant')) subcategoryName = 'Bottoms';
+  } else if (hasMenSignal || (matchesAny(MEN_ALLOWED) && !hasWomenSignal && (searchText.includes('men') || searchText.includes('male') || searchText.includes('man')))) {
+    collectionType = 'Men';
+    gender = 'Men';
+    if (searchText.includes('shirt') || searchText.includes('tshirt') || searchText.includes('tee')) subcategoryName = 'T-Shirts & Shirts';
+    else if (searchText.includes('jacket') || searchText.includes('hoodie')) subcategoryName = 'Jackets & Hoodies';
+    else if (searchText.includes('jean') || searchText.includes('cargo') || searchText.includes('pant')) subcategoryName = 'Bottoms';
+    else if (searchText.includes('short')) subcategoryName = 'Shorts';
   } else {
-    // If it doesn't match our whitelists, reject it
+    // If it doesn't match our whitelists with explicit gender signal, reject it
     return { allowed: false, gender: '', subcategoryName: '', collectionType: '' };
   }
 
   return { allowed: true, gender, subcategoryName, collectionType };
 }
+
 
 
 

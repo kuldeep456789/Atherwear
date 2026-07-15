@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { RootState } from '../../store/store';
 import { logout } from '../../store/slices/authSlice';
-import { useGetProductsQuery, useGetProductCountQuery } from '../../store/slices/productApiSlice';
+import { useGetProductsQuery } from '../../store/slices/productApiSlice';
 import { getProductId } from '../../lib/product';
 import { formatINR } from '../../lib/currency';
 import MiniCart from './MiniCart';
@@ -41,8 +41,7 @@ const Navbar = () => {
   const wishlistItems = useSelector((state: RootState) => state.wishlist.wishlistItems);
   const wishlistCount = wishlistItems.length;
   const userInfo = useSelector((state: RootState) => state.auth.userInfo);
-  const { data: productCountData } = useGetProductCountQuery(undefined, { pollingInterval: 300000 });
-  const redisProductCount = productCountData?.count ?? 0;
+
   const userDisplayName =
     userInfo?.firstName?.trim() ||
     [userInfo?.firstName, userInfo?.lastName].filter(Boolean).join(' ').trim() ||
@@ -241,15 +240,7 @@ const Navbar = () => {
 
           {/* Right - Actions */}
           <div className="flex items-center gap-1 sm:gap-2 lg:gap-3 ml-auto">
-            {/* Redis Product Count Badge */}
-            {redisProductCount > 0 && (
-              <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full border border-zinc-200 dark:border-zinc-700 mr-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-                <span className="text-[11px] font-semibold text-zinc-600 dark:text-zinc-400 tracking-wide whitespace-nowrap">
-                  {redisProductCount.toLocaleString()} products
-                </span>
-              </div>
-            )}
+
             {/* Desktop Search Bar */}
             <div ref={searchContainerRef} className="hidden md:block relative">
               <motion.form

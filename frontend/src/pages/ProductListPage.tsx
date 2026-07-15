@@ -110,36 +110,6 @@ const ProductListPage = () => {
         </div>
       </div>
 
-      {/* Filter tabs bar (Sticky at top) */}
-      <div className="w-full border-b-2 border-black dark:border-white flex items-center justify-between sticky top-[130px] bg-[hsl(var(--card))] z-20">
-        <div className="flex items-center h-14">
-          {tabs.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`h-full px-6 sm:px-8 text-xs font-black tracking-widest uppercase border-r-2 border-black dark:border-white transition-colors cursor-pointer ${
-                activeTab === tab
-                  ? 'bg-[hsl(var(--foreground))] text-[hsl(var(--background))]'
-                  : 'bg-[hsl(var(--card))] text-[hsl(var(--foreground))] hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))]'
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
-        <div className="flex items-center h-14 border-l-2 border-black dark:border-white">
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="h-full px-6 text-xs font-black tracking-widest uppercase bg-[hsl(var(--card))] text-[hsl(var(--foreground))] cursor-pointer focus:outline-none appearance-none"
-          >
-            <option value="Newest">SORT: NEWEST</option>
-            <option value="Popularity">SORT: POPULAR</option>
-            <option value="Price: Low to High">SORT: PRICE ↑</option>
-            <option value="Price: High to Low">SORT: PRICE ↓</option>
-          </select>
-        </div>
-      </div>
 
       <div className="max-w-[1920px] mx-auto">
         {/* Loading */}

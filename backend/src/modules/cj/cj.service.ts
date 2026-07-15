@@ -28,6 +28,7 @@ const EXCLUDED_CATEGORY_IDS = new Set([
   '2043294797236301825',
   '2606121220391623700',
   '2075130484984541185',
+  '2607151126551616100',
 ]);
 
 const EXCLUDED_PRODUCT_PIDS = new Set([
@@ -43,6 +44,7 @@ const EXCLUDED_PRODUCT_PIDS = new Set([
   '2043294797236301825',
   '2606121220391623700',
   '2075130484984541185',
+  '2607151126551616100',
 ]);
 
 @Injectable()
@@ -670,6 +672,22 @@ export class CjService {
       gender = check.gender;
       subcategoryName = check.subcategoryName;
       collectionType = check.collectionType;
+    } else {
+      // Double-verify: even if keyword crawl set a gender, check the product name
+      // to catch misclassification (e.g., "women's shirt" crawled under keyword "shirts" for Men)
+      const productName = String(product?.productNameEn ?? product?.productName ?? product?.nameEn ?? product?.name ?? '').toLowerCase();
+      const catName = String(product?.categoryName ?? product?.categoryThirdName ?? product?.categorySecondName ?? product?.categoryFirstName ?? '').toLowerCase();
+      const combined = `${productName} ${catName}`;
+      const hasWomenSignal = /\b(women|woman|womens|ladies|lady|female)\b/i.test(combined);
+      const hasMenSignal = /\b(men|man|mens|male|gents)\b/i.test(combined) && !hasWomenSignal;
+
+      if (hasWomenSignal && gender !== 'Women') {
+        gender = 'Women';
+        collectionType = 'Women';
+      } else if (hasMenSignal && gender !== 'Men') {
+        gender = 'Men';
+        collectionType = 'Men';
+      }
     }
 
     const images = [
