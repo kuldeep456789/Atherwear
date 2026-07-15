@@ -29,7 +29,7 @@ const ProductListPage = () => {
   const [page, setPage] = useState(1);
   const collectionType = getCollectionFromPath(location.pathname);
   const isNewArrivals = location.pathname.includes('/new-arrivals');
-  const [sortBy, setSortBy] = useState(isNewArrivals ? 'Newest' : 'Popularity');
+  const [sortBy] = useState(isNewArrivals ? 'Newest' : 'Popularity');
   const [activeTab, setActiveTab] = useState(() => getActiveTabFromPath(location.pathname));
 
   useEffect(() => {
@@ -85,7 +85,6 @@ const ProductListPage = () => {
     ? `${collectionType} Collections`
     : 'Our Shop';
 
-  const tabs = isNewArrivals ? ['MEN', 'WOMEN'] : ['MEN', 'WOMEN'];
 
   return (
     <div className="bg-[hsl(var(--background))] min-h-screen text-[hsl(var(--foreground))] uppercase">
