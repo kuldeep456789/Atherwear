@@ -7,7 +7,7 @@ import type { CartItem } from '../store/slices/cartSlice';
 import { toggleWishlist } from '../store/slices/wishlistSlice';
 import { useGetRelatedProductsQuery } from '../store/slices/productApiSlice';
 import ProductCard from '../components/product/ProductCard';
-import { Trash2, ShoppingBag, Heart, Percent, Truck, ShieldCheck, RotateCcw, Check, Tag, X, ChevronRight, Star } from 'lucide-react';
+import { Trash2, ShoppingBag, Heart, Percent, Truck, Check, Tag, X, ChevronRight, Star } from 'lucide-react';
 import QuantitySelector from '../components/QuantitySelector';
 import { formatINR } from '../lib/currency';
 import { motion, AnimatePresence } from 'framer-motion';

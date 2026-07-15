@@ -6,7 +6,7 @@ import { saveShippingAddress } from '../store/slices/cartSlice';
 import CheckoutSteps from '../components/checkout/CheckoutSteps';
 import OrderSummarySidebar from '../components/checkout/OrderSummarySidebar';
 import { MapPin, Building2, Hash, Globe, Phone, Mail, User } from 'lucide-react';
-import { formatINR } from '../lib/currency';
+
 
 const InputField = ({
   id, label, value, onChange, icon, required, placeholder, type, autoComplete

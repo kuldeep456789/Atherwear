@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../store/store';
-import { X, Sparkles, ArrowRight, Shield, Truck, RefreshCw } from 'lucide-react';
-import { formatINR } from '../lib/currency';
+import { X, Sparkles, ArrowRight } from 'lucide-react';
 
 const LS_KEY = 'vastra_welcome_seen';
 
