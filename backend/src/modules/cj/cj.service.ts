@@ -12,6 +12,12 @@ import { SEARCH_KEYWORDS, BROAD_CATEGORY_KEYWORDS_WITH_GENDER } from './keywords
 const PRODUCT_COUNT_CACHE_KEY = 'cj:product_count';
 const PRODUCT_COUNT_TTL = 60 * 60 * 24;
 
+// Product warehouse — merged deduplicated product pool written after crawl
+const WAREHOUSE_KEY_MEN = 'products:warehouse:men';
+const WAREHOUSE_KEY_WOMEN = 'products:warehouse:women';
+const WAREHOUSE_KEY_ALL = 'products:warehouse:all';
+const WAREHOUSE_TTL = 60 * 60; // 1 hour (matches your friend's setup)
+
 const DEFAULT_SIZES = ['S', 'M', 'L', 'XL'];
 const DEFAULT_COLORS = ['Black'];
 
@@ -303,7 +309,65 @@ export class CjService {
 
     console.log(`[CJ] Keyword crawl complete. Total unique products: ${allProducts.length}`);
     await this.saveProductCount(allProducts.length);
+
+    // ── Write to product warehouse (split by gender, TTL = 1 hour) ──────────
+    const menProducts = allProducts.filter(
+      p => String(p._gender ?? p.collectionType ?? p.gender ?? '').toLowerCase() === 'men',
+    );
+    const womenProducts = allProducts.filter(
+      p => String(p._gender ?? p.collectionType ?? p.gender ?? '').toLowerCase() === 'women',
+    );
+
+    await Promise.all([
+      this.redisService.setJson(WAREHOUSE_KEY_MEN, menProducts, WAREHOUSE_TTL),
+      this.redisService.setJson(WAREHOUSE_KEY_WOMEN, womenProducts, WAREHOUSE_TTL),
+      this.redisService.setJson(WAREHOUSE_KEY_ALL, allProducts, WAREHOUSE_TTL),
+    ]);
+
+    console.log(
+      `[CJ] Warehouse written — Men: ${menProducts.length}, Women: ${womenProducts.length}, Total: ${allProducts.length}`,
+    );
+
     return allProducts;
+  }
+
+  /**
+   * Read from the product warehouse (populated by crawlAllByKeywords).
+   * Returns a paginated slice of the stored product array.
+   */
+  async getWarehouseProducts(
+    gender: 'men' | 'women' | 'all' | '' = 'all',
+    pageNum = 1,
+    pageSize = 80,
+    categoryId?: string,
+  ): Promise<{ products: any[]; total: number; warehouseHit: true } | null> {
+    const key =
+      gender === 'men' ? WAREHOUSE_KEY_MEN
+      : gender === 'women' ? WAREHOUSE_KEY_WOMEN
+      : WAREHOUSE_KEY_ALL;
+
+    const warehouse = await this.redisService.getJson<any[]>(key);
+    if (!warehouse || !Array.isArray(warehouse) || warehouse.length === 0) {
+      return null;
+    }
+
+    let pool = warehouse;
+
+    if (categoryId) {
+      pool = warehouse.filter(
+        p => String(p.categoryId ?? p.category ?? '') === categoryId,
+      );
+    }
+
+    const total = pool.length;
+    const start = (pageNum - 1) * pageSize;
+    const products = pool.slice(start, start + pageSize);
+
+    console.log(
+      `[CJ] Warehouse READ gender=${gender} page=${pageNum} size=${pageSize} -> ${products.length}/${total}`,
+    );
+
+    return { products, total, warehouseHit: true };
   }
 
   async getProductCount(): Promise<number> {

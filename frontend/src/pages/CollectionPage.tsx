@@ -37,31 +37,30 @@ const matchesCollection = (name: string, gender: string, group = '') => {
   const normalized = `${name} ${group}`.toLowerCase();
 
   if (gender === 'men') {
-    // Match "men", "man", "male", "mens" but NOT "women/woman"
     return /\b(men|man|male|mens)\b/i.test(normalized) && !/\b(women|woman|female|womens)\b/i.test(normalized);
   }
 
   if (gender === 'women') {
-    // Match "women", "woman", "female", "womens"
     return /\b(women|woman|female|womens)\b/i.test(normalized);
   }
 
+  // For 'all' or empty gender, include everything
   return true;
 };
 
 // Client-side gender filter — strict match on collectionType or gender field
 const matchesProductGender = (product: any, gender: string): boolean => {
-  if (!gender) return true;
+  if (!gender || gender === 'all') return true;
   const ct = String(product?.collectionType ?? product?.gender ?? '').toLowerCase().trim();
   return ct === gender.toLowerCase();
 };
 
-const ITEMS_PER_PAGE = 10;
 
 const CollectionPage = () => {
   const { gender, subcategory } = useParams();
   const normalizedGender = gender?.toLowerCase() || '';
   const normalizedSubcategory = subcategory?.toLowerCase() || '';
+  const isAllGender = normalizedGender === 'all' || normalizedGender === '';
   const [page, setPage] = useState(1);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -87,11 +86,13 @@ const CollectionPage = () => {
   };
 
   const { data: categoriesData = [], isLoading: categoriesLoading } = useGetCategoriesQuery(undefined);
+
+  // For "all" gender, show all categories; for men/women, filter accordingly
   const collectionTabs = Array.isArray(categoriesData)
     ? categoriesData.filter((category: any) =>
         matchesCollection(
           String(category?.name || ''),
-          normalizedGender,
+          isAllGender ? '' : normalizedGender,
           String(category?.group || ''),
         ),
       )
@@ -104,19 +105,32 @@ const CollectionPage = () => {
   const categoryId = activeCategory?._id;
 
   const { data: categoryProductsData, isLoading: categoryLoading, error: categoryError } = useGetProductsByCategoryQuery(
-    categoryId ? { categoryId, pageNum: 1, pageSize: 80 } : (undefined as any),
+    categoryId ? { categoryId, pageNum: page, pageSize: 20 } : (undefined as any),
     { skip: !categoryId } as any,
   );
 
+  // Main gender query — uses warehouse, server-side paginated
   const { data: genderProductsData, isLoading: genderLoading, error: genderError } = useGetProductsQuery(
     !categoryId
       ? {
-          ...(normalizedGender ? { gender: normalizedGender } : {}),
-          pageNum: 1,
-          pageSize: 80,
+          ...(normalizedGender && !isAllGender ? { gender: normalizedGender } : {}),
+          pageNum: page,
+          pageSize: 20,
         }
       : (undefined as any),
     { skip: !!categoryId } as any,
+  );
+
+  // Fetch men product count (for getCategoryCount helper)
+  const { data: menProductsData } = useGetProductsQuery(
+    { gender: 'men', pageNum: 1, pageSize: 20 },
+    { skip: !isAllGender && normalizedGender !== 'men' },
+  );
+
+  // Fetch women product count
+  const { data: womenProductsData } = useGetProductsQuery(
+    { gender: 'women', pageNum: 1, pageSize: 20 },
+    { skip: !isAllGender && normalizedGender !== 'women' },
   );
 
   const data = categoryId ? categoryProductsData : genderProductsData;
@@ -134,20 +148,53 @@ const CollectionPage = () => {
           : [];
 
   // Strictly filter products by gender — applied on ALL tab (no subcategory)
-  // This prevents women's products showing in men's collection and vice versa
-  const genderFilteredProducts = !categoryId && normalizedGender
+  const genderFilteredProducts = !categoryId && normalizedGender && !isAllGender
     ? productsFromResponse.filter((p: any) => matchesProductGender(p, normalizedGender))
     : productsFromResponse;
 
   const sortedProducts = [...genderFilteredProducts];
 
+  // ── Count helpers ──────────────────────────────────────────────────────────
+  const menCount = (() => {
+    const raw = Array.isArray(menProductsData?.products) ? menProductsData.products : [];
+    return raw.filter((p: any) => matchesProductGender(p, 'men')).length;
+  })();
+
+  const womenCount = (() => {
+    const raw = Array.isArray(womenProductsData?.products) ? womenProductsData.products : [];
+    return raw.filter((p: any) => matchesProductGender(p, 'women')).length;
+  })();
+
+  const totalAllCount = isAllGender
+    ? sortedProducts.length
+    : menCount + womenCount || sortedProducts.length;
+
+  // Per-category product count (from already-loaded genderProductsData)
+  const allLoadedProducts = Array.isArray(genderProductsData?.products)
+    ? genderProductsData.products
+    : [];
+
+  const getCategoryCount = (tab: any): number => {
+    if (!allLoadedProducts.length) return 0;
+    const tabSlug = normalizeSlug(String(tab.name || ''));
+    return allLoadedProducts.filter((p: any) => {
+      const pCat = normalizeSlug(String(p?.categoryName || p?.category || ''));
+      const pCatId = String(p?.categoryId || '');
+      return pCat === tabSlug || pCatId === tab._id;
+    }).length;
+  };
+
+  // ── Category tabs ──────────────────────────────────────────────────────────
   const filteredTabs = Array.isArray(collectionTabs)
     ? collectionTabs.filter((tab: any) => cleanCategoryName(tab.name).toUpperCase() !== 'ALL')
     : [];
+
   const categoryTabLinks = filteredTabs.map((tab: any) => {
     const tabSlug = toSlug(String(tab.name || ''));
     const displayName = cleanCategoryName(tab.name);
     const isActive = normalizeSlug(normalizedSubcategory) === tabSlug;
+    const tabCount = getCategoryCount(tab);
+
     return (
       <Link
         key={tab._id}
@@ -159,6 +206,11 @@ const CollectionPage = () => {
         }`}
       >
         {displayName.toUpperCase()}
+        {tabCount > 0 && (
+          <span className={`ml-1 text-[10px] font-semibold ${isActive ? 'text-zinc-500 dark:text-zinc-400' : 'text-zinc-400 dark:text-zinc-600'}`}>
+            ({tabCount})
+          </span>
+        )}
         {isActive && (
           <motion.span
             layoutId="activeTab"
@@ -170,16 +222,29 @@ const CollectionPage = () => {
       </Link>
     );
   });
-  const totalPages = Math.max(1, Math.ceil(sortedProducts.length / ITEMS_PER_PAGE));
-  const paginatedProducts = sortedProducts.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+
+  // Server returns the current page products directly — no client-side slicing needed
+  // For warehouse responses, data.total gives the full pool size
+  const serverTotal: number = (data as any)?.total ?? sortedProducts.length;
+  const ITEMS_PER_PAGE = 20;
+  const totalPages = Math.max(1, Math.ceil(serverTotal / ITEMS_PER_PAGE));
+  // Products are already paged by the server, display them as-is
+  const paginatedProducts = sortedProducts;
 
   const pageTitle = activeCategory?.name
     ? `${cleanCategoryName(activeCategory.name)}`
     : subcategory
       ? `${fromSlug(subcategory)}`
-      : gender
-        ? `${gender} COLLECTIONS`
-        : 'COLLECTIONS';
+      : normalizedGender === 'all'
+        ? 'ALL COLLECTIONS'
+        : gender
+          ? `${gender} COLLECTIONS`
+          : 'COLLECTIONS';
+
+  // Section count shown in the header (men/women page = their count; all page = total)
+  const headerCount = isAllGender
+    ? totalAllCount
+    : sortedProducts.length;
 
   return (
     <div className="bg-[hsl(var(--background))] min-h-screen text-[hsl(var(--foreground))] uppercase">
@@ -201,9 +266,11 @@ const CollectionPage = () => {
             <h1 className="text-[22px] sm:text-[28px] lg:text-[32px] font-bold tracking-tight text-[hsl(var(--foreground))] leading-none">
               {pageTitle}
             </h1>
-            <span className="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 tracking-wider">
-              {isLoading ? '...' : sortedProducts.length} ITEMS
-            </span>
+            <div className="flex items-center gap-4">
+              <span className="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 tracking-wider">
+                {isLoading ? '...' : headerCount} ITEMS
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -245,32 +312,9 @@ const CollectionPage = () => {
               </div>
             ) : (
               <div className="flex items-center gap-2 sm:gap-3">
-                {/* ALL tab — always first, active when no subcategory selected */}
-                <Link
-                  to={gender ? `/collections/${gender}` : '/collections'}
-                  className={`group relative shrink-0 py-2 px-2 text-[13px] sm:text-[15px] font-bold tracking-wider transition-all duration-200 cursor-pointer ${
-                    !normalizedSubcategory
-                      ? 'text-[hsl(var(--foreground))]'
-                      : 'text-zinc-400 dark:text-zinc-500 hover:text-[hsl(var(--foreground))]'
-                  }`}
-                >
-                  ALL{' '}
-                  <span className="text-xs font-medium text-gray-500">
-                    ({isLoading ? '...' : sortedProducts.length})
-                  </span>
-                  {!normalizedSubcategory && (
-                    <motion.span
-                      layoutId="activeTab"
-                      className="absolute -bottom-[2px] left-1/2 -translate-x-1/2 w-[calc(100%-16px)] h-[3px] rounded-full bg-[hsl(var(--foreground))]"
-                      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                    />
-                  )}
-                  <span className="absolute -bottom-[2px] left-1/2 -translate-x-1/2 w-0 group-hover:w-[calc(100%-16px)] h-[3px] rounded-full bg-zinc-300 dark:bg-zinc-600 transition-all duration-300" />
-                </Link>
                 {categoryTabLinks}
               </div>
             )}
-
           </div>
         </div>
       </div>

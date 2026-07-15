@@ -251,6 +251,7 @@ export class ProductsService {
 
     try {
       if (query.q) {
+        // Search query — always use keyword matching (live CJ)
         const normalizedQuery = query.q.toLowerCase().trim().replace(/\s+/g, ' ');
         const bestKeyword = this.findBestKeyword(normalizedQuery);
         if (bestKeyword) {
@@ -264,8 +265,40 @@ export class ProductsService {
           return { products: [], source: 'cj', query: normalizedQuery, noMatch: true };
         }
       } else if (query.categoryId) {
+        // Category lookup — try warehouse filter first, then live CJ
+        const gender = (query.gender ?? '').toLowerCase() as 'men' | 'women' | 'all' | '';
+        const pageNum = Number(query.pageNum || query.page || 1);
+        const pageSize = Number(query.pageSize || query.limit || 80);
+        const warehouseResult = await this.cjService.getWarehouseProducts(
+          gender || 'all', pageNum, pageSize, query.categoryId,
+        );
+        if (warehouseResult && warehouseResult.products.length > 0) {
+          return {
+            products: warehouseResult.products,
+            total: warehouseResult.total,
+            source: 'warehouse',
+          };
+        }
+        // Fall through to live CJ
         cjProducts = await this.cjService.getProductsByCategory(query.categoryId, query.pid, query);
       } else {
+        // General listing — check warehouse first
+        const gender = (query.gender ?? '').toLowerCase() as 'men' | 'women' | 'all' | '';
+        const pageNum = Number(query.pageNum || query.page || 1);
+        const pageSize = Number(query.pageSize || query.limit || 80);
+        const warehouseResult = await this.cjService.getWarehouseProducts(
+          gender || 'all', pageNum, pageSize,
+        );
+        if (warehouseResult && warehouseResult.products.length > 0) {
+          console.log(`[Products] Warehouse HIT gender=${gender} page=${pageNum} -> ${warehouseResult.products.length} products (total pool: ${warehouseResult.total})`);
+          return {
+            products: warehouseResult.products,
+            total: warehouseResult.total,
+            source: 'warehouse',
+          };
+        }
+        // Warehouse empty — fall through to live CJ
+        console.log(`[Products] Warehouse MISS gender=${gender}, falling through to live CJ`);
         cjProducts = await this.cjService.getProducts(query);
       }
     } catch (err: any) {
@@ -323,6 +356,7 @@ export class ProductsService {
       source: 'cj',
     };
   }
+
 
   private escapeRegex(value: string) {
     return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

@@ -74,6 +74,7 @@ function App() {
         {/* Main app routes with Navbar & Footer */}
         <Route element={<MainLayout />}>
           <Route path="/" element={<HomePage />} />
+          <Route path="/collections/all" element={<CollectionPage />} />
           <Route path="/collections/:gender" element={<CollectionPage />} />
           <Route path="/collections/:gender/:subcategory" element={<CollectionPage />} />
           <Route path="/new-arrivals" element={<ProductListPage />} />
