@@ -90,7 +90,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
               alt={product.name}
               loading="lazy"
               onError={() => { if (primaryImage !== PLACEHOLDER_IMAGE) setImageFailed(true); }}
-              className="h-full w-full object-cover object-center transition-transform duration-[400ms] ease-out group-hover:scale-[1.06]"
+              className="h-full w-full object-cover object-center"
             />
           )}
 
