@@ -89,14 +89,14 @@ const TrackOrderPage = () => {
       {/* Header */}
       <div className="w-full border-b-2 border-black dark:border-white">
         <div className="max-w-[1920px] mx-auto px-6 sm:px-10 py-10 sm:py-14">
-          <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black uppercase tracking-tight text-[hsl(var(--foreground))] leading-none">
+          <h1 className="text-4xl lg:text-5xl font-extrabold tracking-tight text-[hsl(var(--foreground))] leading-none">
             TRACK ORDER
           </h1>
         </div>
       </div>
 
       {/* Track form */}
-      <div className="max-w-2xl mx-auto px-6 sm:px-10 py-16 sm:py-20">
+      <div className="max-w-2xl mx-auto px-6 sm:px-10 py-10 sm:py-14">
         <div className="border-2 border-black dark:border-white p-8 sm:p-12">
           <div className="flex items-center gap-4 mb-8">
             <Truck size={32} strokeWidth={2} />

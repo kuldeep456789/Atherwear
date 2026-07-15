@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Lock, Mail, Phone, Smartphone, Sparkles, ArrowLeft, Check } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, Phone, Smartphone, ArrowLeft, Check } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '../store/store';
 import { setCredentials } from '../store/slices/authSlice';
@@ -18,6 +18,8 @@ const LoginPage = () => {
   const location = useLocation();
   const redirect = new URLSearchParams(location.search).get('redirect') || '/';
   const userInfo = useSelector((state: RootState) => state.auth.userInfo);
+
+  const hasPendingItem = !!sessionStorage.getItem('pendingCartItem');
 
   const [loginMethod, setLoginMethod] = useState<'email' | 'mobile'>('email');
   const [isRegister, setIsRegister] = useState(location.pathname === '/register');
@@ -168,43 +170,58 @@ const LoginPage = () => {
 
   return (
     <div className="min-h-screen bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
-      <div className="grid min-h-screen lg:grid-cols-[1.05fr_0.95fr]">
-        {/* Left hero panel */}
-        <section className="relative hidden overflow-hidden lg:block">
-          <div className="absolute inset-0 bg-zinc-950" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/20" />
-          <div className="relative z-10 flex h-full flex-col justify-between p-12">
+      <div className="grid min-h-screen lg:grid-cols-[1fr_1fr]">
+        {/* Left — Premium fashion image with brand overlay */}
+        <section className="relative hidden overflow-hidden lg:block animate-fade-in">
+          <img
+            src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1920&q=80"
+            alt="VASTRA fashion"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-black/35" />
+          <div className="relative z-10 flex h-full flex-col justify-between p-14">
             <Link to="/" className="text-2xl font-black tracking-tight text-white">VASTRA</Link>
-            <div className="max-w-xl">
-              <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-[11px] font-black uppercase tracking-[0.22em] text-white backdrop-blur">
-                <Sparkles size={14} />
-                {isRegister ? 'Join the community' : 'Members get first access'}
-              </span>
+            <div className="max-w-lg">
               <h1 className="text-6xl font-black leading-none tracking-tight text-white">
-                {isRegister ? 'Create your wardrobe account.' : 'Your wardrobe dashboard starts here.'}
+                VASTRA
               </h1>
-              <p className="mt-5 text-lg leading-8 text-zinc-300">
-                {isRegister
-                  ? 'Sign up and unlock wishlist, faster checkout, and exclusive member-only drops.'
-                  : 'Save your cart, keep a wishlist, and move faster through checkout with one clean account.'}
+              <p className="mt-4 text-xl font-light text-white/80 tracking-wide">
+                Elevate Your Everyday Style
+              </p>
+              <p className="mt-5 text-sm leading-7 text-white/60 max-w-md normal-case tracking-normal">
+                Discover premium fashion crafted with timeless design, exceptional comfort, and modern elegance.
+              </p>
+              <p className="mt-3 text-sm leading-6 text-white/50 max-w-md normal-case tracking-normal">
+                Sign in to explore your personalized shopping experience.
               </p>
             </div>
           </div>
         </section>
 
-        {/* Right form panel */}
-        <section className="flex items-center justify-center px-5 py-12 sm:px-8">
+        {/* Right — Form panel */}
+        <section className="flex items-center justify-center px-6 py-12 sm:px-10">
           <div className="w-full max-w-md">
-            <Link to="/" className="mb-6 block text-2xl font-black tracking-tight lg:hidden">VASTRA</Link>
+
+            {/* Mobile brand */}
+            <Link to="/" className="mb-8 block text-2xl font-black tracking-tight lg:hidden">VASTRA</Link>
+
+            {/* Pending-item banner */}
+            {hasPendingItem && !isRegister && (
+              <div className="mb-6 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 px-5 py-4">
+                <h3 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                  Please sign in to continue
+                </h3>
+                <p className="mt-1.5 text-xs leading-5 text-zinc-500 dark:text-zinc-400 normal-case tracking-normal">
+                  Sign in to add products to your bag, manage your wishlist, and complete checkout.
+                </p>
+              </div>
+            )}
 
             <div className="mb-8">
-              <p className="text-sm font-black uppercase tracking-[0.22em] text-teal-600 dark:text-teal-400">
-                {isRegister ? 'Create account' : 'Welcome back'}
-              </p>
-              <h2 className="mt-2 text-4xl font-black tracking-tight">
-                {isRegister ? 'Join VASTRA' : 'Sign in to continue'}
+              <h2 className="text-4xl font-black tracking-tight">
+                {isRegister ? 'Join VASTRA' : 'Sign in'}
               </h2>
-              <p className="mt-3 text-sm leading-6 text-zinc-500 dark:text-zinc-400">
+              <p className="mt-3 text-sm leading-6 text-zinc-500 dark:text-zinc-400 normal-case tracking-normal">
                 {isRegister
                   ? 'Create your free account — no card required.'
                   : 'Access your cart, wishlist, and order history.'}
@@ -212,13 +229,27 @@ const LoginPage = () => {
             </div>
 
             {/* Login / Register tabs */}
-            <div className="mb-6 grid grid-cols-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 p-1">
-              <button type="button" onClick={() => switchMode(false)}
-                className={`rounded-lg px-3 py-2.5 text-sm font-black uppercase tracking-wider transition-all cursor-pointer ${!isRegister ? 'bg-[hsl(var(--card))] text-[hsl(var(--foreground))] shadow-sm' : 'text-zinc-500 hover:text-[hsl(var(--foreground))]'}`}>
+            <div className="mb-6 grid grid-cols-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 p-1 gap-0">
+              <button
+                type="button"
+                onClick={() => switchMode(false)}
+                className={`rounded-lg px-3 py-2.5 text-sm font-semibold uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+                  !isRegister
+                    ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm'
+                    : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+                }`}
+              >
                 Login
               </button>
-              <button type="button" onClick={() => switchMode(true)}
-                className={`rounded-lg px-3 py-2.5 text-sm font-black uppercase tracking-wider transition-all cursor-pointer ${isRegister ? 'bg-[hsl(var(--card))] text-[hsl(var(--foreground))] shadow-sm' : 'text-zinc-500 hover:text-[hsl(var(--foreground))]'}`}>
+              <button
+                type="button"
+                onClick={() => switchMode(true)}
+                className={`rounded-lg px-3 py-2.5 text-sm font-semibold uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+                  isRegister
+                    ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm'
+                    : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+                }`}
+              >
                 Register
               </button>
             </div>
@@ -229,13 +260,27 @@ const LoginPage = () => {
                 {/* Login method selector */}
                 {!otpSent && (
                   <div className="flex gap-2 mb-6">
-                    <button type="button" onClick={() => { setLoginMethod('email'); setErrorMessage(''); }}
-                      className={`flex-1 h-[46px] rounded-xl text-[13px] font-bold tracking-wide transition-all duration-200 cursor-pointer border-2 ${loginMethod === 'email' ? 'bg-[hsl(var(--foreground))] text-[hsl(var(--background))] border-[hsl(var(--foreground))]' : 'bg-transparent text-zinc-500 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400'}`}>
-                      <Mail size={16} className="inline mr-1.5" strokeWidth={1.5} /> Email
+                    <button
+                      type="button"
+                      onClick={() => { setLoginMethod('email'); setErrorMessage(''); }}
+                      className={`flex-1 h-12 rounded-xl text-[13px] font-semibold tracking-wide transition-all duration-200 cursor-pointer border-2 ${
+                        loginMethod === 'email'
+                          ? 'bg-[hsl(var(--foreground))] text-[hsl(var(--background))] border-[hsl(var(--foreground))]'
+                          : 'bg-transparent text-zinc-500 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400'
+                      }`}
+                    >
+                      <Mail size={16} className="inline mr-1.5 -mt-0.5" strokeWidth={1.5} /> Email
                     </button>
-                    <button type="button" onClick={() => { setLoginMethod('mobile'); setErrorMessage(''); }}
-                      className={`flex-1 h-[46px] rounded-xl text-[13px] font-bold tracking-wide transition-all duration-200 cursor-pointer border-2 ${loginMethod === 'mobile' ? 'bg-[hsl(var(--foreground))] text-[hsl(var(--background))] border-[hsl(var(--foreground))]' : 'bg-transparent text-zinc-500 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400'}`}>
-                      <Smartphone size={16} className="inline mr-1.5" strokeWidth={1.5} /> Mobile
+                    <button
+                      type="button"
+                      onClick={() => { setLoginMethod('mobile'); setErrorMessage(''); }}
+                      className={`flex-1 h-12 rounded-xl text-[13px] font-semibold tracking-wide transition-all duration-200 cursor-pointer border-2 ${
+                        loginMethod === 'mobile'
+                          ? 'bg-[hsl(var(--foreground))] text-[hsl(var(--background))] border-[hsl(var(--foreground))]'
+                          : 'bg-transparent text-zinc-500 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400'
+                      }`}
+                    >
+                      <Smartphone size={16} className="inline mr-1.5 -mt-0.5" strokeWidth={1.5} /> Mobile
                     </button>
                   </div>
                 )}
@@ -244,14 +289,14 @@ const LoginPage = () => {
                 {loginMethod === 'email' && !otpSent && (
                   <form onSubmit={handleLogin} className="space-y-4" noValidate>
                     <div>
-                      <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-zinc-500">Email address</label>
+                      <label className="mb-2 block text-[11px] font-semibold uppercase tracking-widest text-zinc-500">Email address</label>
                       <div className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-[hsl(var(--card))] px-4 py-3.5 transition focus-within:border-zinc-500">
                         <Mail size={17} className="shrink-0 text-zinc-400" />
                         <input type="email" placeholder="you@example.com" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-400" />
                       </div>
                     </div>
                     <div>
-                      <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-zinc-500">Password</label>
+                      <label className="mb-2 block text-[11px] font-semibold uppercase tracking-widest text-zinc-500">Password</label>
                       <div className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-[hsl(var(--card))] px-4 py-3.5 transition focus-within:border-zinc-500">
                         <Lock size={17} className="shrink-0 text-zinc-400" />
                         <input type={showLoginPassword ? 'text' : 'password'} placeholder="Enter your password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-400" />
@@ -271,7 +316,7 @@ const LoginPage = () => {
                       <div className="rounded-xl border border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/30 px-4 py-3 text-sm font-semibold text-red-700 dark:text-red-300">{errorMessage}</div>
                     )}
 
-                    <button type="submit" disabled={isLoading} className="mt-2 w-full rounded-xl bg-[hsl(var(--foreground))] text-[hsl(var(--background))] py-4 text-sm font-bold tracking-wider transition hover:opacity-90 disabled:opacity-60 cursor-pointer">
+                    <button type="submit" disabled={isLoading} className="mt-2 w-full rounded-xl bg-[hsl(var(--foreground))] text-[hsl(var(--background))] h-14 text-sm font-semibold tracking-wider transition hover:shadow-md disabled:opacity-60 cursor-pointer">
                       {isLoading ? 'Signing in...' : 'Login'}
                     </button>
                   </form>
@@ -283,7 +328,7 @@ const LoginPage = () => {
                     {!otpSent ? (
                       <>
                         <div>
-                          <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-zinc-500">Mobile Number</label>
+                          <label className="mb-2 block text-[11px] font-semibold uppercase tracking-widest text-zinc-500">Mobile Number</label>
                           <div className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-[hsl(var(--card))] px-4 py-3.5 transition focus-within:border-zinc-500">
                             <Phone size={17} className="shrink-0 text-zinc-400" />
                             <span className="text-sm font-semibold text-zinc-500">+91</span>
@@ -291,7 +336,7 @@ const LoginPage = () => {
                           </div>
                         </div>
                         {errorMessage && <div className="rounded-xl border border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/30 px-4 py-3 text-sm font-semibold text-red-700 dark:text-red-300">{errorMessage}</div>}
-                        <button type="button" onClick={handleSendOtp} disabled={otpLoading || mobileNumber.length < 10} className="w-full rounded-xl bg-[hsl(var(--foreground))] text-[hsl(var(--background))] py-4 text-sm font-bold tracking-wider transition hover:opacity-90 disabled:opacity-50 cursor-pointer">
+                        <button type="button" onClick={handleSendOtp} disabled={otpLoading || mobileNumber.length < 10} className="w-full rounded-xl bg-[hsl(var(--foreground))] text-[hsl(var(--background))] h-14 text-sm font-semibold tracking-wider transition hover:opacity-90 disabled:opacity-50 cursor-pointer">
                           {otpLoading ? 'Sending...' : 'Send OTP'}
                         </button>
                       </>
@@ -300,7 +345,7 @@ const LoginPage = () => {
                         <button type="button" onClick={() => { setOtpSent(false); setOtpValues(['', '', '', '', '', '']); setErrorMessage(''); }} className="flex items-center gap-1.5 text-[12px] font-semibold text-zinc-500 hover:text-[hsl(var(--foreground))] transition-colors cursor-pointer mb-2">
                           <ArrowLeft size={14} strokeWidth={2} /> Change number
                         </button>
-                        <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-zinc-500">Enter OTP</label>
+                        <label className="mb-2 block text-[11px] font-semibold uppercase tracking-widest text-zinc-500">Enter OTP</label>
                         <p className="text-[13px] text-zinc-500 mb-4">OTP sent to +91 {mobileNumber}</p>
                         <div className="flex gap-2 justify-center mb-2">
                           {otpValues.map((val, i) => (
@@ -320,7 +365,7 @@ const LoginPage = () => {
                           ))}
                         </div>
                         {errorMessage && <div className="rounded-xl border border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/30 px-4 py-3 text-sm font-semibold text-red-700 dark:text-red-300">{errorMessage}</div>}
-                        <button type="button" onClick={handleVerifyOtp} disabled={otpLoading || otpValues.join('').length !== 6} className="w-full rounded-xl bg-[hsl(var(--foreground))] text-[hsl(var(--background))] py-4 text-sm font-bold tracking-wider transition hover:opacity-90 disabled:opacity-50 cursor-pointer">
+                        <button type="button" onClick={handleVerifyOtp} disabled={otpLoading || otpValues.join('').length !== 6} className="w-full rounded-xl bg-[hsl(var(--foreground))] text-[hsl(var(--background))] h-14 text-sm font-semibold tracking-wider transition hover:opacity-90 disabled:opacity-50 cursor-pointer">
                           {otpLoading ? 'Verifying...' : 'Verify OTP'}
                         </button>
                         <div className="text-center">
@@ -344,13 +389,13 @@ const LoginPage = () => {
               <form onSubmit={handleRegister} className="space-y-4" noValidate>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-zinc-500">First name</label>
+                    <label className="mb-2 block text-[11px] font-semibold uppercase tracking-widest text-zinc-500">First name</label>
                     <div className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-[hsl(var(--card))] px-4 py-3.5 transition focus-within:border-zinc-500">
                       <input type="text" placeholder="Aarav" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-400" />
                     </div>
                   </div>
                   <div>
-                    <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-zinc-500">Last name</label>
+                    <label className="mb-2 block text-[11px] font-semibold uppercase tracking-widest text-zinc-500">Last name</label>
                     <div className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-[hsl(var(--card))] px-4 py-3.5 transition focus-within:border-zinc-500">
                       <input type="text" placeholder="Sharma" value={lastName} onChange={(e) => setLastName(e.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-400" />
                     </div>
@@ -358,7 +403,7 @@ const LoginPage = () => {
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-zinc-500">Email address</label>
+                  <label className="mb-2 block text-[11px] font-semibold uppercase tracking-widest text-zinc-500">Email address</label>
                   <div className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-[hsl(var(--card))] px-4 py-3.5 transition focus-within:border-zinc-500">
                     <Mail size={17} className="shrink-0 text-zinc-400" />
                     <input type="email" placeholder="you@example.com" value={registerEmail} onChange={(e) => setRegisterEmail(e.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-400" />
@@ -366,7 +411,7 @@ const LoginPage = () => {
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-zinc-500">Mobile number (optional)</label>
+                  <label className="mb-2 block text-[11px] font-semibold uppercase tracking-widest text-zinc-500">Mobile number (optional)</label>
                   <div className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-[hsl(var(--card))] px-4 py-3.5 transition focus-within:border-zinc-500">
                     <Phone size={17} className="shrink-0 text-zinc-400" />
                     <span className="text-sm font-semibold text-zinc-500">+91</span>
@@ -375,7 +420,7 @@ const LoginPage = () => {
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-zinc-500">Password</label>
+                  <label className="mb-2 block text-[11px] font-semibold uppercase tracking-widest text-zinc-500">Password</label>
                   <div className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-[hsl(var(--card))] px-4 py-3.5 transition focus-within:border-zinc-500">
                     <Lock size={17} className="shrink-0 text-zinc-400" />
                     <input type={showRegisterPassword ? 'text' : 'password'} placeholder="Minimum 6 characters" value={registerPassword} onChange={(e) => setRegisterPassword(e.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-400" />
@@ -386,7 +431,7 @@ const LoginPage = () => {
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-zinc-500">Confirm password</label>
+                  <label className="mb-2 block text-[11px] font-semibold uppercase tracking-widest text-zinc-500">Confirm password</label>
                   <div className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-[hsl(var(--card))] px-4 py-3.5 transition focus-within:border-zinc-500">
                     <Lock size={17} className="shrink-0 text-zinc-400" />
                     <input type={showConfirmPassword ? 'text' : 'password'} placeholder="Re-enter your password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-400" />
@@ -400,13 +445,13 @@ const LoginPage = () => {
                   <div className="rounded-xl border border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/30 px-4 py-3 text-sm font-semibold text-red-700 dark:text-red-300">{errorMessage}</div>
                 )}
 
-                <button type="submit" disabled={isLoading} className="mt-2 w-full rounded-xl bg-[hsl(var(--foreground))] text-[hsl(var(--background))] py-4 text-sm font-bold tracking-wider transition hover:opacity-90 disabled:opacity-60 cursor-pointer">
+                <button type="submit" disabled={isLoading} className="mt-2 w-full rounded-xl bg-[hsl(var(--foreground))] text-[hsl(var(--background))] h-14 text-sm font-semibold tracking-wider transition hover:shadow-md disabled:opacity-60 cursor-pointer">
                   {isLoading ? 'Creating account...' : 'Create account'}
                 </button>
 
-                <p className="text-center text-xs text-zinc-500">
+                <p className="text-center text-xs text-zinc-500 normal-case tracking-normal">
                   Already have an account?{' '}
-                  <button type="button" onClick={() => switchMode(false)} className="font-bold text-[hsl(var(--foreground))] underline underline-offset-2 cursor-pointer">Login</button>
+                  <button type="button" onClick={() => switchMode(false)} className="font-semibold text-[hsl(var(--foreground))] underline underline-offset-2 cursor-pointer">Login</button>
                 </p>
               </form>
             )}

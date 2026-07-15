@@ -30,10 +30,12 @@ interface ProductCardProps {
 export const ProductCardSkeleton = () => (
   <div className="w-full bg-white dark:bg-zinc-900 rounded-[14px] overflow-hidden animate-pulse">
     <div className="aspect-[4/5] bg-zinc-100 dark:bg-zinc-800" />
-    <div className="p-4 pb-[18px] space-y-2.5">
-      <div className="h-3 w-16 bg-zinc-100 dark:bg-zinc-800 rounded" />
-      <div className="h-[18px] w-full bg-zinc-100 dark:bg-zinc-800 rounded" />
-      <div className="h-5 w-20 bg-zinc-100 dark:bg-zinc-800 rounded mt-1" />
+    <div className="p-4 border-t border-gray-100 dark:border-zinc-800 space-y-2">
+      <div className="h-4 w-full bg-zinc-100 dark:bg-zinc-800 rounded" />
+      <div className="flex items-center gap-2">
+        <div className="h-6 w-16 bg-zinc-100 dark:bg-zinc-800 rounded" />
+        <div className="h-4 w-14 bg-zinc-100 dark:bg-zinc-800 rounded" />
+      </div>
     </div>
   </div>
 );
@@ -95,12 +97,19 @@ const ProductCard = ({ product }: ProductCardProps) => {
         </div>
       </Link>
 
-      <Link to={`/product/${productId}`} className="flex flex-col px-4 py-[14px] flex-1 space-y-1">
+      <Link to={`/product/${productId}`} className="flex flex-col p-4 flex-1 border-t border-gray-100 dark:border-zinc-800">
         <h3 className="text-base font-medium text-gray-900 dark:text-white line-clamp-2 leading-snug">
           {product.title || product.name}
         </h3>
-        <div className="text-base font-medium text-gray-900 dark:text-white">
-          {formatINR(product.discountPrice && product.discountPrice < product.price ? product.discountPrice : product.price)}
+        <div className="flex items-center gap-2 mt-1.5">
+          <span className="text-xl font-bold text-gray-900 dark:text-white">
+            {formatINR(product.discountPrice && product.discountPrice < product.price ? product.discountPrice : product.price)}
+          </span>
+          {product.discountPrice && product.discountPrice < product.price && (
+            <span className="text-base text-gray-500 line-through">
+              {formatINR(product.price)}
+            </span>
+          )}
         </div>
       </Link>
     </div>

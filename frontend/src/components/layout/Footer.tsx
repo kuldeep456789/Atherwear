@@ -13,38 +13,12 @@ const Footer = () => {
 
   return (
     <footer className="bg-black text-white font-sans uppercase w-full">
-      {/* Newsletter strip */}
-      {/* <div className="w-full border-b border-zinc-800 flex flex-col md:flex-row">
-        <div className="flex-1 px-6 py-7 sm:px-10 sm:py-9 md:px-12 md:py-11 border-b md:border-b-0 md:border-r border-zinc-800">
-          <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight leading-none">
-            JOIN THE CLUB
-          </h3>
-        </div> */}
-      {/* <div className="flex-1 px-6 py-7 sm:px-10 sm:py-9 md:px-12 md:py-11 flex items-center">
-          <form className="flex w-full border border-zinc-700 focus-within:border-[#C9A227] transition-colors duration-300" onSubmit={handleSubscribe}>
-            <input
-              type="email"
-              placeholder="YOUR EMAIL"
-              required
-              className="bg-transparent text-white px-4 py-2.5 sm:py-3 flex-1 text-xs sm:text-sm font-bold tracking-widest focus:outline-none placeholder:text-zinc-600"
-            />
-            <button type="submit" className="bg-[#C9A227] text-black px-6 sm:px-8 py-2.5 sm:py-3 text-xs sm:text-sm font-black tracking-widest hover:bg-[#b8921f] transition-all duration-300 shrink-0 cursor-pointer border-l border-zinc-700">
-              JOIN
-            </button>
-          </form>
-          {subscribed && (
-            <p className="text-[#C9A227] text-xs ml-3 font-black whitespace-nowrap animate-pulse">SUBSCRIBED ✓</p>
-          )}
-        </div> */}
-      {/* </div> */}
-
-      {/* Main footer grid — 4 columns */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-zinc-800">
         {/* Brand */}
         <div className="px-6 py-7 sm:px-10 sm:py-9 md:px-12 md:py-11">
           <h3 className="text-xl sm:text-2xl font-black tracking-tighter mb-2 leading-none">VASTRA</h3>
           <p className="text-xs sm:text-sm text-zinc-500 font-medium normal-case tracking-normal leading-relaxed max-w-xs">
-            Premium minimal fashion for the modern wardrobe. Timeless design, effortless style.
+            Elevating Everyday Fashion with Premium Quality, Modern Design, and Timeless Style.
           </p>
         </div>
 
@@ -75,9 +49,7 @@ const Footer = () => {
             {[
               { to: '/faq', label: 'FAQ' },
               { to: '/shipping-policy', label: 'Shipping Policy' },
-              { to: '/returns', label: 'Returns & Refunds' },
               { to: '/track-order', label: 'Track Order' },
-              { to: '/contact', label: 'Contact Us' },
             ].map(({ to, label }) => (
               <li key={to}>
                 <Link
@@ -113,7 +85,7 @@ const Footer = () => {
               </a>
             </li>
           </ul>
-          {/* Social */}
+          {/* Social
           <div className="mt-5">
             <h5 className="text-[10px] font-black tracking-[0.2em] text-zinc-500 mb-2">FOLLOW US</h5>
             <div className="flex items-center gap-3">
@@ -128,7 +100,7 @@ const Footer = () => {
                 </svg>
               </a>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </footer >

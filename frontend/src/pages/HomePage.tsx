@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowRight, BadgePercent, ShieldCheck, Truck, X, Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import { X, Eye, EyeOff, Mail, Lock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '../store/store';
 import { setCredentials } from '../store/slices/authSlice';
@@ -9,10 +9,8 @@ import { useLoginMutation } from '../store/slices/userApiSlice';
 import { useGetProductsQuery } from '../store/slices/productApiSlice';
 import ProductCard from '../components/product/ProductCard';
 import Pagination from '../components/Pagination';
-import { getFirstProductImage } from '../lib/product';
-import { formatUSD } from '../lib/currency';
 
-const placeholderImage = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="800" viewBox="0 0 400 500"><rect width="100%" height="100%" fill="%23f4f4f5"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="24" font-weight="900" fill="%23a1a1aa" letter-spacing="4">AETHERWEAR</text></svg>';
+
 
 const ITEMS_PER_PAGE = 10;
 
@@ -58,6 +56,18 @@ const HomePage = () => {
   const menProducts = Array.isArray(menData?.products) ? menData.products : [];
   const womenProducts = Array.isArray(womenData?.products) ? womenData.products : [];
 
+  const carouselProducts = useMemo(() => {
+    const mixed: any[] = [];
+    const max = Math.min(menProducts.length, womenProducts.length, 5);
+    for (let i = 0; i < max; i++) {
+      mixed.push(menProducts[i], womenProducts[i]);
+    }
+    return mixed.slice(0, 10);
+  }, [menProducts, womenProducts]);
+
+  const [carouselIdx, setCarouselIdx] = useState(0);
+  const carouselRef = useRef<HTMLDivElement>(null);
+
   const [menShowAll, setMenShowAll] = useState(false);
   const [menPage, setMenPage] = useState(1);
   const [womenShowAll, setWomenShowAll] = useState(false);
@@ -73,14 +83,15 @@ const HomePage = () => {
     ? womenProducts.slice((womenPage - 1) * ITEMS_PER_PAGE, womenPage * ITEMS_PER_PAGE)
     : womenProducts.slice(0, ITEMS_PER_PAGE);
 
-  // For hero slideshow, use new arrivals images
-  const heroImages = useMemo(() => {
-    if (newArrivals.length === 0) return [placeholderImage];
-    return newArrivals.map((p: any) => getFirstProductImage(p) || placeholderImage);
-  }, [newArrivals]);
+  const heroImages = [
+    'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1920&q=80',
+    'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=1920&q=80',
+    'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=1920&q=80',
+    'https://images.unsplash.com/photo-1445205170230-053b83016050?w=1920&q=80',
+    'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=1920&q=80',
+  ];
 
   const [currentHeroIdx, setCurrentHeroIdx] = useState(0);
-  const [heroFailedImgs, setHeroFailedImgs] = useState<Set<number>>(new Set());
   const [showLoginPopup, setShowLoginPopup] = useState(false);
   const [countdown, setCountdown] = useState(10);
 
@@ -102,7 +113,6 @@ const HomePage = () => {
         clearTimeout(popupTimer);
       };
     }
-
     return () => clearInterval(heroTimer);
   }, [heroImages.length, userInfo]);
 
@@ -139,134 +149,108 @@ const HomePage = () => {
   return (
     <div className="w-full bg-[hsl(var(--background))] text-[hsl(var(--foreground))] font-sans uppercase">
       {/* ───────── HERO ───────── */}
-      <section className="relative min-h-[calc(100vh-130px)] overflow-hidden bg-black text-white border-b-2 border-black">
+      <section className="relative h-[550px] sm:h-[650px] lg:h-[720px] overflow-hidden bg-black text-white">
         {heroImages.map((img: string, idx: number) => (
           <div
             key={idx}
-            className={`absolute inset-0 h-full w-full transition-all duration-1000 ease-in-out transform ${idx === currentHeroIdx
-              ? 'opacity-80 scale-100'
-              : 'opacity-0 scale-105 pointer-events-none'
-              }`}
+            className={`absolute inset-0 h-full w-full transition-opacity duration-1000 ease-in-out ${idx === currentHeroIdx ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
           >
-            {heroFailedImgs.has(idx) ? (
-              <div className="h-full w-full bg-zinc-900 flex items-center justify-center">
-                <span className="text-white/20 text-6xl font-black tracking-[0.3em]">AW</span>
-              </div>
-            ) : (
-              <img
-                src={img}
-                alt="Aetherwear streetwear collection"
-                loading={idx === 0 ? 'eager' : 'lazy'}
-                onError={() => setHeroFailedImgs(prev => new Set(prev).add(idx))}
-                className="h-full w-full object-cover object-center"
-              />
-            )}
+            <img
+              src={img}
+              alt="VASTRA fashion collection"
+              loading={idx === 0 ? 'eager' : 'lazy'}
+              className="h-full w-full object-cover object-center"
+            />
           </div>
         ))}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
-        <div className="relative z-10 flex min-h-[calc(100vh-130px)] w-full max-w-[1920px] mx-auto px-6 sm:px-10 lg:px-16 py-16 items-end">
-          <div className="w-full flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8 pb-10">
-            <div className="max-w-3xl">
-              {/* <p className="text-sm sm:text-base font-black tracking-[0.3em] text-red-500 mb-4">NEW SEASON DROP</p> */}
-              <h1 className="text-[2.5rem] min-[375px]:text-5xl sm:text-7xl lg:text-[6rem] font-black leading-[0.85] tracking-tighter uppercase">
-                <span className="block sm:hidden whitespace-nowrap">VASTRA</span>
-                <span className="hidden sm:block">VASTRA</span>
-              </h1>
-              {/* <p className="mt-4 sm:mt-6 text-sm sm:text-base text-zinc-400 max-w-lg normal-case tracking-normal font-medium leading-relaxed">
-                Premium streetwear engineered for the modern rebel. Limited drops, infinite attitude.
-              </p> */}
-              <div className="mt-8 sm:mt-10 flex flex-row gap-3 sm:gap-0 w-full sm:w-auto">
-                <Link to="/collections/men" className="group/btn flex-1 sm:flex-initial justify-center inline-flex items-center gap-3 bg-white px-6 py-5 sm:px-14 sm:py-7 text-sm sm:text-lg font-black tracking-widest text-black transition-all duration-300 hover:bg-red-600 hover:text-white border-2 border-white relative overflow-hidden shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0">
-                  <span className="relative z-10 flex items-center gap-3 whitespace-nowrap">
-                    SHOP MEN <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300 group-hover/btn:translate-x-1" />
-                  </span>
-                </Link>
-                <Link to="/collections/women" className="group/btn flex-1 sm:flex-initial justify-center inline-flex items-center gap-3 px-6 py-5 sm:px-14 sm:py-7 text-sm sm:text-lg font-black tracking-widest text-white transition-all duration-300 hover:bg-white hover:text-black border-2 border-white sm:-ml-[2px] relative overflow-hidden shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0">
-                  <span className="relative z-10 flex items-center gap-3 whitespace-nowrap">
-                    SHOP WOMEN <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300 group-hover/btn:translate-x-1" />
-                  </span>
-                </Link>
-              </div>
-            </div>
-            <div className="grid grid-cols-3 w-full lg:w-auto mt-8 lg:mt-0">
-              {[
-                ['12K+', 'FITS SHIPPED'],
-                ['4.8', 'AVG RATING'],
-                ['48H', 'DISPATCH'],
-              ].map(([value, label], idx) => (
-                <div key={label} className={`border-2 border-white p-4 sm:p-6 text-center bg-black/50 backdrop-blur-sm min-w-0 ${idx > 0 ? '-ml-[2px]' : ''}`}>
-                  <div className="text-2xl sm:text-4xl font-black">{value}</div>
-                  <div className="mt-1.5 text-[10px] sm:text-xs font-bold tracking-widest text-zinc-400 truncate">{label}</div>
-                </div>
-              ))}
+        <div className="absolute inset-0 bg-black/35" />
+        <div className="relative z-10 flex h-full w-full max-w-[1400px] mx-auto px-12 lg:px-20 pb-20 lg:pb-24 items-end">
+          <div className="max-w-xl">
+            <h1 className="text-7xl lg:text-8xl font-black leading-[0.85] tracking-tighter text-white">
+              VASTRA
+            </h1>
+            <p className="mt-5 text-lg text-white/90 max-w-md leading-8 font-normal normal-case tracking-normal">
+              Discover premium fashion crafted for modern lifestyles. Explore timeless collections designed with quality, comfort, and confidence for every occasion.
+            </p>
+            <div className="mt-8 flex flex-row gap-5 items-center">
+              <Link to="/collections/men" className="inline-flex items-center justify-center h-[64px] px-14 bg-white text-black text-lg font-bold tracking-widest transition-all duration-300 hover:bg-zinc-200 border-2 border-white active:scale-[0.98]">
+                SHOP MEN
+              </Link>
+              <Link to="/collections/women" className="inline-flex items-center justify-center h-[64px] px-14 text-white text-lg font-bold tracking-widest transition-all duration-300 hover:bg-white hover:text-black border-2 border-white active:scale-[0.98]">
+                SHOP WOMEN
+              </Link>
             </div>
           </div>
         </div>
-        <div className="absolute bottom-8 left-6 sm:left-10 lg:left-16 z-20 flex gap-2">
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-3">
           {heroImages.map((_: string, idx: number) => (
             <button
               key={idx}
               onClick={() => setCurrentHeroIdx(idx)}
-              className="group relative h-1.5 w-14 cursor-pointer bg-white/20 transition-all hover:bg-white/40 overflow-hidden"
-            >
-              <span
-                className={`absolute inset-y-0 left-0 bg-white transition-all ${idx === currentHeroIdx ? 'w-full duration-[2000ms] ease-linear' : 'w-0 duration-0'
-                  }`}
-              />
-            </button>
+              className={`w-2 h-2 rounded-full transition-all duration-300 cursor-pointer ${idx === currentHeroIdx ? 'bg-white w-6' : 'bg-white/40 hover:bg-white/60'}`}
+              aria-label={`Slide ${idx + 1}`}
+            />
           ))}
         </div>
       </section>
 
-      {/* ───────── FEATURES STRIP ───────── */}
-      <section className="border-b-2 border-black dark:border-white bg-[hsl(var(--card))]">
-        <div className="flex flex-col md:flex-row">
-          {[
-            { icon: Truck, title: 'FREE SHIPPING', copy: `On orders above ${formatUSD(399)}` },
-            { icon: ShieldCheck, title: 'ORIGINAL QUALITY', copy: 'Checked fabrics & finishing' },
-            { icon: BadgePercent, title: 'BUNDLE PRICING', copy: 'Buy 3 and save more' },
-          ].map(({ icon: Icon, title, copy }, idx) => (
-            <div key={title} className={`group flex-1 flex items-center gap-4 p-6 sm:p-8 md:p-10 transition-all duration-300 hover:bg-[hsl(var(--foreground))]/5 ${idx < 2 ? 'border-b-2 md:border-b-0 md:border-r-2 border-black dark:border-white' : ''}`}>
-              <span className="inline-flex h-14 w-14 items-center justify-center border-2 border-black dark:border-white group-hover:bg-[hsl(var(--foreground))] group-hover:text-[hsl(var(--background))] transition-all duration-300">
-                <Icon size={22} strokeWidth={2} />
-              </span>
-              <div>
-                <h3 className="text-base sm:text-lg font-black tracking-widest">{title}</h3>
-                <p className="mt-1.5 text-sm text-zinc-500 normal-case tracking-normal">{copy}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
 
-      {/* ───────── NEW ARRIVALS ───────── */}
-      {newArrivals.length > 0 && (
+
+      {/* ───────── FEATURED COLLECTION ───────── */}
+      {carouselProducts.length > 0 && (
         <section className="border-b-2 border-black dark:border-white">
           <div className="max-w-[1920px] mx-auto px-6 sm:px-10 lg:px-16 py-12 sm:py-16 lg:py-20">
             <div className="flex items-end justify-between mb-8 sm:mb-10">
               <div>
-                {/* <p className="text-xs sm:text-sm font-black tracking-[0.25em] text-zinc-500 mb-2">FRESH DROPS</p> */}
-                <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-none">NEW ARRIVALS</h2>
+                <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-none">COLLECTION</h2>
               </div>
-              <Link
-                to="/new-arrivals"
-                className="hidden sm:inline-flex items-center gap-2 text-xs sm:text-sm font-black tracking-widest hover:underline underline-offset-4 transition-all group"
-              >
-                VIEW ALL <ArrowRight size={16} strokeWidth={2.5} className="group-hover:translate-x-1 transition-transform" />
-              </Link>
+
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-              {newArrivals.slice(0, 10).map((product: any) => (
-                <ProductCard key={product.pid || product._id} product={product} />
-              ))}
-            </div>
-            <div className="mt-8 text-center sm:hidden">
-              <Link
-                to="/new-arrivals"
-                className="inline-flex items-center gap-2 px-8 py-4 border-2 border-black dark:border-white text-xs font-black tracking-widest hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))] transition-colors"
-              >
-                VIEW ALL NEW ARRIVALS <ArrowRight size={14} strokeWidth={2.5} />
-              </Link>
+            <div className="relative" ref={carouselRef}>
+              <div className="overflow-hidden">
+                <div
+                  className="flex transition-transform duration-300 ease-in-out"
+                  style={{ transform: `translateX(-${carouselIdx * (carouselRef.current?.offsetWidth ?? 0)}px)` }}
+                >
+                  {carouselProducts.map((product: any) => (
+                    <div
+                      key={product.pid || product._id}
+                      className="flex-shrink-0 w-1/2 md:w-1/3 lg:w-1/4"
+                    >
+                      <div className="px-3">
+                        <ProductCard product={product} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {carouselProducts.length > 4 && (
+                <div className="flex justify-end mt-8 gap-3">
+                  <button
+                    onClick={() => setCarouselIdx((p) => Math.max(0, p - 1))}
+                    disabled={carouselIdx === 0}
+                    className="w-12 h-12 rounded-full bg-white shadow-md hover:shadow-lg transition-all flex items-center justify-center disabled:opacity-25 disabled:cursor-not-allowed cursor-pointer"
+                    aria-label="Previous products"
+                  >
+                    <ChevronLeft size={20} strokeWidth={2} />
+                  </button>
+                  <button
+                    onClick={() => setCarouselIdx((p) => {
+                      if (!carouselRef.current) return p;
+                      const maxIdx = Math.ceil(carouselProducts.length / 4) - 1;
+                      return Math.min(p + 1, maxIdx);
+                    })}
+                    disabled={
+                      !carouselRef.current ||
+                      carouselIdx >= Math.ceil(carouselProducts.length / 4) - 1
+                    }
+                    className="w-12 h-12 rounded-full bg-white shadow-md hover:shadow-lg transition-all flex items-center justify-center disabled:opacity-25 disabled:cursor-not-allowed cursor-pointer"
+                    aria-label="Next products"
+                  >
+                    <ChevronRight size={20} strokeWidth={2} />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </section>

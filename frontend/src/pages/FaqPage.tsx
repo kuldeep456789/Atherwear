@@ -58,9 +58,9 @@ const FaqPage = () => {
 
       {/* Header */}
       <div className="w-full border-b-2 border-black dark:border-white">
-        <div className="max-w-[1920px] mx-auto px-6 sm:px-10 py-10 sm:py-14">
-          <p className="text-xs sm:text-sm font-black tracking-[0.25em] text-zinc-500 mb-3">HAVE QUESTIONS?</p>
-          <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black uppercase tracking-tight text-[hsl(var(--foreground))] leading-none">
+        <div className="max-w-[1920px] mx-auto px-6 sm:px-10 py-8 sm:py-10">
+          <p className="text-xs sm:text-sm font-black tracking-[0.25em] text-zinc-500 mb-2">HAVE QUESTIONS?</p>
+          <h1 className="text-4xl lg:text-5xl font-extrabold tracking-tight text-[hsl(var(--foreground))] leading-none">
             FAQ
           </h1>
         </div>
@@ -124,21 +124,7 @@ const FaqPage = () => {
         )}
       </div>
 
-      {/* Contact CTA */}
-      <div className="border-t-2 border-black dark:border-white bg-[hsl(var(--card))]">
-        <div className="max-w-3xl mx-auto px-6 sm:px-10 py-12 sm:py-16 text-center">
-          <h2 className="text-2xl sm:text-3xl font-black tracking-tight mb-3">STILL HAVE QUESTIONS?</h2>
-          <p className="text-sm text-zinc-500 normal-case tracking-normal mb-6">
-            Our support team is ready to help you 24/7.
-          </p>
-          <Link
-            to="/contact"
-            className="inline-flex items-center gap-2 px-8 py-4 bg-[hsl(var(--foreground))] text-[hsl(var(--background))] text-xs font-black tracking-widest border-2 border-black dark:border-white hover:bg-red-600 hover:text-white hover:border-red-600 transition-all duration-300"
-          >
-            CONTACT US
-          </Link>
-        </div>
-      </div>
+
     </div>
   );
 };

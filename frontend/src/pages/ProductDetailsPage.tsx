@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { useGetProductDetailsQuery, useGetRelatedProductsQuery, useCreateReviewMutation } from '../store/slices/productApiSlice';
+import { useGetProductDetailsQuery, useCreateReviewMutation } from '../store/slices/productApiSlice';
 import { addToCart } from '../store/slices/cartSlice';
 import { toggleWishlist } from '../store/slices/wishlistSlice';
-import { addRecentlyViewed } from '../store/slices/recentlyViewedSlice';
 import type { RootState } from '../store/store';
-import { ShoppingBag, Heart, ShieldCheck, Truck, RotateCcw, Star, Check, ChevronRight, ChevronLeft, X, ZoomIn, SendHorizonal, ThumbsUp, Share2 } from 'lucide-react';
-import ProductCard from '../components/product/ProductCard';
+import { ShoppingBag, Heart, Star, Check, ChevronRight, ChevronLeft, X, ZoomIn, SendHorizonal, ThumbsUp, Share2 } from 'lucide-react';
+import toast from 'react-hot-toast';
+import Loader from '../components/Loader';
 import { getColorHex } from '../utils/colorMap';
 import { getProductImages, getProductId } from '../lib/product';
 import { formatINR } from '../lib/currency';
@@ -42,10 +42,6 @@ const ProductDetailsPage = () => {
   const wishlistItems = useSelector((state: RootState) => state.wishlist.wishlistItems);
   const productId = product ? getProductId(product) || id || '' : '';
   const isWishlisted = product ? wishlistItems.some((item: any) => item._id === productId) : false;
-  const recentlyViewedItems = useSelector((state: RootState) => state.recentlyViewed.items);
-  const recentItemsToDisplay = recentlyViewedItems.filter((item) => item._id !== id).slice(0, 4);
-  const { data: relatedProductsData } = useGetRelatedProductsQuery(id, { skip: !id });
-  const relatedProducts = relatedProductsData?.products || [];
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState('');
   const [selectedColor, setSelectedColor] = useState('');
@@ -67,39 +63,28 @@ const ProductDetailsPage = () => {
   const reviewRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (product) {
-      dispatch(addRecentlyViewed(product));
-      setSelectedImage(0);
-    }
-  }, [product, dispatch]);
-
-  useEffect(() => {
     setSelectedImage(0);
   }, [selectedColor]);
 
+  useEffect(() => {
+    const pending = sessionStorage.getItem('pendingCartItem');
+    if (pending) {
+      try {
+        const item = JSON.parse(pending);
+        dispatch(addToCart(item));
+        setIsAdded(true);
+        toast.success('Product added successfully');
+        setTimeout(() => setIsAdded(false), 2000);
+      } catch (_) {
+        // ignore parse errors
+      } finally {
+        sessionStorage.removeItem('pendingCartItem');
+      }
+    }
+  }, [dispatch]);
+
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[hsl(var(--background))]">
-        <div className="max-w-[1500px] mx-auto px-4 lg:px-7 flex flex-col lg:flex-row lg:gap-6 xl:gap-8">
-          <div className="w-full lg:w-[48%] flex gap-1.5 lg:gap-2">
-            <div className="hidden lg:flex flex-col gap-1.5">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="w-[52px] h-[68px] rounded-lg shimmer" />
-              ))}
-            </div>
-            <div className="flex-1 h-[550px] lg:h-[620px] shimmer rounded-xl border border-zinc-200 dark:border-zinc-700" />
-          </div>
-          <div className="w-full lg:w-[52%] py-4 lg:py-6 space-y-6 lg:space-y-7">
-            <div className="h-6 shimmer w-1/5 rounded" />
-            <div className="h-[52px] shimmer w-4/5 rounded" />
-            <div className="h-5 shimmer w-2/5 rounded" />
-            <div className="h-[44px] shimmer w-2/3 rounded" />
-            <div className="h-9 shimmer w-full rounded-lg" />
-            <div className="h-14 shimmer w-full rounded-xl" />
-          </div>
-        </div>
-      </div>
-    );
+    return <Loader />;
   }
 
   if (error || !product) {
@@ -145,11 +130,19 @@ const ProductDetailsPage = () => {
       setTimeout(() => setErrorMsg(''), 3000);
       return;
     }
-    console.log("Price Check:", {
-      price: product.price,
-      discountPrice: product.discountPrice,
-      product,
-    });
+    if (!userInfo) {
+      const pendingItem = {
+        _id: productId,
+        name: product.name,
+        price: product.discountPrice || product.price,
+        image: getProductImages(product)[0] || '',
+        qty: 1,
+        variant: { color: selectedColor, size: selectedSize },
+      };
+      sessionStorage.setItem('pendingCartItem', JSON.stringify(pendingItem));
+      navigate(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
+      return;
+    }
     dispatch(
       addToCart({
         _id: productId,
@@ -161,6 +154,7 @@ const ProductDetailsPage = () => {
       })
     );
     setIsAdded(true);
+    toast.success('Product added to your bag');
     setTimeout(() => setIsAdded(false), 2000);
   };
 
@@ -264,74 +258,78 @@ const ProductDetailsPage = () => {
   });
 
   return (
-    <div className="bg-[hsl(var(--background))] min-h-screen text-[hsl(var(--foreground))] font-sans uppercase pb-24 lg:pb-0">
+    <div className="bg-[hsl(var(--background))] min-h-screen text-[hsl(var(--foreground))] font-sans overflow-x-hidden">
       {/* Breadcrumbs */}
-      <div className="w-full border-b-2 border-black dark:border-white px-6 sm:px-10 py-4">
-        <div className="flex gap-2 items-center text-xs font-bold tracking-widest text-zinc-500">
-          <Link to="/" className="hover:text-[hsl(var(--foreground))] transition-colors">HOME</Link>
-          <ChevronRight size={10} strokeWidth={3} />
-          {product.gender && (
-            <>
-              <Link to={`/collections/${product.gender}`} className="hover:text-[hsl(var(--foreground))] transition-colors">
-                {String(product.gender).toUpperCase()} COLLECTIONS
-              </Link>
-              <ChevronRight size={10} strokeWidth={3} />
-            </>
-          )}
-          {product.subcategory && (
-            <>
-              <Link to={`/collections/${product.gender}/${normalizeSlug(String(product.subcategory))}`} className="hover:text-[hsl(var(--foreground))] transition-colors">
-                {product.subcategory}
-              </Link>
-              <ChevronRight size={10} strokeWidth={3} />
-            </>
-          )}
-          <span className="text-[hsl(var(--foreground))] line-clamp-1 normal-case tracking-normal">{product.title || product.name}</span>
+      <div className="border-b border-zinc-200 dark:border-zinc-800">
+        <div className="max-w-[1400px] mx-auto px-8 lg:px-12 py-4">
+          <div className="flex gap-2 items-center text-xs font-medium text-zinc-400">
+            <Link to="/" className="hover:text-black dark:hover:text-white transition-colors">HOME</Link>
+            <ChevronRight size={10} strokeWidth={2} />
+            {product.gender && (
+              <>
+                <Link to={`/collections/${product.gender}`} className="hover:text-black dark:hover:text-white transition-colors">
+                  {String(product.gender).toUpperCase()} COLLECTIONS
+                </Link>
+                <ChevronRight size={10} strokeWidth={2} />
+              </>
+            )}
+            {product.subcategory && (
+              <>
+                <Link to={`/collections/${product.gender}/${normalizeSlug(String(product.subcategory))}`} className="hover:text-black dark:hover:text-white transition-colors">
+                  {product.subcategory}
+                </Link>
+                <ChevronRight size={10} strokeWidth={2} />
+              </>
+            )}
+            <span className="text-black dark:text-white line-clamp-1">{product.title || product.name}</span>
+          </div>
         </div>
       </div>
 
-      <div className="max-w-[1500px] mx-auto px-4 lg:px-7 flex flex-col lg:flex-row lg:gap-6 xl:gap-8">
-        {/* Left — Images (48%) */}
-        <div className="w-full lg:w-[48%]">
-          <div className="flex gap-1.5 lg:gap-2">
-            {/* Thumbnails — vertical on desktop */}
-            <div className="hidden lg:flex flex-col gap-1.5 shrink-0 pt-0">
-              {displayImages.map((img: string, i: number) => (
-                <button
-                  key={i}
-                  onClick={() => setSelectedImage(i)}
-                  className={`w-[52px] h-[68px] rounded-lg overflow-hidden cursor-pointer transition-all duration-200 border-2 ${
-                    selectedImage === i
-                      ? 'border-[hsl(var(--foreground))] opacity-100 shadow-sm'
-                      : 'border-zinc-200 dark:border-zinc-700 opacity-60 hover:opacity-100 hover:border-zinc-400 dark:hover:border-zinc-500'
-                  }`}
-                >
-                  <img src={img} alt={`View ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
-                </button>
-              ))}
-            </div>
-            {/* Main image + Zoom preview wrapper */}
-            <div className="flex-1 flex gap-0 xl:gap-3 min-w-0">
-              {/* Main image */}
-              <div className="flex-1 min-w-0 relative" ref={imageRef}>
+      {/* Main — Two Column Layout */}
+      <div className="max-w-[1400px] mx-auto px-8 lg:px-12 py-10">
+        <div className="flex flex-col lg:flex-row lg:flex-nowrap items-start justify-center gap-12">
+
+          {/* ─── Left — Gallery (55%) ─── */}
+          <div className="w-full lg:w-[700px] lg:min-w-[580px] lg:flex-shrink-0">
+            <div className="flex gap-3">
+              {/* Thumbnail column */}
+              <div className="hidden lg:flex flex-col gap-3 w-[80px] shrink-0">
+                {displayImages.map((img: string, i: number) => (
+                  <button
+                    key={i}
+                    onClick={() => setSelectedImage(i)}
+                    className={`w-[80px] h-[110px] rounded-xl overflow-hidden cursor-pointer transition-all duration-200 border-2 flex-shrink-0 hover:scale-105 ${
+                      selectedImage === i
+                        ? 'border-black dark:border-white'
+                        : 'border-transparent opacity-60 hover:opacity-100'
+                    }`}
+                  >
+                    <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" />
+                  </button>
+                ))}
+              </div>
+
+              {/* Main Image */}
+              <div className="flex-1 min-w-0 group" ref={imageRef}>
                 <div
                   onMouseMove={handleImageZoom}
                   onMouseLeave={() => setZoomLens((p) => ({ ...p, active: false }))}
                   onClick={() => openLightbox(selectedImage)}
-                  className="w-full h-[550px] lg:h-[620px] bg-zinc-100 dark:bg-[#F4F4F2] overflow-hidden relative cursor-crosshair group rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-sm flex items-center justify-center"
+                  className="relative w-full max-w-[700px] h-[620px] lg:h-[720px] bg-[#f8f8f8] rounded-[18px] overflow-hidden flex items-center justify-center cursor-crosshair"
                 >
                   <img
                     key={selectedImage}
                     src={displayImages[selectedImage] || displayImages[0]}
                     alt={productName || 'Product'}
-                    className="max-w-full max-h-full object-contain p-2 transition-opacity duration-300 ease-out animate-fadeIn select-none"
+                    className="max-w-full max-h-full object-contain p-6 transition-opacity duration-300 select-none"
                     draggable={false}
                   />
 
-                  {/* Zoom lens overlay */}
+                  {/* Zoom lens */}
                   {zoomLens.active && (
                     <div
-                      className="absolute border-2 border-[hsl(var(--foreground))] bg-white/10 dark:bg-black/10 pointer-events-none z-30 rounded-sm"
+                      className="absolute border-2 border-black dark:border-white bg-white/10 dark:bg-black/10 pointer-events-none z-30 rounded-sm"
                       style={{
                         width: `${LENS_SIZE}px`,
                         height: `${LENS_SIZE}px`,
@@ -342,21 +340,21 @@ const ProductDetailsPage = () => {
                   )}
 
                   {/* Badges */}
-                  <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
+                  <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
                     {discountPct > 0 && (
-                      <span className="bg-red-600 text-white text-[10px] font-semibold tracking-wider px-3 py-1.5 rounded-md shadow-sm">
+                      <span className="bg-red-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-sm">
                         -{discountPct}%
                       </span>
                     )}
                     {productName.toLowerCase().includes('oversized') && (
-                      <span className="bg-black text-white text-[10px] font-semibold tracking-wider px-3 py-1.5 rounded-md shadow-sm">
+                      <span className="bg-black text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-sm">
                         OVERSIZED
                       </span>
                     )}
                   </div>
 
                   {/* Floating Wishlist + Share */}
-                  <div className="absolute top-3 right-3 flex flex-col gap-2 z-20">
+                  <div className="absolute top-4 right-4 flex flex-col gap-2 z-20">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -395,7 +393,7 @@ const ProductDetailsPage = () => {
                     </button>
                   </div>
 
-                  {/* Left/Right arrows */}
+                  {/* Nav arrows at bottom-right (Nike-style) */}
                   {displayImages.length > 1 && (
                     <>
                       <button
@@ -403,291 +401,224 @@ const ProductDetailsPage = () => {
                           e.stopPropagation();
                           setSelectedImage((prev) => (prev - 1 + displayImages.length) % displayImages.length);
                         }}
-                        className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300 shadow-sm hover:bg-white dark:hover:bg-zinc-800 flex items-center justify-center backdrop-blur-sm transition-all duration-200 cursor-pointer opacity-0 group-hover:opacity-100 active:scale-90 z-10"
+                        className="absolute bottom-4 right-14 w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center hover:shadow-lg transition-shadow z-10 cursor-pointer"
                         aria-label="Previous image"
                       >
-                        <ChevronLeft className="w-5 h-5" strokeWidth={2} />
+                        <ChevronLeft size={18} strokeWidth={2} />
                       </button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           setSelectedImage((prev) => (prev + 1) % displayImages.length);
                         }}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300 shadow-sm hover:bg-white dark:hover:bg-zinc-800 flex items-center justify-center backdrop-blur-sm transition-all duration-200 cursor-pointer opacity-0 group-hover:opacity-100 active:scale-90 z-10"
+                        className="absolute bottom-4 right-4 w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center hover:shadow-lg transition-shadow z-10 cursor-pointer"
                         aria-label="Next image"
                       >
-                        <ChevronRight className="w-5 h-5" strokeWidth={2} />
+                        <ChevronRight size={18} strokeWidth={2} />
                       </button>
                     </>
                   )}
 
                   {/* Zoom hint */}
-                  <div className="absolute bottom-3 right-3 bg-black/60 text-white text-[9px] font-medium tracking-wider px-2.5 py-1.5 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity rounded-md pointer-events-none z-10">
+                  <div className="absolute bottom-4 left-4 bg-black/60 text-white text-[10px] font-medium px-2.5 py-1.5 rounded-md flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
                     <ZoomIn size={11} strokeWidth={2} /> ZOOM
                   </div>
                 </div>
 
-                {/* Thumbnails — horizontal on mobile */}
-                <div className="flex lg:hidden gap-1.5 mt-1.5 overflow-x-auto pb-1">
+                {/* Mobile thumbnails — horizontal slider */}
+                <div className="flex lg:hidden gap-2 mt-3 overflow-x-auto pb-1">
                   {displayImages.map((img: string, i: number) => (
                     <button
                       key={i}
                       onClick={() => setSelectedImage(i)}
-                      className={`flex-shrink-0 w-12 h-16 rounded-lg overflow-hidden cursor-pointer transition-all duration-200 border-2 ${
+                      className={`flex-shrink-0 w-16 h-20 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
                         selectedImage === i
-                          ? 'border-[hsl(var(--foreground))] opacity-100'
+                          ? 'border-black dark:border-white'
                           : 'border-transparent opacity-60 hover:opacity-100'
                       }`}
                     >
-                      <img src={img} alt={`View ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
+                      <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" />
+                    </button>
+                  ))}
+                </div>
+
+                {/* Zoom preview — xl screens */}
+                {zoomLens.active && (
+                  <div className="hidden xl:block mt-3">
+                    <div className="w-full h-[200px] overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-lg bg-white dark:bg-zinc-900">
+                      <img
+                        src={displayImages[selectedImage] || displayImages[0]}
+                        alt=""
+                        className="w-full h-full object-cover"
+                        draggable={false}
+                        style={{
+                          transform: `scale(${ZOOM_SCALE})`,
+                          transformOrigin: `${zoomLens.imgX}% ${zoomLens.imgY}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* ─── Right — Product Details (45%) ─── */}
+          <div className="w-full lg:w-[500px] lg:min-w-[380px] lg:flex-shrink-0 lg:sticky lg:top-6 self-start">
+            <div className="space-y-4">
+              {/* Brand */}
+              <span className="block text-sm font-medium uppercase text-gray-500 dark:text-gray-400 tracking-wider">
+                {collabTag ? `VASTRA × ${collabTag}` : 'VASTRA'}
+              </span>
+
+              {/* Product Name */}
+              <h1 className="text-2xl font-semibold leading-tight line-clamp-2 text-zinc-900 dark:text-white">
+                {productName || 'Product'}
+              </h1>
+
+              {/* Rating Badge */}
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-amber-500">&#9733;</span>
+                <span className="font-semibold text-zinc-800 dark:text-zinc-200">{Number(averageRatingVal).toFixed(1)}</span>
+                <span className="text-zinc-400">| {totalNumReviews} Reviews</span>
+              </div>
+
+              {/* Price */}
+              <div className="flex items-baseline gap-3">
+                <span className="text-4xl font-bold text-zinc-900 dark:text-white">
+                  {formatINR(product.discountPrice || product.price)}
+                </span>
+                {product.discountPrice && (
+                  <>
+                    <span className="text-lg text-zinc-400 line-through">{formatINR(product.price)}</span>
+                    <span className="text-sm font-bold text-green-600">{discountPct}% OFF</span>
+                  </>
+                )}
+              </div>
+
+              {/* Error message */}
+              {errorMsg && (
+                <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-red-600 text-sm font-medium p-3 rounded-xl">
+                  {errorMsg}
+                </div>
+              )}
+
+              {/* Colour */}
+              <div>
+                <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200 mb-3">Colour</p>
+                <div className="flex gap-3 flex-wrap">
+                  {colors.map((color: any) => (
+                    <button
+                      key={color}
+                      onClick={() => setSelectedColor(color)}
+                      className={`w-[28px] h-[28px] rounded-full border transition-all duration-200 cursor-pointer hover:scale-105 flex items-center justify-center ${
+                        selectedColor === color
+                          ? 'border-black dark:border-white'
+                          : 'border-zinc-300 dark:border-zinc-600'
+                      }`}
+                      style={{ backgroundColor: getColorHex(color) }}
+                      title={color}
+                    >
+                      {selectedColor === color && (
+                        <svg className="w-3.5 h-3.5 text-white drop-shadow-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3}>
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      )}
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Zoom preview panel — xl screens */}
-              {zoomLens.active && (
-                <div className="hidden xl:block w-[200px] shrink-0 self-start sticky top-[130px]">
-                  <div className="w-full h-[266px] overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-lg bg-white dark:bg-zinc-900">
-                    <img
-                      src={displayImages[selectedImage] || displayImages[0]}
-                      alt=""
-                      className="w-full h-full object-cover"
-                      draggable={false}
-                      style={{
-                        transform: `scale(${ZOOM_SCALE})`,
-                        transformOrigin: `${zoomLens.imgX}% ${zoomLens.imgY}%`,
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Right — Details (sticky, 52%) */}
-        <div className="w-full lg:w-[52%] lg:sticky lg:top-[130px] lg:self-start">
-          <div className="pt-4 lg:pt-6">
-            {collabTag && (
-              <span className="text-[12px] font-medium text-zinc-500 tracking-[0.15em] uppercase">
-                VASTRA × {collabTag}
-              </span>
-            )}
-
-            {/* Title */}
-            <h1 className="text-[28px] sm:text-[34px] lg:text-[44px] font-bold leading-[1.15] max-w-[520px] line-clamp-3 normal-case">
-              {productName || 'Product'}
-            </h1>
-
-            {/* Rating — 16px below title */}
-            <div className="flex items-center gap-2 mt-4 mb-6">
-              <div className="flex items-center gap-0.5">
-                {[1, 2, 3, 4, 5].map((s) => (
-                  <Star
-                    key={s}
-                    size={16}
-                    strokeWidth={1.5}
-                    fill={s <= Math.round(averageRatingVal) ? 'currentColor' : 'none'}
-                    className={s <= Math.round(averageRatingVal) ? 'text-amber-500' : 'text-zinc-300 dark:text-zinc-600'}
-                  />
-                ))}
-              </div>
-              <span className="text-[15px] text-zinc-500 font-normal tracking-wide normal-case">
-                {Number(averageRatingVal).toFixed(1)}
-              </span>
-              <span className="text-[14px] text-zinc-400 font-normal normal-case">
-                ({totalNumReviews})
-              </span>
-            </div>
-
-            {/* Price — 24px below rating */}
-            <div className="flex items-baseline gap-4 mb-7">
-              {product.discountPrice ? (
-                <>
-                  <span className="text-[44px] lg:text-[52px] font-bold tracking-tight">{formatINR(product.discountPrice)}</span>
-                  <span className="text-xl text-zinc-400 line-through">{formatINR(product.price)}</span>
-                  <span className="text-sm font-bold text-red-600 bg-red-50 dark:bg-red-950/30 px-3 py-1 rounded-md border border-red-600">
-                    -{discountPct}%
-                  </span>
-                </>
-              ) : (
-                <span className="text-[44px] lg:text-[52px] font-bold tracking-tight">{formatINR(product.price)}</span>
-              )}
-            </div>
-
-            {errorMsg && (
-              <div className="bg-red-600 text-white p-4 text-xs font-bold tracking-wider rounded-lg mb-6">
-                {errorMsg}
-              </div>
-            )}
-
-            {/* Color — 28px below price */}
-            <div className="mb-6">
-              <p className="text-[14px] font-semibold tracking-[0.12em] uppercase mb-2">
-                Color: <span className="text-zinc-500 capitalize font-normal normal-case">{selectedColor || 'Select'}</span>
-              </p>
-              <div className="flex gap-2 flex-wrap">
-                {colors.map((color: any) => (
+              {/* Size */}
+              <div>
+                <div className="flex justify-between items-center mb-3">
+                  <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">Select Size</p>
                   <button
-                    key={color}
-                    onClick={() => setSelectedColor(color)}
-                    className={`flex flex-col items-center gap-0.5 transition-all duration-200 cursor-pointer group ${selectedColor === color ? '' : 'opacity-60 hover:opacity-100'}`}
+                    onClick={() => setSizeGuideOpen(true)}
+                    className="text-sm font-medium text-zinc-400 underline underline-offset-2 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
                   >
-                    <span
-                      className={`w-[28px] h-[28px] rounded-full transition-all duration-200 block shadow-inner ${
-                        selectedColor === color
-                          ? 'border-[2px] border-[hsl(var(--foreground))] ring-[2.5px] ring-[hsl(var(--foreground))] ring-offset-[1.5px] ring-offset-[hsl(var(--background))] scale-105'
-                          : 'border border-zinc-300 dark:border-zinc-600 group-hover:scale-105 group-hover:border-zinc-400 dark:group-hover:border-zinc-500'
-                      }`}
-                      style={{ backgroundColor: getColorHex(color) }}
-                    />
-                    <span className={`text-[11px] font-medium tracking-wide whitespace-nowrap ${selectedColor === color ? 'text-[hsl(var(--foreground))]' : 'text-zinc-400'}`}>
-                      {(color || '').charAt(0).toUpperCase() + (color || '').slice(1)}
-                    </span>
+                    Size Guide →
                   </button>
-                ))}
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  {sizes.map((size: any) => (
+                    <button
+                      key={size}
+                      onClick={() => setSelectedSize(size)}
+                      className={`w-14 h-[42px] rounded-[10px] border text-[15px] font-medium transition-all duration-200 cursor-pointer active:scale-[0.97] ${
+                        selectedSize === size
+                          ? 'bg-black dark:bg-white text-white dark:text-black border-black dark:border-white'
+                          : 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white border-[#d9d9d9] dark:border-zinc-600 hover:border-black dark:hover:border-white hover:bg-[#fafafa] dark:hover:bg-zinc-800'
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {/* Size — 28px below color */}
-            <div className="mb-8">
-              <div className="flex justify-between items-center mb-3">
-                <p className="text-[14px] font-semibold tracking-[0.12em] uppercase">
-                  Size: <span className="text-zinc-500 font-normal normal-case">{selectedSize || 'Select'}</span>
-                </p>
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-3">
                 <button
-                  onClick={() => setSizeGuideOpen(true)}
-                  className="text-[12px] text-zinc-500 underline underline-offset-2 cursor-pointer hover:text-[hsl(var(--foreground))] transition-colors font-semibold"
+                  onClick={handleBuyNow}
+                  className="flex-1 h-14 rounded-xl text-sm font-bold tracking-wider transition-all duration-200 cursor-pointer bg-black dark:bg-white text-white dark:text-black hover:shadow-lg active:scale-[0.98]"
                 >
-                  SIZE GUIDE
+                  BUY NOW
+                </button>
+                <button
+                  onClick={handleAddToCart}
+                  className={`flex-1 h-14 rounded-xl text-sm font-bold tracking-wider transition-all duration-200 cursor-pointer border-2 active:scale-[0.98] ${
+                    isAdded
+                      ? 'bg-green-600 text-white border-green-600'
+                      : 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white border-zinc-300 dark:border-zinc-700 hover:border-black dark:hover:border-white hover:shadow-sm'
+                  }`}
+                >
+                  {isAdded ? (
+                    <span className="flex items-center justify-center gap-2"><Check size={16} strokeWidth={3} /> ADDED</span>
+                  ) : (
+                    <span className="flex items-center justify-center gap-2"><ShoppingBag size={16} /> ADD TO CART</span>
+                  )}
+                </button>
+                <button
+                  onClick={() =>
+                    dispatch(
+                      toggleWishlist({
+                        _id: productId,
+                        name: product.name,
+                        price: product.price,
+                        discountPrice: product.discountPrice,
+                        image: getProductImages(product)[0] || '',
+                      })
+                    )
+                  }
+                  className={`w-14 h-14 shrink-0 rounded-xl border-2 flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-[0.95] ${
+                    isWishlisted
+                      ? 'bg-red-600 text-white border-red-600'
+                      : 'bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 hover:border-red-400 hover:text-red-500 hover:shadow-sm'
+                  }`}
+                  aria-label="Wishlist"
+                >
+                  <Heart size={20} fill={isWishlisted ? 'currentColor' : 'none'} strokeWidth={2} />
                 </button>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {sizes.map((size: any) => (
-                  <button
-                    key={size}
-                    onClick={() => setSelectedSize(size)}
-                    className={`min-w-[52px] h-[44px] px-3 rounded-lg border text-sm font-semibold transition-all duration-200 cursor-pointer active:scale-[0.97] ${
-                      selectedSize === size
-                        ? 'bg-[hsl(var(--foreground))] text-[hsl(var(--background))] border-[hsl(var(--foreground))] shadow-sm'
-                        : 'bg-[hsl(var(--card))] text-[hsl(var(--foreground))] border-zinc-300 dark:border-zinc-600 hover:border-[hsl(var(--foreground))] hover:shadow-sm'
-                    }`}
-                  >
-                    {size}
-                  </button>
-                ))}
+
+              {/* Description */}
+              <div className="pt-0">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-800 dark:text-zinc-200 mb-3">Description</h3>
+                <div
+                  className="product-description text-sm leading-relaxed text-zinc-500 dark:text-zinc-400"
+                  dangerouslySetInnerHTML={{
+                    __html: DOMPurify.sanitize(product.description ?? '', {
+                      ADD_TAGS: ['img'],
+                      ADD_ATTR: ['src', 'alt', 'style'],
+                    }),
+                  }}
+                />
               </div>
-            </div>
-
-            {/* Actions — 32px below size */}
-            <div className="flex gap-2.5">
-              <button
-                onClick={handleBuyNow}
-                className="flex-[48%] h-[54px] rounded-xl text-[15px] font-bold tracking-wider transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer bg-[hsl(var(--foreground))] text-[hsl(var(--background))] hover:opacity-90 active:scale-[0.98] shadow-sm hover:shadow-md"
-              >
-                BUY NOW
-              </button>
-              <button
-                onClick={handleAddToCart}
-                className={`flex-[48%] h-[54px] rounded-xl text-[15px] font-bold tracking-wider transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer border-2 ${
-                  isAdded
-                    ? 'bg-green-600 text-white border-green-600'
-                    : 'bg-[hsl(var(--card))] text-[hsl(var(--foreground))] border-zinc-300 dark:border-zinc-600 hover:border-[hsl(var(--foreground))] hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))] active:scale-[0.98]'
-                }`}
-              >
-                {isAdded ? (
-                  <><Check className="w-4 h-4" strokeWidth={3} /> ADDED</>
-                ) : (
-                  <><ShoppingBag className="w-4 h-4" strokeWidth={2} /> ADD TO CART</>
-                )}
-              </button>
-              <button
-                onClick={() =>
-                  dispatch(
-                    toggleWishlist({
-                      _id: productId,
-                      name: product.name,
-                      price: product.price,
-                      discountPrice: product.discountPrice,
-                        image: getProductImages(product)[0] || '',
-                    })
-                  )
-                }
-                className={`w-[52px] h-[52px] shrink-0 rounded-xl border-2 transition-all duration-200 flex items-center justify-center cursor-pointer active:scale-[0.95] ${
-                  isWishlisted
-                    ? 'bg-red-600 text-white border-red-600'
-                    : 'bg-[hsl(var(--card))] text-[hsl(var(--foreground))] border-zinc-300 dark:border-zinc-600 hover:border-red-400 hover:text-red-500 hover:scale-105 hover:shadow-sm'
-                }`}
-              >
-                <Heart className="w-5 h-5" fill={isWishlisted ? 'currentColor' : 'none'} strokeWidth={2} />
-              </button>
-            </div>
-
-            {/* Trust badges */}
-            <div className="grid grid-cols-3 gap-2 mt-6">
-              {[
-                { icon: Truck, label: 'FREE SHIPPING' },
-                { icon: RotateCcw, label: '14 DAY RETURNS' },
-                { icon: ShieldCheck, label: 'SECURE CHECKOUT' },
-              ].map(({ icon: Icon, label }) => (
-                <div key={label} className="flex flex-col items-center justify-center text-center py-3 px-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-[hsl(var(--card))] min-h-[68px] transition-all duration-250 hover:-translate-y-0.5 hover:border-zinc-300 dark:hover:border-zinc-600 hover:shadow-md">
-                  <Icon className="w-4 h-4 mb-1 text-zinc-500 dark:text-zinc-400" strokeWidth={1.5} />
-                  <span className="text-[9px] font-semibold tracking-wider leading-tight">{label}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* Description */}
-            <div className="mt-6">
-              <h3 className="text-[14px] font-semibold tracking-[0.12em] uppercase mb-3">
-                Description
-              </h3>
-              <div
-                className="product-description text-[15px] leading-relaxed normal-case tracking-normal text-zinc-500 dark:text-zinc-400"
-                dangerouslySetInnerHTML={{
-                  __html: DOMPurify.sanitize(product.description ?? '', {
-                    ADD_TAGS: ['img'],
-                    ADD_ATTR: ['src', 'alt', 'style'],
-                  }),
-                }}
-              />
             </div>
           </div>
         </div>
       </div>
-
-      {/* You May Also Like */}
-      {relatedProducts.length > 0 && (
-        <div className="border-t-2 border-black dark:border-white">
-          <div className="px-6 sm:px-10 py-8 border-b-2 border-black dark:border-white">
-            <h2 className="text-2xl sm:text-3xl font-black tracking-tight">
-              YOU MAY ALSO LIKE
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-            {relatedProducts.map((item: any) => (
-              <ProductCard key={item._id} product={item} />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Recently Viewed */}
-      {recentItemsToDisplay.length > 0 && (
-        <div className="border-t-2 border-black dark:border-white">
-          <div className="px-6 sm:px-10 py-8 border-b-2 border-black dark:border-white">
-            <h2 className="text-2xl sm:text-3xl font-black tracking-tight">
-              RECENTLY VIEWED
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-            {recentItemsToDisplay.map((item: any) => (
-              <ProductCard key={item._id} product={item} />
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* ───────── CUSTOMER REVIEWS ───────── */}
       <div ref={reviewRef} className="border-t-2 border-black dark:border-white">

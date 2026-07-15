@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ChevronRight, ChevronDown, ChevronLeft } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronRight, ChevronLeft } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { useGetProductsByCategoryQuery, useGetProductsQuery } from '../store/slices/productApiSlice';
 import { useGetCategoriesQuery } from '../store/slices/categoryApiSlice';
 import ProductCard from '../components/product/ProductCard';
@@ -53,10 +53,7 @@ const CollectionPage = () => {
   const { gender, subcategory } = useParams();
   const normalizedGender = gender?.toLowerCase() || '';
   const normalizedSubcategory = subcategory?.toLowerCase() || '';
-  const [sortBy, setSortBy] = useState('Popularity');
   const [page, setPage] = useState(1);
-  const [sortOpen, setSortOpen] = useState(false);
-  const sortRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
@@ -64,17 +61,6 @@ const CollectionPage = () => {
   useEffect(() => {
     setPage(1);
   }, [normalizedGender, normalizedSubcategory]);
-
-  useEffect(() => {
-    if (!sortOpen) return;
-    const handler = (e: MouseEvent) => {
-      if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
-        setSortOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [sortOpen]);
 
   const checkScroll = () => {
     const el = scrollRef.current;
@@ -90,12 +76,6 @@ const CollectionPage = () => {
     el.scrollBy({ left: dir === 'left' ? -amount : amount, behavior: 'smooth' });
     setTimeout(checkScroll, 300);
   };
-
-  const sortOptions = [
-    { value: 'Popularity', label: 'Popularity' },
-    { value: 'Price: Low to High', label: 'Price ↑' },
-    { value: 'Price: High to Low', label: 'Price ↓' },
-  ];
 
   const { data: categoriesData = [], isLoading: categoriesLoading } = useGetCategoriesQuery(undefined);
   const collectionTabs = Array.isArray(categoriesData)
@@ -144,17 +124,37 @@ const CollectionPage = () => {
           ? (data as any).records
           : [];
 
-  const sortedProducts = [...productsFromResponse].sort((a: any, b: any) => {
-    const aPrice = Number(a.discountPrice ?? a.price ?? 0);
-    const bPrice = Number(b.discountPrice ?? b.price ?? 0);
-    const aReviews = Number(a.numReviews ?? 0);
-    const bReviews = Number(b.numReviews ?? 0);
-    if (sortBy === 'Popularity') return bReviews - aReviews;
-    if (sortBy === 'Price: Low to High') return aPrice - bPrice;
-    if (sortBy === 'Price: High to Low') return bPrice - aPrice;
-    return 0;
-  });
+  const sortedProducts = [...productsFromResponse];
 
+  const filteredTabs = Array.isArray(collectionTabs)
+    ? collectionTabs.filter((tab: any) => cleanCategoryName(tab.name).toUpperCase() !== 'ALL')
+    : [];
+  const categoryTabLinks = filteredTabs.map((tab: any) => {
+    const tabSlug = toSlug(String(tab.name || ''));
+    const displayName = cleanCategoryName(tab.name);
+    const isActive = normalizeSlug(normalizedSubcategory) === tabSlug;
+    return (
+      <Link
+        key={tab._id}
+        to={gender ? `/collections/${gender}/${tabSlug}` : `/collections/${tabSlug}`}
+        className={`group relative shrink-0 py-2 px-2 text-[13px] sm:text-[15px] font-bold tracking-wider transition-all duration-200 cursor-pointer ${
+          isActive
+            ? 'text-[hsl(var(--foreground))]'
+            : 'text-zinc-400 dark:text-zinc-500 hover:text-[hsl(var(--foreground))]'
+        }`}
+      >
+        {displayName.toUpperCase()}
+        {isActive && (
+          <motion.span
+            layoutId="activeTab"
+            className="absolute -bottom-[2px] left-1/2 -translate-x-1/2 w-[calc(100%-16px)] h-[3px] rounded-full bg-[hsl(var(--foreground))]"
+            transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+          />
+        )}
+        <span className="absolute -bottom-[2px] left-1/2 -translate-x-1/2 w-0 group-hover:w-[calc(100%-16px)] h-[3px] rounded-full bg-zinc-300 dark:bg-zinc-600 transition-all duration-300" />
+      </Link>
+    );
+  });
   const totalPages = Math.max(1, Math.ceil(sortedProducts.length / ITEMS_PER_PAGE));
   const paginatedProducts = sortedProducts.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
@@ -229,119 +229,37 @@ const CollectionPage = () => {
                 ))}
               </div>
             ) : (
-              collectionTabs.map((tab: any) => {
-                const tabSlug = toSlug(String(tab.name || ''));
-                const isActive = normalizeSlug(normalizedSubcategory) === tabSlug;
-                const displayName = cleanCategoryName(tab.name);
-
-                return (
-                  <Link
-                    key={tab._id}
-                    to={gender ? `/collections/${gender}/${tabSlug}` : `/collections/${tabSlug}`}
-                    className={`group relative shrink-0 py-2 px-2 text-[13px] sm:text-[15px] font-bold tracking-wider transition-all duration-200 cursor-pointer ${
-                      isActive
-                        ? 'text-[hsl(var(--foreground))]'
-                        : 'text-zinc-400 dark:text-zinc-500 hover:text-[hsl(var(--foreground))]'
-                    }`}
-                  >
-                    {displayName.toUpperCase()}
-                    {isActive && (
-                      <motion.span
-                        layoutId="activeTab"
-                        className="absolute -bottom-[2px] left-1/2 -translate-x-1/2 w-[calc(100%-16px)] h-[3px] rounded-full bg-[hsl(var(--foreground))]"
-                        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                      />
-                    )}
-                    <span className="absolute -bottom-[2px] left-1/2 -translate-x-1/2 w-0 group-hover:w-[calc(100%-16px)] h-[3px] rounded-full bg-zinc-300 dark:bg-zinc-600 transition-all duration-300" />
-                  </Link>
-                );
-              })
-            )}
-            {/* Sort on mobile/tablet inside scroll */}
-            <div className="hidden sm:flex items-center h-full shrink-0 ml-2">
-              <div className="relative" ref={sortRef}>
-                <button
-                  onClick={() => setSortOpen(!sortOpen)}
-                  className="flex items-center gap-2 py-2 px-3 text-[13px] sm:text-[15px] font-bold tracking-wider text-zinc-400 dark:text-zinc-500 hover:text-[hsl(var(--foreground))] transition-colors cursor-pointer"
+              <div className="flex items-center gap-2 sm:gap-3">
+                {/* ALL tab — always first, active when no subcategory selected */}
+                <Link
+                  to={gender ? `/collections/${gender}` : '/collections'}
+                  className={`group relative shrink-0 py-2 px-2 text-[13px] sm:text-[15px] font-bold tracking-wider transition-all duration-200 cursor-pointer ${
+                    !normalizedSubcategory
+                      ? 'text-[hsl(var(--foreground))]'
+                      : 'text-zinc-400 dark:text-zinc-500 hover:text-[hsl(var(--foreground))]'
+                  }`}
                 >
-                  {sortOptions.find((o) => o.value === sortBy)?.label}
-                  <ChevronDown size={13} strokeWidth={2.5} className={`transition-transform duration-200 ${sortOpen ? 'rotate-180' : ''}`} />
-                </button>
-                <AnimatePresence>
-                  {sortOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -8, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -8, scale: 0.95 }}
-                      transition={{ duration: 0.2, ease: 'easeOut' }}
-                      className="absolute top-full right-0 mt-1.5 w-[200px] bg-white dark:bg-zinc-900 rounded-xl shadow-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden z-50"
-                      style={{ transformOrigin: 'top right' }}
-                    >
-                      <div className="py-1.5">
-                        {sortOptions.map((option) => (
-                          <button
-                            key={option.value}
-                            onClick={() => { setSortBy(option.value); setSortOpen(false); }}
-                            className={`w-full flex items-center px-4 py-3 text-[13px] font-semibold tracking-normal text-left transition-all duration-150 cursor-pointer ${
-                              sortBy === option.value
-                                ? 'bg-zinc-100 dark:bg-zinc-800 text-black dark:text-white'
-                                : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 hover:text-black dark:hover:text-white'
-                            }`}
-                          >
-                            {option.label}
-                          </button>
-                        ))}
-                      </div>
-                    </motion.div>
+                  ALL{' '}
+                  <span className="text-xs font-medium text-gray-500">
+                    ({productsFromResponse.length})
+                  </span>
+                  {!normalizedSubcategory && (
+                    <motion.span
+                      layoutId="activeTab"
+                      className="absolute -bottom-[2px] left-1/2 -translate-x-1/2 w-[calc(100%-16px)] h-[3px] rounded-full bg-[hsl(var(--foreground))]"
+                      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                    />
                   )}
-                </AnimatePresence>
+                  <span className="absolute -bottom-[2px] left-1/2 -translate-x-1/2 w-0 group-hover:w-[calc(100%-16px)] h-[3px] rounded-full bg-zinc-300 dark:bg-zinc-600 transition-all duration-300" />
+                </Link>
+                {categoryTabLinks}
               </div>
-            </div>
+            )}
+
           </div>
         </div>
       </div>
 
-      {/* Mobile Sort Row */}
-      <div className="sm:hidden flex items-center justify-between px-6 py-3 border-b border-zinc-200 dark:border-zinc-800 bg-[hsl(var(--card))]">
-        <span className="text-[11px] font-semibold text-zinc-400">{isLoading ? '...' : sortedProducts.length} ITEMS</span>
-        <div className="relative" ref={sortRef}>
-          <button
-            onClick={() => setSortOpen(!sortOpen)}
-            className="flex items-center gap-1.5 text-[11px] font-bold tracking-wider text-zinc-500 hover:text-[hsl(var(--foreground))] transition-colors cursor-pointer"
-          >
-            SORT: {sortOptions.find((o) => o.value === sortBy)?.label}
-            <ChevronDown size={13} strokeWidth={2.5} className={`transition-transform duration-200 ${sortOpen ? 'rotate-180' : ''}`} />
-          </button>
-          <AnimatePresence>
-            {sortOpen && (
-              <motion.div
-                initial={{ opacity: 0, y: -8, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -8, scale: 0.95 }}
-                transition={{ duration: 0.2, ease: 'easeOut' }}
-                className="absolute top-full right-0 mt-1.5 w-[200px] bg-white dark:bg-zinc-900 rounded-xl shadow-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden z-50"
-                style={{ transformOrigin: 'top right' }}
-              >
-                <div className="py-1.5">
-                  {sortOptions.map((option) => (
-                    <button
-                      key={option.value}
-                      onClick={() => { setSortBy(option.value); setSortOpen(false); }}
-                      className={`w-full flex items-center px-4 py-3 text-[13px] font-semibold tracking-normal text-left transition-all duration-150 cursor-pointer ${
-                        sortBy === option.value
-                          ? 'bg-zinc-100 dark:bg-zinc-800 text-black dark:text-white'
-                          : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 hover:text-black dark:hover:text-white'
-                      }`}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
 
       {/* Products Grid */}
       <div className="max-w-[1920px] mx-auto">
@@ -368,8 +286,8 @@ const CollectionPage = () => {
               ))}
             </div>
             <Pagination currentPage={page} totalPages={totalPages} onPageChange={(p) => { setPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />
-          </>
-        )}
+            </>
+            )}
       </div>
     </div>
   );
