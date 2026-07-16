@@ -4,7 +4,7 @@ import { Heart } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toggleWishlist } from '../../store/slices/wishlistSlice';
 import type { RootState } from '../../store/store';
-import { getFirstProductImage, getProductId } from '../../lib/product';
+import { getProductId } from '../../lib/product';
 import { formatINR } from '../../lib/currency';
 import toast from 'react-hot-toast';
 import WishlistLoginPopup from '../WishlistLoginPopup';
@@ -51,7 +51,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
   const productId = getProductId(product) || product.name || 'product';
   const isWishlisted = wishlistItems.some((item: any) => item._id === productId);
 
-  const primaryImage = getFirstProductImage(product) || PLACEHOLDER_IMAGE;
+  const primaryImage = product?.images?.[0] || PLACEHOLDER_IMAGE;
 
   const handleWishlistClick = (e: React.MouseEvent) => {
     e.preventDefault();

@@ -50,6 +50,70 @@ export class RedisService implements OnModuleDestroy {
     await this.client.del(key);
   }
 
+  /**
+   * Delete multiple keys matching a glob pattern.
+   * e.g. delPattern('products:warehouse:*') removes all warehouse keys.
+   */
+  async delPattern(pattern: string): Promise<void> {
+    if (!(await this.ensureConnected())) {
+      return;
+    }
+
+    const keys = await this.client.keys(pattern);
+    if (keys.length > 0) {
+      await this.client.del(keys);
+    }
+  }
+
+  /**
+   * List all keys matching a glob pattern.
+   */
+  async keys(pattern: string): Promise<string[]> {
+    if (!(await this.ensureConnected())) {
+      return [];
+    }
+
+    return this.client.keys(pattern);
+  }
+
+  /**
+   * Rename an existing key (atomic double-buffer swap).
+   * If the source key doesn't exist, this is a no-op.
+   */
+  async rename(source: string, destination: string): Promise<void> {
+    if (!(await this.ensureConnected())) {
+      return;
+    }
+
+    try {
+      await this.client.rename(source, destination);
+    } catch {
+      // Key doesn't exist — ignore
+    }
+  }
+
+  /**
+   * Get the remaining TTL (in seconds) for a key. Returns -1 if no TTL, -2 if key missing.
+   */
+  async ttl(key: string): Promise<number> {
+    if (!(await this.ensureConnected())) {
+      return -2;
+    }
+
+    return this.client.ttl(key);
+  }
+
+  /**
+   * Set a TTL on an existing key (expire in seconds).
+   */
+  async expire(key: string, ttlSeconds: number): Promise<void> {
+    if (!(await this.ensureConnected())) {
+      return;
+    }
+
+    await this.client.expire(key, ttlSeconds);
+  }
+
   async onModuleDestroy() {
     if (this.client.isOpen) {
       await this.client.quit();

@@ -4,7 +4,7 @@ import { MongooseModule } from '@nestjs/mongoose';
   imports: [
     MongooseModule.forRoot(
       process.env.MONGODB_URI ??
-      'mongodb://localhost:27017/vastra',
+      'mongodb://localhost:27017/aetherwear',
     ),
   ],
 })

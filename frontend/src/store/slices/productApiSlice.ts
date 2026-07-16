@@ -1,31 +1,7 @@
 import { apiSlice } from './apiSlice';
+import { filterExcluded } from '../../constants/products';
 
 const PRODUCTS_URL = '/api/products';
-
-const EXCLUDED_IDS = new Set([
-  '2607130752441623600',
-  '2607130905271619800',
-  '2075876029409300482',
-  '2046802660565475329',
-  '2502151121241601900',
-  '2043934021520044033',
-  '2043944570651648002',
-  '2043945824983830529',
-  '2043943887814762497',
-  '2043294797236301825',
-  '2606121220391623700',
-  '2075130484984541185',
-  '2607151126551616100',
-]);
-
-const isExcluded = (p: any) =>
-  EXCLUDED_IDS.has(String(p?.pid ?? '')) ||
-  EXCLUDED_IDS.has(String(p?.categoryId ?? p?.category ?? ''));
-
-const filterExcluded = (products: any[]) =>
-  Array.isArray(products)
-    ? products.filter((p: any) => !isExcluded(p))
-    : [];
 
 const transformListResponse = (response: any) => {
   if (response?.products) {
@@ -36,6 +12,10 @@ const transformListResponse = (response: any) => {
 
 export const productApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
+    /**
+     * Generic product listing — reads from Redis warehouse via NestJS.
+     * Supports gender, subcategoryName, q (search), page, etc.
+     */
     getProducts: builder.query({
       query: (params: {
         categoryId?: string;
@@ -58,29 +38,37 @@ export const productApiSlice = apiSlice.injectEndpoints({
       }),
       transformResponse: transformListResponse,
       providesTags: ['Product'],
-      keepUnusedDataFor: 30,
+      // Keep cache for 10 minutes — warehouse refreshes hourly so this is safe
+      keepUnusedDataFor: 600,
     }),
+
+    /**
+     * Single product detail (includes variant data from CJ).
+     */
     getProductDetails: builder.query({
       query: (productId) => ({
         url: `${PRODUCTS_URL}/${productId}`,
       }),
-      transformResponse: (response: any) => {
-        if (response && isExcluded(response)) {
-          return null;
-        }
-        return response;
-      },
+      transformResponse: (response: any) => response ?? null,
       providesTags: (_, __, productId) => [{ type: 'Product' as const, id: productId }],
-      keepUnusedDataFor: 30,
+      keepUnusedDataFor: 600,
     }),
+
+    /**
+     * Related products for a product detail page.
+     */
     getRelatedProducts: builder.query({
       query: (productId) => ({
         url: `${PRODUCTS_URL}/${productId}/related`,
       }),
       transformResponse: transformListResponse,
       providesTags: (_, __, productId) => [{ type: 'Product' as const, id: `related-${productId}` }],
-      keepUnusedDataFor: 60,
+      keepUnusedDataFor: 600,
     }),
+
+    /**
+     * Post a product review.
+     */
     createReview: builder.mutation({
       query: ({ productId, rating, comment }) => ({
         url: `${PRODUCTS_URL}/${productId}/reviews`,
@@ -89,6 +77,11 @@ export const productApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: (_, __, { productId }) => [{ type: 'Product' as const, id: productId }, 'Product'],
     }),
+
+    /**
+     * @deprecated — prefer useGetProductsQuery with { gender, subcategoryName }.
+     * Kept for any legacy usage.
+     */
     getProductsByCategory: builder.query({
       query: ({ categoryId, pageNum, pageSize }: { categoryId: string; pageNum?: number; pageSize?: number }) => ({
         url: `${PRODUCTS_URL}/category/${categoryId}`,
@@ -96,22 +89,37 @@ export const productApiSlice = apiSlice.injectEndpoints({
       }),
       transformResponse: transformListResponse,
       providesTags: ['Product'],
-      keepUnusedDataFor: 30,
+      keepUnusedDataFor: 600,
     }),
+
+    /**
+     * Fetch total product count (shown in Navbar banner).
+     */
     getProductCount: builder.query({
       query: () => ({
         url: '/api/cj/product-count',
       }),
-      keepUnusedDataFor: 300,
+      keepUnusedDataFor: 600,
+    }),
+
+    /**
+     * Fetch CJ sync status — for admin dashboard health widget.
+     */
+    getSyncStatus: builder.query({
+      query: () => ({
+        url: '/api/cj/sync-status',
+      }),
+      keepUnusedDataFor: 60,
     }),
   }),
 });
 
-export const { 
-  useGetProductsQuery, 
+export const {
+  useGetProductsQuery,
   useGetProductDetailsQuery,
   useGetRelatedProductsQuery,
   useGetProductsByCategoryQuery,
   useCreateReviewMutation,
   useGetProductCountQuery,
+  useGetSyncStatusQuery,
 } = productApiSlice;

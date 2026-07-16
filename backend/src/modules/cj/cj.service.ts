@@ -2,87 +2,163 @@ import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import axios, { AxiosRequestConfig } from 'axios';
 import { RedisService } from '../redis/redis.service';
 import { isProductAllowed, isCategoryAllowed, isHardBlocked, BLOCKED } from './category.mapper';
-import { SEARCH_KEYWORDS, BROAD_CATEGORY_KEYWORDS_WITH_GENDER } from './keywords';
+import { CRAWL_CATALOG, categoryToKey } from './keywords';
 
+// ─── Redis key constants ────────────────────────────────────────────────────
+
+/** Stable "current" warehouse keys — what users read from */
+const WAREHOUSE_KEY_MEN   = 'products:warehouse:men';
+const WAREHOUSE_KEY_WOMEN = 'products:warehouse:women';
+const WAREHOUSE_KEY_ALL   = 'products:warehouse:all';
+
+/** "Next" buffer keys — written during sync, swapped atomically on success */
+const WAREHOUSE_NEXT_MEN   = 'products:warehouse:next:men';
+const WAREHOUSE_NEXT_WOMEN = 'products:warehouse:next:women';
+const WAREHOUSE_NEXT_ALL   = 'products:warehouse:next:all';
+
+/** Per-category granular keys e.g. products:warehouse:men:t-shirts */
+const categoryKey = (gender: string, cat: string) =>
+  `products:warehouse:${gender.toLowerCase()}:${categoryToKey(cat)}`;
+const categoryNextKey = (gender: string, cat: string) =>
+  `products:warehouse:next:${gender.toLowerCase()}:${categoryToKey(cat)}`;
+
+/** Sync metrics key */
+const SYNC_METRICS_KEY = 'cj:sync:metrics';
+
+/** Warehouse TTL — 90 minutes (cron runs every 60 min so there's always overlap) */
+const WAREHOUSE_TTL = 90 * 60;
+
+/** Per-product details cache */
 const PRODUCT_COUNT_CACHE_KEY = 'cj:product_count';
 const PRODUCT_COUNT_TTL = 60 * 60 * 24;
 
-// Product warehouse — merged deduplicated product pool written after crawl
-const WAREHOUSE_KEY_MEN = 'products:warehouse:men';
-const WAREHOUSE_KEY_WOMEN = 'products:warehouse:women';
-const WAREHOUSE_KEY_ALL = 'products:warehouse:all';
-const WAREHOUSE_TTL = 90 * 60; // 90 minutes (to overlap with 60-minute cron job)
-
-const DEFAULT_SIZES = ['S', 'M', 'L', 'XL'];
+const DEFAULT_SIZES  = ['S', 'M', 'L', 'XL'];
 const DEFAULT_COLORS = ['Black'];
 
 const EXCLUDED_CATEGORY_IDS = new Set([
-  '2607130752441623600',
-  '2607130905271619800',
-  '2075876029409300482',
-  '2046802660565475329',
-  '2502151121241601900',
-  '2043934021520044033',
-  '2043944570651648002',
-  '2043945824983830529',
-  '2043943887814762497',
-  '2043294797236301825',
-  '2606121220391623700',
-  '2075130484984541185',
-  '2607151126551616100',
-  '2607130811071611500',
-  '2607080934161603700',
-  '2607150846361621600'
+  '2607130752441623600', '2607130905271619800', '2075876029409300482',
+  '2046802660565475329', '2502151121241601900', '2043934021520044033',
+  '2043944570651648002', '2043945824983830529', '2043943887814762497',
+  '2043294797236301825', '2606121220391623700', '2075130484984541185',
+  '2607151126551616100', '2607130811071611500', '2607080934161603700',
+  '2607150846361621600',
 ]);
 
 const EXCLUDED_PRODUCT_PIDS = new Set([
-  '2607130752441623600',
-  '2607130905271619800',
-  '2075876029409300482',
-  '2046802660565475329',
-  '2502151121241601900',
-  '2043934021520044033',
-  '2043944570651648002',
-  '2043945824983830529',
-  '2043943887814762497',
-  '2043294797236301825',
-  '2606121220391623700',
-  '2075130484984541185',
-  '2607151126551616100',
-  '2607130811071611500',
-  '2607080934161603700',
-  '2607150846361621600'
+  '2607130752441623600', '2607130905271619800', '2075876029409300482',
+  '2046802660565475329', '2502151121241601900', '2043934021520044033',
+  '2043944570651648002', '2043945824983830529', '2043943887814762497',
+  '2043294797236301825', '2606121220391623700', '2075130484984541185',
+  '2607151126551616100', '2607130811071611500', '2607080934161603700',
+  '2607150846361621600',
 ]);
+
+// ─── Sync metrics type ──────────────────────────────────────────────────────
+
+export interface SyncMetrics {
+  lastSyncTime: string | null;
+  lastSyncDurationMs: number | null;
+  productCount: number;
+  menCount: number;
+  womenCount: number;
+  status: 'success' | 'failed' | 'running' | 'never';
+  error: string | null;
+  apiCallsUsed: number;
+  nextSyncIn: string;
+}
+
+// ─── Service ────────────────────────────────────────────────────────────────
 
 @Injectable()
 export class CjService {
+  private readonly logger = new Logger(CjService.name);
   private readonly baseUrl =
-    process.env.CJ_API_BASE_URL ??
-    'https://developers.cjdropshipping.com/api2.0';
-  private readonly accessTokenCacheKey = 'cj:access_token';
+    process.env.CJ_API_BASE_URL ?? 'https://developers.cjdropshipping.com/api2.0';
+  private readonly accessTokenCacheKey   = 'cj:access_token';
   private readonly accessTokenTtlSeconds = 60 * 60 * 23;
-  private readonly requestDelayMs = 500; // 2 requests/sec to speed up fetch but stay under limit
+  /** 300ms between requests ≈ 3 req/s — well under CJ limits */
+  private readonly requestDelayMs = 300;
   private accessTokenCache: { token: string; expiresAt: number } | null = null;
   private requestQueue: Promise<void> = Promise.resolve();
+  private apiCallsThisSync = 0;
 
-  constructor(private readonly redisService: RedisService) { }
+  constructor(private readonly redisService: RedisService) {}
+
+  // ─── Public: access token ─────────────────────────────────────────────────
 
   async getAccessToken() {
     const apiKey = process.env.CJ_API_KEY;
-    if (!apiKey) {
-      throw new InternalServerErrorException('CJ_API_KEY is not configured');
-    }
-    console.log('[CJ] POST /v1/authentication/getAccessToken');
+    if (!apiKey) throw new InternalServerErrorException('CJ_API_KEY is not configured');
+
+    this.logger.log('[CJ] POST /v1/authentication/getAccessToken');
     return this.scheduleRequest('/v1/authentication/getAccessToken', {
       method: 'POST',
       data: { apiKey },
     });
   }
+
+  // ─── Public: categories ───────────────────────────────────────────────────
+
+  async getCategories() {
+    const cacheKey = 'cj:categories';
+    const cached = await this.redisService.getJson<any>(cacheKey);
+    if (cached) return cached;
+
+    this.logger.log('[CJ] GET /v1/product/getCategory');
+    const response = await this.scheduleRequest('/v1/product/getCategory', {
+      method: 'GET',
+      headers: await this.authHeaders(),
+    });
+
+    const normalized = this.normalizeCategoryResponse(response);
+    await this.redisService.setJson(cacheKey, normalized, 60 * 60 * 24 * 7);
+    return normalized;
+  }
+
+  // ─── Public: single product detail ────────────────────────────────────────
+
+  async getProductById(pid: string) {
+    if (!pid) throw new BadRequestException('product id is required');
+
+    const cacheKey = `cj:product:id:${pid}`;
+    const cached = await this.redisService.getJson<any>(cacheKey);
+    if (cached) return cached;
+
+    const url = `/v1/product/list?pid=${pid}`;
+    this.logger.log(`[CJ] GET ${url}`);
+    const response = await this.scheduleRequest(url, {
+      method: 'GET',
+      headers: await this.authHeaders(),
+    });
+
+    if (response?.result === false) {
+      throw new NotFoundException(`CJ API Error: ${response?.message || 'Product not found'}`);
+    }
+
+    const normalized = this.normalizeProductResponse(response);
+    const product = normalized?.products?.[0] ?? null;
+
+    if (!product) throw new NotFoundException('Product not found');
+
+    try {
+      const enriched = await this.enrichWithVariants(product, pid);
+      await this.redisService.setJson(cacheKey, enriched, 60 * 60 * 24);
+      return enriched;
+    } catch (err: any) {
+      this.logger.warn(`[CJ] Variant enrichment failed for ${pid}: ${err?.message ?? err}`);
+    }
+
+    await this.redisService.setJson(cacheKey, product, 60 * 60 * 24);
+    return product;
+  }
+
+  // ─── Public: raw product list (used by admin / category listing) ──────────
 
   async getProducts(query: Record<string, string | undefined> = {}) {
     const cacheKey = `cj:products:list:${JSON.stringify(query)}`;
@@ -90,160 +166,65 @@ export class CjService {
     if (cached) return cached;
 
     const url = `/v1/product/list${this.buildSearch(query)}`;
-    console.log(`[CJ] GET ${url}`);
+    this.logger.log(`[CJ] GET ${url}`);
     const response = await this.scheduleRequest(url, {
       method: 'GET',
       headers: await this.authHeaders(),
     });
 
     const normalized = this.normalizeProductResponse(response, query);
-    await this.redisService.setJson(cacheKey, normalized, 60 * 60 * 24); // Cache for 24 hours
-    return normalized;
-  }
-
-  async getAllProducts(categoryId?: string) {
-    let targetCategoryIds: string[] = [];
-    const allProducts: any[] = [];
-
-    if (categoryId) {
-      targetCategoryIds = [categoryId];
-    } else {
-      console.log(`[CJ] Fetching allowed categories to sync...`);
-      const catsResponse = await this.getCategories();
-      const leaves = catsResponse?.categories || [];
-      // We already filtered leaves in flattenCategories, so these are only allowed ones.
-      targetCategoryIds = leaves.map((c: any) => c.categoryId).filter(Boolean);
-    }
-
-    console.log(`[CJ] Fetching products for ${targetCategoryIds.length} allowed categories...`);
-
-    for (const catId of targetCategoryIds) {
-      let pageNum = 1;
-      const pageSize = 100;
-
-      while (true) {
-        const query: Record<string, string> = {
-          pageNum: String(pageNum),
-          pageSize: String(pageSize),
-          categoryId: catId,
-        };
-
-        try {
-          const response = await this.getProducts(query);
-          const products = response?.products || [];
-
-          if (products.length === 0) break;
-
-          allProducts.push(...products);
-          console.log(`[CJ] Fetched page ${pageNum} for category ${catId} (${products.length} items). Total so far: ${allProducts.length}`);
-
-          if (products.length < pageSize) break;
-
-          if (pageNum * pageSize >= 2000) {
-            break;
-          }
-
-          pageNum++;
-        } catch (e: any) {
-          console.warn(`[CJ] Failed to fetch category ${catId} page ${pageNum}:`, e.message);
-          break;
-        }
-      }
-
-      if (allProducts.length >= 25000) {
-        console.warn(`[CJ] Hit 25000 products safety limit for getAllProducts`);
-        break;
-      }
-    }
-
-    console.log(`[CJ] Finished fetching products. Total: ${allProducts.length}`);
-    await this.saveProductCount(allProducts.length);
-    return allProducts;
-  }
-
-  async getCategories() {
-    const cacheKey = `cj:categories`;
-    const cached = await this.redisService.getJson<any>(cacheKey);
-    if (cached) return cached;
-
-    console.log('[CJ] GET /v1/product/getCategory');
-    const response = await this.scheduleRequest('/v1/product/getCategory', {
-      method: 'GET',
-      headers: await this.authHeaders(),
-    });
-
-    const normalized = this.normalizeCategoryResponse(response);
-    await this.redisService.setJson(cacheKey, normalized, 60 * 60 * 24 * 7); // Cache for 7 days
+    await this.redisService.setJson(cacheKey, normalized, 60 * 60 * 24);
     return normalized;
   }
 
   async getProductsByCategory(categoryId: string, pid?: string, query: Record<string, string | undefined> = {}) {
-    if (!categoryId) {
-      throw new BadRequestException('categoryId query parameter is required');
-    }
+    if (!categoryId) throw new BadRequestException('categoryId query parameter is required');
 
     const cacheKey = `cj:products:cat:${categoryId}:pid:${pid || 'none'}:q:${JSON.stringify(query)}`;
     const cached = await this.redisService.getJson<any>(cacheKey);
     if (cached) return cached;
 
-    // Only forward CJ-relevant params (same filtering as buildSearch)
     const cjQuery = this.filterCjParams(query);
-    const searchParams = new URLSearchParams({ categoryId, ...cjQuery });
-
-    if (pid) {
-      searchParams.set('pid', pid);
-    }
-
-    const url = `/v1/product/list?${searchParams.toString()}`;
-    console.log(`[CJ] GET ${url}`);
+    const url = `/v1/product/list${this.buildSearch({ ...cjQuery, categoryId, ...(pid ? { pid } : {}) })}`;
+    this.logger.log(`[CJ] GET ${url}`);
     const response = await this.scheduleRequest(url, {
       method: 'GET',
       headers: await this.authHeaders(),
     });
 
-    const normalized = this.normalizeProductResponse(response);
-    await this.redisService.setJson(cacheKey, normalized, 60 * 60 * 24);
+    const normalized = this.normalizeProductResponse(response, query);
+    await this.redisService.setJson(cacheKey, normalized, 60 * 60 * 6);
     return normalized;
   }
 
-  async getProductById(pid: string) {
-    if (!pid) {
-      throw new BadRequestException('product id is required');
+  async getAllProducts(categoryId?: string) {
+    const categories = categoryId ? [categoryId] : (await this.getCategories())?.categories?.map((c: any) => c.id).filter(Boolean) ?? [];
+    const allProducts: any[] = [];
+
+    for (const catId of categories) {
+      let pageNum = 1;
+      while (true) {
+        try {
+          const pageSize = 100;
+          const url = `/v1/product/list${this.buildSearch({ categoryId: catId, pageNum: String(pageNum), pageSize: String(pageSize) })}`;
+          this.logger.log(`[CJ] GET ${url}`);
+          const response = await this.scheduleRequest(url, { method: 'GET', headers: await this.authHeaders() });
+          const products = this.extractList(response);
+          const normalized = this.normalizeProductResponse(response);
+          allProducts.push(...(normalized.products || []));
+          if (products.length < pageSize) break;
+          if (pageNum * pageSize >= 2000) break;
+          pageNum++;
+        } catch (e: any) {
+          this.logger.warn(`[CJ] Failed to fetch category ${catId} page ${pageNum}: ${e.message}`);
+          break;
+        }
+      }
+      if (allProducts.length >= 25000) break;
     }
 
-    const cacheKey = `cj:product:id:${pid}`;
-    const cached = await this.redisService.getJson<any>(cacheKey);
-    if (cached) return cached;
-
-    const url = `/v1/product/list?pid=${pid}`;
-    console.log(`[CJ] GET ${url}`);
-    const response = await this.scheduleRequest(url, {
-      method: 'GET',
-      headers: await this.authHeaders(),
-    });
-
-    if (response?.result === false || (response?.code && response.code !== 200 && response.code !== '200')) {
-      throw new NotFoundException(`CJ API Error: ${response?.message || 'Product not found'}`);
-    }
-
-    const normalized = this.normalizeProductResponse(response);
-    const product = normalized?.products?.[0] ?? null;
-
-    if (!product) {
-      throw new NotFoundException('Product not found');
-    }
-
-    // Enrich with variant details (real colors, sizes, variant images) from CJ variant endpoint
-    try {
-      const enriched = await this.enrichWithVariants(product, pid);
-      await this.redisService.setJson(cacheKey, enriched, 60 * 60 * 24);
-      return enriched;
-    } catch (err: any) {
-      console.warn(`[CJ] Variant enrichment failed for ${pid}, returning base product:`, err?.message ?? err);
-    }
-
-    await this.redisService.setJson(cacheKey, product, 60 * 60 * 24);
-    return product;
+    await this.saveProductCount(allProducts.length);
+    return allProducts;
   }
 
   async searchProducts(keyword: string, pageNum = 1, pageSize = 100, hint?: any) {
@@ -256,101 +237,11 @@ export class CjService {
     return this.getProducts(query);
   }
 
-  async crawlAllByKeywords(): Promise<any[]> {
-    const allProducts: any[] = [];
-    const seenPids = new Set<string>();
-    const allKeywords = [
-      ...BROAD_CATEGORY_KEYWORDS_WITH_GENDER,
-      ...SEARCH_KEYWORDS.map(k => ({ keyword: k.keyword, gender: k.gender, category: k.category })),
-    ];
-
-    console.log(`[CJ] Starting keyword crawl with ${allKeywords.length} keywords...`);
-
-    for (const { keyword, gender, category } of allKeywords) {
-      let pageNum = 1;
-      let consecutiveEmpty = 0;
-
-      while (true) {
-        try {
-          const response = await this.searchProducts(keyword, pageNum, 100, {
-            _gender: gender,
-            _category: category,
-            _collectionType: gender,
-          });
-          const products = response?.products || [];
-
-          if (products.length === 0) {
-            consecutiveEmpty++;
-            if (consecutiveEmpty >= 2 || pageNum > 5) break;
-            pageNum++;
-            continue;
-          }
-
-          consecutiveEmpty = 0;
-
-          for (const product of products) {
-            const pid = String(product?.pid || product?.id || '');
-            if (!pid || seenPids.has(pid)) continue;
-            seenPids.add(pid);
-            if (isHardBlocked(product)) continue;
-
-            allProducts.push({
-              ...product,
-              _gender: gender,
-              _category: category ?? 'Other',
-              _collectionType: gender,
-            });
-          }
-          if (products.length < 100 || pageNum >= 50) break;
-          pageNum++;
-          
-          if (allProducts.length >= 10000) {
-            console.log(`[CJ] Hit maximum limit of 10000 products.`);
-            break;
-          }
-        } catch (e: any) {
-          console.warn(`[CJ] Keyword search failed for "${keyword}" page ${pageNum}:`, e.message);
-          break;
-        }
-      }
-
-      if (allProducts.length >= 10000) {
-        break;
-      }
-    }
-
-    console.log(`[CJ] Keyword crawl complete. Total unique products: ${allProducts.length}`);
-    await this.saveProductCount(allProducts.length);
-
-    if (allProducts.length < 50) {
-      console.warn(`[CJ] Crawl failed or returned too few products (${allProducts.length}). Keeping existing Redis cache to serve users.`);
-      return allProducts;
-    }
-
-    // ── Write to product warehouse (split by gender, TTL = 90 minutes) ──────────
-    const menProducts = allProducts.filter(
-      p => String(p._gender ?? p.collectionType ?? p.gender ?? '').toLowerCase() === 'men',
-    );
-    const womenProducts = allProducts.filter(
-      p => String(p._gender ?? p.collectionType ?? p.gender ?? '').toLowerCase() === 'women',
-    );
-
-    await Promise.all([
-      this.redisService.setJson(WAREHOUSE_KEY_MEN, menProducts, WAREHOUSE_TTL),
-      this.redisService.setJson(WAREHOUSE_KEY_WOMEN, womenProducts, WAREHOUSE_TTL),
-      this.redisService.setJson(WAREHOUSE_KEY_ALL, allProducts, WAREHOUSE_TTL),
-    ]);
-
-    console.log(
-      `[CJ] Warehouse written — Men: ${menProducts.length}, Women: ${womenProducts.length}, Total: ${allProducts.length}`,
-    );
-
-    return allProducts;
-  }
+  // ─── Public: warehouse read (used by products.service.ts) ─────────────────
 
   /**
-   * Read from the product warehouse (populated by crawlAllByKeywords).
-   * Returns a paginated slice of the stored product array.
+   * Read products from the Redis warehouse.
+   * This is the ONLY path users ever see — never falls back to live CJ.
    */
   async getWarehouseProducts(
     gender: 'men' | 'women' | 'all' | '' = 'all',
@@ -359,8 +250,24 @@ export class CjService {
     categoryId?: string,
     subcategoryName?: string,
   ): Promise<{ products: any[]; total: number; warehouseHit: true } | null> {
+
+    // If a specific subcategory is requested, use the per-category Redis key (fast path)
+    if (subcategoryName && gender && gender !== 'all') {
+      const catKey = categoryKey(gender, subcategoryName);
+      const catData = await this.redisService.getJson<any[]>(catKey);
+
+      if (catData && Array.isArray(catData) && catData.length > 0) {
+        const total = catData.length;
+        const start = (pageNum - 1) * pageSize;
+        const products = catData.slice(start, start + pageSize);
+        this.logger.log(`[CJ] Warehouse cat-key HIT ${catKey} → ${products.length}/${total}`);
+        return { products, total, warehouseHit: true };
+      }
+    }
+
+    // Fall back to main gender warehouse and filter in-memory
     const key =
-      gender === 'men' ? WAREHOUSE_KEY_MEN
+      gender === 'men'   ? WAREHOUSE_KEY_MEN
       : gender === 'women' ? WAREHOUSE_KEY_WOMEN
       : WAREHOUSE_KEY_ALL;
 
@@ -372,15 +279,13 @@ export class CjService {
     let pool = warehouse;
 
     if (categoryId) {
-      pool = pool.filter(
-        p => String(p.categoryId ?? p.category ?? '') === categoryId,
-      );
+      pool = pool.filter(p => String(p.categoryId ?? p.category ?? '') === categoryId);
     }
-    
+
     if (subcategoryName) {
-      const normalizedSub = subcategoryName.trim().toLowerCase();
-      pool = pool.filter(
-        p => String(p.subcategoryName ?? p._category ?? p.category ?? '').trim().toLowerCase() === normalizedSub,
+      const norm = subcategoryName.trim().toLowerCase();
+      pool = pool.filter(p =>
+        String(p.subcategoryName ?? p._category ?? p.category ?? '').trim().toLowerCase() === norm,
       );
     }
 
@@ -388,11 +293,159 @@ export class CjService {
     const start = (pageNum - 1) * pageSize;
     const products = pool.slice(start, start + pageSize);
 
-    console.log(
-      `[CJ] Warehouse READ gender=${gender} page=${pageNum} size=${pageSize} -> ${products.length}/${total}`,
-    );
-
+    this.logger.log(`[CJ] Warehouse READ gender=${gender} page=${pageNum} size=${pageSize} → ${products.length}/${total}`);
     return { products, total, warehouseHit: true };
+  }
+
+  // ─── Public: catalog sync (called by cron) ────────────────────────────────
+
+  /**
+   * Main cron sync — fetches all categories page-by-page (one keyword per category)
+   * and uses a double-buffer strategy: writes to :next keys first, then swaps
+   * atomically so users never read partial data.
+   *
+   * Retry: if CJ fails, waits 30s then 2m before giving up.
+   * If all retries fail, existing warehouse data is preserved untouched.
+   */
+  async runCatalogSync(): Promise<{ success: boolean; count: number }> {
+    const syncStart = Date.now();
+    this.apiCallsThisSync = 0;
+
+    await this.saveSyncMetrics({ status: 'running', error: null, lastSyncTime: null, productCount: 0, menCount: 0, womenCount: 0, lastSyncDurationMs: null, apiCallsUsed: 0, nextSyncIn: '60 minutes' });
+
+    this.logger.log('[Cron] ✅ Sync Started');
+
+    // ── Attempt with retry ──────────────────────────────────────────────────
+    const RETRY_DELAYS = [0, 30_000, 120_000]; // Immediate, 30s, 2m
+    let lastError = '';
+    let allProducts: any[] | null = null;
+
+    for (let attempt = 0; attempt < RETRY_DELAYS.length; attempt++) {
+      if (RETRY_DELAYS[attempt] > 0) {
+        this.logger.warn(`[Cron] ⏳ Retrying sync in ${RETRY_DELAYS[attempt] / 1000}s (attempt ${attempt + 1})...`);
+        await this.delay(RETRY_DELAYS[attempt]);
+      }
+
+      try {
+        allProducts = await this.fetchCatalog();
+        break; // success — exit retry loop
+      } catch (e: any) {
+        lastError = e?.message ?? String(e);
+        this.logger.error(`[Cron] ❌ Sync attempt ${attempt + 1} failed: ${lastError}`);
+      }
+    }
+
+    // ── All retries failed — keep existing cache ────────────────────────────
+    if (!allProducts) {
+      this.logger.error('[Cron] ❌ All sync attempts failed. Existing warehouse cache preserved.');
+      await this.saveSyncMetrics({
+        status: 'failed',
+        error: lastError,
+        lastSyncTime: new Date().toISOString(),
+        productCount: 0,
+        menCount: 0,
+        womenCount: 0,
+        lastSyncDurationMs: Date.now() - syncStart,
+        apiCallsUsed: this.apiCallsThisSync,
+        nextSyncIn: '60 minutes',
+      });
+      return { success: false, count: 0 };
+    }
+
+    if (allProducts.length < 50) {
+      this.logger.warn(`[Cron] ⚠️ Fetch returned only ${allProducts.length} products — too few to be valid. Keeping existing cache.`);
+      await this.saveSyncMetrics({
+        status: 'failed',
+        error: `Only ${allProducts.length} products returned — refusing to overwrite warehouse`,
+        lastSyncTime: new Date().toISOString(),
+        productCount: 0,
+        menCount: 0,
+        womenCount: 0,
+        lastSyncDurationMs: Date.now() - syncStart,
+        apiCallsUsed: this.apiCallsThisSync,
+        nextSyncIn: '60 minutes',
+      });
+      return { success: false, count: allProducts.length };
+    }
+
+    // ── Double-buffer: write to :next keys, then swap ───────────────────────
+    const menProducts   = allProducts.filter(p => String(p._gender ?? '').toLowerCase() === 'men');
+    const womenProducts = allProducts.filter(p => String(p._gender ?? '').toLowerCase() === 'women');
+
+    this.logger.log(`[Cron] ✅ Products Fetched — Men: ${menProducts.length}, Women: ${womenProducts.length}, Total: ${allProducts.length}`);
+
+    // Write to :next buffer
+    await Promise.all([
+      this.redisService.setJson(WAREHOUSE_NEXT_ALL,   allProducts,   WAREHOUSE_TTL),
+      this.redisService.setJson(WAREHOUSE_NEXT_MEN,   menProducts,   WAREHOUSE_TTL),
+      this.redisService.setJson(WAREHOUSE_NEXT_WOMEN, womenProducts, WAREHOUSE_TTL),
+    ]);
+
+    // Write per-category keys to :next buffer
+    const categoryGroups = this.groupByCategory(allProducts);
+    const catWriteOps: Promise<void>[] = [];
+    for (const [catKey, catProducts] of Object.entries(categoryGroups)) {
+      catWriteOps.push(this.redisService.setJson(`products:warehouse:next:${catKey}`, catProducts, WAREHOUSE_TTL));
+    }
+    await Promise.all(catWriteOps);
+
+    // Atomic swap: :next → :current
+    await Promise.all([
+      this.redisService.rename(WAREHOUSE_NEXT_ALL,   WAREHOUSE_KEY_ALL),
+      this.redisService.rename(WAREHOUSE_NEXT_MEN,   WAREHOUSE_KEY_MEN),
+      this.redisService.rename(WAREHOUSE_NEXT_WOMEN, WAREHOUSE_KEY_WOMEN),
+    ]);
+
+    // Swap per-category keys
+    const catSwapOps: Promise<void>[] = [];
+    for (const catKey of Object.keys(categoryGroups)) {
+      catSwapOps.push(this.redisService.rename(`products:warehouse:next:${catKey}`, `products:warehouse:${catKey}`));
+    }
+    await Promise.all(catSwapOps);
+
+    const durationMs = Date.now() - syncStart;
+    this.logger.log(`[Cron] ✅ Redis Updated`);
+    this.logger.log(`[Cron] ✅ Execution Time: ${(durationMs / 1000).toFixed(1)}s`);
+    this.logger.log(`[Cron] ✅ API Calls Used: ~${this.apiCallsThisSync}`);
+    this.logger.log(`[Cron] ✅ Sync Completed Successfully`);
+
+    await this.saveProductCount(allProducts.length);
+    await this.saveSyncMetrics({
+      status: 'success',
+      error: null,
+      lastSyncTime: new Date().toISOString(),
+      productCount: allProducts.length,
+      menCount: menProducts.length,
+      womenCount: womenProducts.length,
+      lastSyncDurationMs: durationMs,
+      apiCallsUsed: this.apiCallsThisSync,
+      nextSyncIn: '60 minutes',
+    });
+
+    return { success: true, count: allProducts.length };
+  }
+
+  /** Also expose the old name for backward compat (cj.controller.ts) */
+  async crawlAllByKeywords() {
+    const result = await this.runCatalogSync();
+    return { length: result.count };
+  }
+
+  // ─── Public: sync metrics ─────────────────────────────────────────────────
+
+  async getSyncMetrics(): Promise<SyncMetrics> {
+    const metrics = await this.redisService.getJson<SyncMetrics>(SYNC_METRICS_KEY);
+    return metrics ?? {
+      status: 'never',
+      error: null,
+      lastSyncTime: null,
+      productCount: 0,
+      menCount: 0,
+      womenCount: 0,
+      lastSyncDurationMs: null,
+      apiCallsUsed: 0,
+      nextSyncIn: '60 minutes',
+    };
   }
 
   async getProductCount(): Promise<number> {
@@ -400,100 +453,96 @@ export class CjService {
     return cached ?? 0;
   }
 
+  // ─── Private: catalog fetch logic ─────────────────────────────────────────
+
+  private async fetchCatalog(): Promise<any[]> {
+    const allProducts: any[] = [];
+    const seenPids = new Set<string>();
+
+    this.logger.log(`[CJ] Starting catalog sync with ${CRAWL_CATALOG.length} categories...`);
+
+    for (const entry of CRAWL_CATALOG) {
+      const { keyword, gender, category } = entry;
+      let pageNum = 1;
+      let consecutiveEmpty = 0;
+
+      while (true) {
+        const response = await this.searchProducts(keyword, pageNum, 100, {
+          _gender: gender,
+          _category: category,
+          _collectionType: gender,
+        });
+        this.apiCallsThisSync++;
+
+        const products: any[] = response?.products ?? [];
+
+        if (products.length === 0) {
+          consecutiveEmpty++;
+          if (consecutiveEmpty >= 2 || pageNum > 5) break;
+          pageNum++;
+          continue;
+        }
+
+        consecutiveEmpty = 0;
+
+        for (const product of products) {
+          const pid = String(product?.pid || product?.id || '');
+          if (!pid || seenPids.has(pid)) continue;
+          seenPids.add(pid);
+          if (isHardBlocked(product)) continue;
+
+          allProducts.push({
+            ...product,
+            _gender: gender,
+            _category: category,
+            _collectionType: gender,
+          });
+        }
+
+        if (products.length < 100 || pageNum >= 10) break;
+        pageNum++;
+      }
+
+      this.logger.log(`[CJ] "${keyword}" → ${allProducts.length} products so far`);
+    }
+
+    this.logger.log(`[CJ] Catalog fetch complete. Unique products: ${allProducts.length}`);
+    return allProducts;
+  }
+
+  // ─── Private: group products by category → Redis key segment ──────────────
+
+  private groupByCategory(products: any[]): Record<string, any[]> {
+    const groups: Record<string, any[]> = {};
+
+    for (const p of products) {
+      const gender  = String(p._gender ?? '').toLowerCase();
+      const catName = String(p._category ?? p.subcategoryName ?? p.category ?? 'other');
+      const key     = `${gender}:${categoryToKey(catName)}`;
+
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(p);
+    }
+
+    return groups;
+  }
+
+  // ─── Private: metrics helpers ─────────────────────────────────────────────
+
+  private async saveSyncMetrics(metrics: SyncMetrics): Promise<void> {
+    await this.redisService.setJson(SYNC_METRICS_KEY, metrics, 60 * 60 * 25); // 25h TTL
+  }
+
   private async saveProductCount(count: number): Promise<void> {
     await this.redisService.setJson(PRODUCT_COUNT_CACHE_KEY, count, PRODUCT_COUNT_TTL);
   }
 
-  private async enrichWithVariants(product: any, pid: string): Promise<any> {
-    const variantUrl = `/v1/product/variant/query?pid=${pid}`;
-    console.log(`[CJ] GET ${variantUrl}`);
-    const variantResponse = await this.scheduleRequest(variantUrl, {
-      method: 'GET',
-      headers: await this.authHeaders(),
-    });
-
-    const rawVariants = Array.isArray(variantResponse?.data)
-      ? variantResponse.data
-      : Array.isArray(variantResponse)
-        ? variantResponse
-        : [];
-
-    if (rawVariants.length === 0) return product;
-
-    const colorSet = new Set<string>();
-    const sizeSet = new Set<string>();
-    const variantImages: string[] = [];
-    const enrichedVariants: any[] = [];
-
-    for (const v of rawVariants) {
-      const parsed = this.parseVariantKey(v.variantKey || '');
-      const color = parsed.color || v.variantNameEn || 'Default';
-      const size = parsed.size || 'One Size';
-
-      colorSet.add(color);
-      sizeSet.add(size);
-
-      if (v.variantImage) {
-        variantImages.push(v.variantImage);
-      }
-
-      enrichedVariants.push({
-        color,
-        size,
-        stock: v.inventories?.[0]?.totalInventory ?? (v as any).stock ?? 999,
-        variantImage: v.variantImage || '',
-        image: v.variantImage || '',
-        price: v.variantSellPrice || product.price,
-        vid: v.vid || '',
-        variantKey: v.variantKey || '',
-      });
-    }
-
-    const colors = Array.from(colorSet).filter(Boolean);
-    const sizes = Array.from(sizeSet).filter(Boolean);
-
-    // Merge variant images into product images (avoiding duplicates)
-    const mergedImages = [...new Set([...variantImages, ...(product.images || [])])];
-
-    return {
-      ...product,
-      colors: colors.length > 0 ? colors : product.colors,
-      sizes: sizes.length > 0 ? sizes : product.sizes,
-      variants: enrichedVariants.length > 0 ? enrichedVariants : product.variants,
-      images: mergedImages,
-    };
-  }
-
-  private readonly CJ_IGNORE_PARAMS = new Set(['minPrice', 'maxPrice', 'minRating', 'sort', 'colors', 'sizes', 'q', 'collectionType', 'gender', 'subcategoryName']);
-  private readonly CJ_PARAM_MAP: Record<string, string> = {};
-
-  private filterCjParams(query: Record<string, string | undefined>): Record<string, string> {
-    const result: Record<string, string> = {};
-    for (const [key, value] of Object.entries(query)) {
-      if (value && !this.CJ_IGNORE_PARAMS.has(key)) {
-        const cjKey = this.CJ_PARAM_MAP[key] ?? key;
-        result[cjKey] = value;
-      }
-    }
-    return result;
-  }
-
-  private buildSearch(query: Record<string, string | undefined>) {
-    const cjParams = this.filterCjParams(query);
-    const searchParams = new URLSearchParams(cjParams);
-    const search = searchParams.toString();
-    return search ? `?${search}` : '';
-  }
+  // ─── Private: HTTP helpers ────────────────────────────────────────────────
 
   private async authHeaders() {
     const configuredToken = process.env.CJ_ACCESS_TOKEN;
-    const token =
-      configuredToken ??
-      (await this.getCachedAccessToken());
-
-    return {
-      'CJ-Access-Token': token,
-    };
+    const token = configuredToken ?? (await this.getCachedAccessToken());
+    return { 'CJ-Access-Token': token };
   }
 
   private async getCachedAccessToken() {
@@ -513,15 +562,9 @@ export class CjService {
     }
 
     const token = await this.resolveAccessToken();
-    const tokenCache = {
-      token,
-      // CJ token TTL is not exposed here, so keep a conservative shared cache.
-      expiresAt: now + this.accessTokenTtlSeconds * 1000,
-    };
-
+    const tokenCache = { token, expiresAt: now + this.accessTokenTtlSeconds * 1000 };
     this.accessTokenCache = tokenCache;
     await this.redisService.setJson(this.accessTokenCacheKey, tokenCache, this.accessTokenTtlSeconds);
-
     return token;
   }
 
@@ -533,12 +576,7 @@ export class CjService {
       response?.accessToken ??
       response?.access_token;
 
-    if (!token) {
-      throw new InternalServerErrorException(
-        'CJ access token was not returned by authentication API',
-      );
-    }
-
+    if (!token) throw new InternalServerErrorException('CJ access token was not returned by authentication API');
     return token;
   }
 
@@ -549,47 +587,31 @@ export class CjService {
     };
 
     const next = this.requestQueue.then(run, run);
-    this.requestQueue = next.then(
-      () => undefined,
-      () => undefined,
-    );
-
+    this.requestQueue = next.then(() => undefined, () => undefined);
     return next;
   }
 
-  private async request(path: string, init: AxiosRequestConfig, attempt = 0) {
+  private async request(path: string, init: AxiosRequestConfig, attempt = 0): Promise<any> {
     try {
-      console.log(`[CJ] AXIOS ${String(init.method || 'GET').toUpperCase()} ${this.baseUrl}${path}`);
+      this.logger.log(`[CJ] AXIOS ${String(init.method || 'GET').toUpperCase()} ${this.baseUrl}${path}`);
       const response = await axios.request({
         baseURL: this.baseUrl,
         url: path,
         ...init,
-        headers: {
-          'Content-Type': 'application/json',
-          ...init.headers,
-        },
+        headers: { 'Content-Type': 'application/json', ...init.headers },
       });
-
       return response.data;
     } catch (error: any) {
       const status = error?.response?.status;
 
       if (status === 429 && attempt < 5) {
-        const retryDelay = 2000 * Math.pow(2, attempt); // 2s, 4s, 8s, 16s, 32s
-        console.warn('[CJ] RATE LIMITED, retrying', {
-          url: `${this.baseUrl}${path}`,
-          attempt: attempt + 1,
-          retryDelay,
-        });
-
+        const retryDelay = 2000 * Math.pow(2, attempt);
+        this.logger.warn(`[CJ] Rate limited — retrying in ${retryDelay}ms (attempt ${attempt + 1})`);
         await this.delay(retryDelay);
         return this.request(path, init, attempt + 1);
       }
 
-      console.error('[CJ] AXIOS ERROR', {
-        url: `${this.baseUrl}${path}`,
-        status,
-      });
+      this.logger.error(`[CJ] AXIOS ERROR ${this.baseUrl}${path} → HTTP ${status}`);
       throw new InternalServerErrorException({
         message: 'CJ Dropshipping API request failed',
         status,
@@ -598,28 +620,21 @@ export class CjService {
     }
   }
 
+  // ─── Private: normalisation helpers ──────────────────────────────────────
+
   private normalizeProductResponse(response: any, query?: Record<string, any>) {
     const products = this.extractList(response)
-      .map((product: any) => this.normalizeProduct(product, query))
+      .map((p: any) => this.normalizeProduct(p, query))
       .filter(Boolean);
-
-    return {
-      ...response,
-      products,
-    };
+    return { ...response, products };
   }
 
   private normalizeCategoryResponse(response: any) {
     const raw = this.extractList(response);
     const categories = this.flattenCategories(raw);
-
-    return {
-      ...response,
-      categories,
-    };
+    return { ...response, categories };
   }
 
-  // CJ's category API returns
   private isBlocked(catName: string): boolean {
     const name = catName.toLowerCase().replace(/[\s_'&-]+/g, '');
     return BLOCKED.some(word => name.includes(word));
@@ -629,99 +644,50 @@ export class CjService {
     const results: any[] = [];
 
     const visit = (item: any, group: string, depth: number) => {
-      if (!item || typeof item !== 'object') {
-        return;
-      }
+      if (!item || typeof item !== 'object') return;
 
       const catName = String(
-        item.categoryName ||
-        item.categoryThirdName ||
-        item.categorySecondName ||
-        item.categoryFirstName ||
-        ''
+        item.categoryName || item.categoryThirdName || item.categorySecondName || item.categoryFirstName || '',
       ).toLowerCase();
 
-      // Always prune blocked branches (e.g. Pet Supplies, Jewelry) at any depth
-      if (catName && this.isBlocked(catName)) {
-        return;
-      }
-
-      // At top level only, also prune non-allowed categories (e.g. Consumer Electronics)
-      if (depth === 0 && catName && !isCategoryAllowed(catName)) {
-        return;
-      }
+      if (catName && this.isBlocked(catName)) return;
+      if (depth === 0 && catName && !isCategoryAllowed(catName)) return;
 
       const childArrayKey = Object.keys(item).find(
-        (key) => Array.isArray(item[key]) && item[key].length > 0 && typeof item[key][0] === 'object',
+        key => Array.isArray(item[key]) && item[key].length > 0 && typeof item[key][0] === 'object',
       );
 
       if (childArrayKey) {
-        const branchId = item?.categorySecondId ?? item?.categoryFirstId;
+        const branchId   = item?.categorySecondId ?? item?.categoryFirstId;
         const branchName = item?.categorySecondName ?? item?.categoryFirstName;
-        const nextGroup = group || item?.categoryFirstName || '';
+        const nextGroup  = group || item?.categoryFirstName || '';
 
-        // Register second-level (and top-level, when it has no second-level id)
-        // categories as their own selectable entries alongside their leaves.
         if (branchId && branchName && isCategoryAllowed(branchName)) {
-          results.push(
-            this.normalizeCategory({ categoryId: branchId, categoryName: branchName }, nextGroup),
-          );
+          results.push(this.normalizeCategory({ categoryId: branchId, categoryName: branchName }, nextGroup));
         }
 
-        for (const child of item[childArrayKey]) {
-          visit(child, nextGroup, depth + 1);
-        }
+        for (const child of item[childArrayKey]) visit(child, nextGroup, depth + 1);
         return;
       }
 
-      // Leaf category — include only if it matches the allow list
       if (catName && isCategoryAllowed(catName)) {
         results.push(this.normalizeCategory(item, group));
       }
     };
 
-    for (const item of items) {
-      visit(item, '', 0);
-    }
-
+    for (const item of items) visit(item, '', 0);
     return results;
   }
 
   private normalizeCategory(category: any, group = '') {
-    const id =
-      category?.categoryId ??
-      category?.categoryThirdId ??
-      category?.categorySecondId ??
-      category?.categoryFirstId ??
-      category?._id ??
-      category?.id ??
-      '';
-    const name =
-      category?.categoryName ??
-      category?.categoryThirdName ??
-      category?.categorySecondName ??
-      category?.categoryFirstName ??
-      category?.name ??
-      '';
-
-    return {
-      ...category,
-      _id: id,
-      id,
-      name,
-      group,
-    };
+    const id = category?.categoryId ?? category?.categoryThirdId ?? category?.categorySecondId ?? category?.categoryFirstId ?? category?._id ?? category?.id ?? '';
+    const name = category?.categoryName ?? category?.categoryThirdName ?? category?.categorySecondName ?? category?.categoryFirstName ?? category?.name ?? '';
+    return { ...category, _id: id, id, name, group };
   }
 
   private extractList(response: any) {
-    if (Array.isArray(response)) {
-      return response;
-    }
-
-    if (Array.isArray(response?.data)) {
-      return response.data;
-    }
-
+    if (Array.isArray(response)) return response;
+    if (Array.isArray(response?.data)) return response.data;
     return (
       response?.data?.list ??
       response?.data?.products ??
@@ -737,172 +703,170 @@ export class CjService {
 
   private normalizeProduct(product: any, query?: Record<string, any>) {
     const categoryId = String(product?.categoryId ?? product?.category ?? '');
-    if (EXCLUDED_CATEGORY_IDS.has(categoryId)) {
-      return null;
-    }
+    if (EXCLUDED_CATEGORY_IDS.has(categoryId)) return null;
 
     const pid = String(
-      product?.pid ??
-      product?.id ??
-      product?.productId ??
-      product?.productPid ??
-      product?.product_id ??
-      product?.productCode ??
-      ''
+      product?.pid ?? product?.id ?? product?.productId ?? product?.productPid ?? product?.product_id ?? product?.productCode ?? '',
     );
-    if (EXCLUDED_PRODUCT_PIDS.has(pid)) {
-      return null;
-    }
+    if (EXCLUDED_PRODUCT_PIDS.has(pid)) return null;
 
-    // Use keyword-crawl metadata if available, otherwise classify now
-    let gender = product._gender || query?._gender;
+    let gender         = product._gender || query?._gender;
     let subcategoryName = product._category || query?._category;
-    let collectionType = product._collectionType || query?._collectionType;
+    let collectionType  = product._collectionType || query?._collectionType;
 
     if (!gender) {
       const check = isProductAllowed(product);
-      if (!check.allowed) {
-        return null;
-      }
+      if (!check.allowed) return null;
       gender = check.gender;
       subcategoryName = check.subcategoryName;
-      collectionType = check.collectionType;
+      collectionType  = check.collectionType;
     } else {
-      // Double-verify: even if keyword crawl set a gender, check the product name
-      // to catch misclassification (e.g., "women's shirt" crawled under keyword "shirts" for Men)
       const productName = String(product?.productNameEn ?? product?.productName ?? product?.nameEn ?? product?.name ?? '').toLowerCase();
-      const catName = String(product?.categoryName ?? product?.categoryThirdName ?? product?.categorySecondName ?? product?.categoryFirstName ?? '').toLowerCase();
-      const combined = `${productName} ${catName}`;
+      const catName     = String(product?.categoryName ?? product?.categoryThirdName ?? product?.categorySecondName ?? product?.categoryFirstName ?? '').toLowerCase();
+      const combined    = `${productName} ${catName}`;
       const hasWomenSignal = /\b(women|woman|womens|ladies|lady|female)\b/i.test(combined);
-      const hasMenSignal = /\b(men|man|mens|male|gents)\b/i.test(combined) && !hasWomenSignal;
+      const hasMenSignal   = /\b(men|man|mens|male|gents)\b/i.test(combined) && !hasWomenSignal;
 
-      if (hasWomenSignal && gender !== 'Women') {
-        gender = 'Women';
-        collectionType = 'Women';
-      } else if (hasMenSignal && gender !== 'Men') {
-        gender = 'Men';
-        collectionType = 'Men';
-      }
+      if (hasWomenSignal && gender !== 'Women') { gender = 'Women'; collectionType = 'Women'; }
+      else if (hasMenSignal && gender !== 'Men') { gender = 'Men'; collectionType = 'Men'; }
     }
 
     const images = [
-      product?.productImage,
-      product?.image,
-      product?.img,
-      product?.primaryImage,
-      product?.mainImageUrl,
-      product?.mainImage,
-      product?.coverImage,
-      product?.bigImage,
-      product?.thumbnail,
-      product?.thumbnailUrl,
-      product?.imageUrl,
+      product?.productImage, product?.image, product?.img, product?.primaryImage,
+      product?.mainImageUrl, product?.mainImage, product?.coverImage, product?.bigImage,
+      product?.thumbnail, product?.thumbnailUrl, product?.imageUrl,
       ...(Array.isArray(product?.productImages) ? product.productImages : []),
       ...(Array.isArray(product?.images) ? product.images : []),
       ...(Array.isArray(product?.imageList) ? product.imageList : []),
       ...(Array.isArray(product?.imgList) ? product.imgList : []),
       ...(Array.isArray(product?.variantImages) ? product.variantImages : []),
       ...(Array.isArray(product?.productImageSet) ? product.productImageSet : []),
-      ...(Array.isArray(product?.extraImages) ? product.extraImages : [])
-    ]
-      .map((item) => {
-        if (!item) return '';
-        if (typeof item === 'string') return item;
-        return item.url || item.image || item.src || '';
-      })
-      .filter(Boolean);
+      ...(Array.isArray(product?.extraImages) ? product.extraImages : []),
+    ].map(item => {
+      if (!item) return '';
+      if (typeof item === 'string') return item;
+      return item.url || item.image || item.src || '';
+    }).filter(Boolean);
 
     const uniqueImages = Array.from(new Set(images));
-    const name =
-      product?.productNameEn ??
-      product?.productName ??
-      product?.nameEn ??
-      product?.name ??
-      '';
+    const name  = product?.productNameEn ?? product?.productName ?? product?.nameEn ?? product?.name ?? '';
     const price = Number(product?.sellPrice ?? product?.price ?? 0) || 0;
+    const sizes    = Array.isArray(product?.sizes)    && product.sizes.length    ? product.sizes    : DEFAULT_SIZES;
+    const colors   = Array.isArray(product?.colors)   && product.colors.length   ? product.colors   : DEFAULT_COLORS;
+    const variants = Array.isArray(product?.variants) && product.variants.length
+      ? product.variants
+      : colors.flatMap((color: string) => sizes.map((size: string) => ({ color, size, stock: 999 })));
 
-    // CJ's list/search response has no size/color/variant breakdown, so we
-    // synthesize a default variant set the storefront's size/color pickers can use.
-    const sizes = Array.isArray(product?.sizes) && product.sizes.length ? product.sizes : DEFAULT_SIZES;
-    const colors = Array.isArray(product?.colors) && product.colors.length ? product.colors : DEFAULT_COLORS;
-    const variants =
-      Array.isArray(product?.variants) && product.variants.length
-        ? product.variants
-        : colors.flatMap((color: string) => sizes.map((size: string) => ({ color, size, stock: 999 })));
-    const categoryName =
-      product?.categoryName ??
-      product?.categoryThirdName ??
-      product?.categorySecondName ??
-      product?.categoryFirstName ??
-      '';
+    const categoryName = product?.categoryName ?? product?.categoryThirdName ?? product?.categorySecondName ?? product?.categoryFirstName ?? '';
 
     return {
       ...product,
-
-      // Store CJ product id separately
       pid,
-
-      // Do NOT overwrite MongoDB's _id
       name,
       title: name,
-
       productName: name,
-
       price,
-
       images: uniqueImages,
-
       categoryId,
-
       categoryName,
-
       subcategoryName,
-
       gender,
-
       category: categoryName || categoryId,
-
-      collectionType:
-        product?.collectionType ??
-        collectionType,
-
-      tags: Array.isArray(product?.tags)
-        ? product.tags
-        : [],
-
+      collectionType: product?.collectionType ?? collectionType,
+      tags: Array.isArray(product?.tags) ? product.tags : [],
       sizes,
-
       colors,
-
       variants,
-
       numReviews: 0,
-
       averageRating: 0,
-
       reviews: [],
     };
   }
 
+  private async enrichWithVariants(product: any, pid: string): Promise<any> {
+    const variantUrl = `/v1/product/variant/query?pid=${pid}`;
+    this.logger.log(`[CJ] GET ${variantUrl}`);
+    const variantResponse = await this.scheduleRequest(variantUrl, {
+      method: 'GET',
+      headers: await this.authHeaders(),
+    });
+
+    const rawVariants = Array.isArray(variantResponse?.data)
+      ? variantResponse.data
+      : Array.isArray(variantResponse) ? variantResponse : [];
+
+    if (rawVariants.length === 0) return product;
+
+    const colorSet = new Set<string>();
+    const sizeSet  = new Set<string>();
+    const variantImages: string[] = [];
+    const enrichedVariants: any[] = [];
+
+    for (const v of rawVariants) {
+      const parsed = this.parseVariantKey(v.variantKey || '');
+      const color  = parsed.color || v.variantNameEn || 'Default';
+      const size   = parsed.size || 'One Size';
+
+      colorSet.add(color);
+      sizeSet.add(size);
+      if (v.variantImage) variantImages.push(v.variantImage);
+
+      enrichedVariants.push({
+        color, size,
+        stock: v.inventories?.[0]?.totalInventory ?? (v as any).stock ?? 999,
+        variantImage: v.variantImage || '',
+        image: v.variantImage || '',
+        price: v.variantSellPrice || product.price,
+        vid: v.vid || '',
+        variantKey: v.variantKey || '',
+      });
+    }
+
+    const colors = Array.from(colorSet).filter(Boolean);
+    const sizes  = Array.from(sizeSet).filter(Boolean);
+    const mergedImages = [...new Set([...variantImages, ...(product.images || [])])];
+
+    return {
+      ...product,
+      colors:   colors.length   > 0 ? colors   : product.colors,
+      sizes:    sizes.length    > 0 ? sizes     : product.sizes,
+      variants: enrichedVariants.length > 0 ? enrichedVariants : product.variants,
+      images:   mergedImages,
+    };
+  }
+
+  private readonly CJ_IGNORE_PARAMS = new Set([
+    'minPrice', 'maxPrice', 'minRating', 'sort', 'colors', 'sizes',
+    'q', 'collectionType', 'gender', 'subcategoryName',
+  ]);
+
+  private filterCjParams(query: Record<string, string | undefined>): Record<string, string> {
+    const result: Record<string, string> = {};
+    for (const [key, value] of Object.entries(query)) {
+      if (value && !this.CJ_IGNORE_PARAMS.has(key)) result[key] = value;
+    }
+    return result;
+  }
+
+  private buildSearch(query: Record<string, string | undefined>) {
+    const cjParams = this.filterCjParams(query);
+    const search   = new URLSearchParams(cjParams).toString();
+    return search ? `?${search}` : '';
+  }
+
   private parseVariantKey(variantKey: string): { color: string; size: string } {
     if (!variantKey) return { color: '', size: '' };
-
     const parts = variantKey.split('-');
     const sizePattern = /^(xs|s|m|l|xl|xxl|xxxl|\d{2,3})$/i;
-
     if (parts.length >= 2 && sizePattern.test(parts[parts.length - 1])) {
       const size = parts.pop()!;
       return { color: parts.join('-'), size: size.toUpperCase() };
     }
-
-    if (parts.length === 2) {
-      return { color: parts[0], size: parts[1].toUpperCase() };
-    }
-
+    if (parts.length === 2) return { color: parts[0], size: parts[1].toUpperCase() };
     return { color: variantKey, size: '' };
   }
 
   private delay(ms: number) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 }

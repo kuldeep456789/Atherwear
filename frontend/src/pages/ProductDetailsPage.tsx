@@ -10,7 +10,7 @@ import toast from 'react-hot-toast';
 import Loader from '../components/Loader';
 import WishlistLoginPopup from '../components/WishlistLoginPopup';
 import { getColorHex } from '../utils/colorMap';
-import { getProductImages, getProductId } from '../lib/product';
+import { getProductId } from '../lib/product';
 import { formatINR } from '../lib/currency';
 import DOMPurify from 'dompurify';
 
@@ -75,7 +75,7 @@ const ProductDetailsPage = () => {
         name: product.name,
         price: product.price,
         discountPrice: product.discountPrice,
-        image: getProductImages(product)[0] || '',
+        image: product?.images?.[0] || '',
       })
     );
     if (!isWishlisted) {
@@ -156,7 +156,7 @@ const ProductDetailsPage = () => {
         _id: productId,
         name: product.name,
         price: product.discountPrice || product.price,
-        image: getProductImages(product)[0] || '',
+        image: product?.images?.[0] || '',
         qty: 1,
         variant: { color: selectedColor, size: selectedSize },
       };
@@ -169,7 +169,7 @@ const ProductDetailsPage = () => {
         _id: productId,
         name: product.name,
         price: product.discountPrice || product.price,
-        image: getProductImages(product)[0] || '',
+        image: product?.images?.[0] || '',
         qty: 1,
         variant: { color: selectedColor, size: selectedSize },
       })
@@ -190,7 +190,7 @@ const ProductDetailsPage = () => {
         _id: productId,
         name: product.name,
         price: product.discountPrice || product.price,
-        image: getProductImages(product)[0] || '',
+        image: product?.images?.[0] || '',
         qty: 1,
         variant: { color: selectedColor, size: selectedSize },
       })
@@ -198,7 +198,7 @@ const ProductDetailsPage = () => {
     navigate('/cart');
   };
 
-  const baseImages = getProductImages(product);
+  const baseImages = product?.images || [];
 
   const colorVariantImages = selectedColor && product.variants
     ? product.variants
@@ -869,7 +869,7 @@ const ProductDetailsPage = () => {
             name: product.name,
             price: product.price,
             discountPrice: product.discountPrice,
-            image: getProductImages(product)[0] || '',
+            image: product?.images?.[0] || '',
           }}
           onClose={() => setShowWishlistPopup(false)}
         />

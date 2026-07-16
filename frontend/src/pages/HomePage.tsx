@@ -6,7 +6,8 @@ import type { RootState } from '../store/store';
 
 import { useGetProductsQuery } from '../store/slices/productApiSlice';
 import ProductCard from '../components/product/ProductCard';
-
+import CategorySection from '../components/product/CategorySection';
+import { MEN_CATEGORIES, WOMEN_CATEGORIES } from '../constants/products';
 
 const HomePage = () => {
   const location = useLocation();
@@ -23,22 +24,52 @@ const HomePage = () => {
     }
   }, [location.state]);
 
-  // Dynamic section queries
+  /**
+   * Two warehouse fetches: one for men, one for women.
+   * RTK Query caches both for 10 minutes. CollectionPage, Navbar search,
+   * and any other component that calls useGetProductsQuery with the same
+   * args will reuse the same cached response — no extra network requests.
+   */
   const { data: menData } = useGetProductsQuery({
-    collectionType: 'Men',
+    gender: 'men',
     pageNum: 1,
-    pageSize: 80,
+    pageSize: 200,
   });
 
   const { data: womenData } = useGetProductsQuery({
-    collectionType: 'Women',
+    gender: 'women',
     pageNum: 1,
-    pageSize: 80,
+    pageSize: 200,
   });
 
-  const menProducts = Array.isArray(menData?.products) ? menData.products : [];
+  const menProducts   = Array.isArray(menData?.products)   ? menData.products   : [];
   const womenProducts = Array.isArray(womenData?.products) ? womenData.products : [];
 
+  /**
+   * Group products by _category locally — zero extra API calls.
+   * Each CategorySection receives a pre-sliced array.
+   */
+  const menByCategory = useMemo(() => {
+    const map = new Map<string, any[]>();
+    for (const p of menProducts) {
+      const cat = String(p._category ?? p.subcategoryName ?? 'Other');
+      if (!map.has(cat)) map.set(cat, []);
+      map.get(cat)!.push(p);
+    }
+    return map;
+  }, [menProducts]);
+
+  const womenByCategory = useMemo(() => {
+    const map = new Map<string, any[]>();
+    for (const p of womenProducts) {
+      const cat = String(p._category ?? p.subcategoryName ?? 'Other');
+      if (!map.has(cat)) map.set(cat, []);
+      map.get(cat)!.push(p);
+    }
+    return map;
+  }, [womenProducts]);
+
+  // Featured carousel — mix of first 5 men + 5 women products
   const carouselProducts = useMemo(() => {
     const mixed: any[] = [];
     const max = Math.min(menProducts.length, womenProducts.length, 5);
@@ -79,9 +110,7 @@ const HomePage = () => {
   }, [heroImages.length, userInfo]);
 
   useEffect(() => {
-    if (showLoginPopup) {
-      setCountdown(10);
-    }
+    if (showLoginPopup) setCountdown(10);
   }, [showLoginPopup]);
 
   useEffect(() => {
@@ -139,9 +168,7 @@ const HomePage = () => {
         </div>
       </section>
 
-
-
-      {/* ───────── FEATURED COLLECTION ───────── */}
+      {/* ───────── FEATURED COLLECTION carousel ───────── */}
       {carouselProducts.length > 0 && (
         <section className="border-b-2 border-black dark:border-white">
           <div className="max-w-[1920px] mx-auto px-6 sm:px-10 lg:px-16 py-12 sm:py-16 lg:py-20">
@@ -149,7 +176,6 @@ const HomePage = () => {
               <div>
                 <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-none">COLLECTION</h2>
               </div>
-
             </div>
             <div className="relative" ref={carouselRef}>
               <div className="overflow-hidden">
@@ -158,10 +184,7 @@ const HomePage = () => {
                   style={{ transform: `translateX(-${carouselIdx * (carouselRef.current?.offsetWidth ?? 0)}px)` }}
                 >
                   {carouselProducts.map((product: any) => (
-                    <div
-                      key={product.pid || product._id}
-                      className="flex-shrink-0 w-1/2 md:w-1/3 lg:w-1/4"
-                    >
+                    <div key={product.pid || product._id} className="flex-shrink-0 w-1/2 md:w-1/3 lg:w-1/4">
                       <div className="px-3">
                         <ProductCard product={product} />
                       </div>
@@ -182,13 +205,9 @@ const HomePage = () => {
                   <button
                     onClick={() => setCarouselIdx((p) => {
                       if (!carouselRef.current) return p;
-                      const maxIdx = Math.ceil(carouselProducts.length / 4) - 1;
-                      return Math.min(p + 1, maxIdx);
+                      return Math.min(p + 1, Math.ceil(carouselProducts.length / 4) - 1);
                     })}
-                    disabled={
-                      !carouselRef.current ||
-                      carouselIdx >= Math.ceil(carouselProducts.length / 4) - 1
-                    }
+                    disabled={!carouselRef.current || carouselIdx >= Math.ceil(carouselProducts.length / 4) - 1}
                     className="w-12 h-12 rounded-full bg-white shadow-md hover:shadow-lg transition-all flex items-center justify-center disabled:opacity-25 disabled:cursor-not-allowed cursor-pointer"
                     aria-label="Next products"
                   >
@@ -200,7 +219,56 @@ const HomePage = () => {
           </div>
         </section>
       )}
+
+      {/* ───────── MEN CATEGORY SECTIONS ───────── */}
+      {menProducts.length > 0 && (
+        <section id="men-section">
+          <div className="px-6 sm:px-10 py-10 border-b-2 border-black dark:border-white">
+            <h2 className="text-5xl sm:text-7xl font-black tracking-tighter uppercase">Men's Collection</h2>
+          </div>
+          {MEN_CATEGORIES.map((cat) => {
+            const catProducts = menByCategory.get(cat) ?? [];
+            return catProducts.length > 0 ? (
+              <CategorySection
+                key={`men-${cat}`}
+                gender="men"
+                categoryName={cat}
+                products={catProducts}
+              />
+            ) : null;
+          })}
+        </section>
+      )}
+
+      {/* ───────── WOMEN CATEGORY SECTIONS ───────── */}
+      {womenProducts.length > 0 && (
+        <section id="women-section">
+          <div className="px-6 sm:px-10 py-10 border-b-2 border-black dark:border-white">
+            <h2 className="text-5xl sm:text-7xl font-black tracking-tighter uppercase">Women's Collection</h2>
+          </div>
+          {WOMEN_CATEGORIES.map((cat) => {
+            const catProducts = womenByCategory.get(cat) ?? [];
+            return catProducts.length > 0 ? (
+              <CategorySection
+                key={`women-${cat}`}
+                gender="women"
+                categoryName={cat}
+                products={catProducts}
+              />
+            ) : null;
+          })}
+        </section>
+      )}
+
+      {/* Empty state — warehouse not yet populated */}
+      {menProducts.length === 0 && womenProducts.length === 0 && (
+        <section className="py-24 text-center border-b-2 border-black dark:border-white">
+          <p className="text-2xl font-black tracking-widest text-zinc-400">SYNCING PRODUCTS...</p>
+          <p className="mt-3 text-sm text-zinc-500 font-normal normal-case">Products will appear once the hourly sync completes.</p>
+        </section>
+      )}
     </div>
   );
 };
+
 export default HomePage;

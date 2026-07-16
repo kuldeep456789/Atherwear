@@ -10,14 +10,56 @@ export class CjController {
     return this.cjService.getAccessToken();
   }
 
-  @Get('products')
-  getProducts() {
-    return this.cjService.getProducts();
-  }
-
   @Get('categories')
   getCategories() {
     return this.cjService.getCategories();
+  }
+
+  @Get('product-count')
+  async productCount() {
+    const count = await this.cjService.getProductCount();
+    return { count };
+  }
+
+  /**
+   * Returns the latest sync metrics: last sync time, product counts,
+   * status, errors, and API calls used.
+   * This powers the admin dashboard sync health widget.
+   */
+  @Get('sync-status')
+  async syncStatus() {
+    return this.cjService.getSyncMetrics();
+  }
+
+  /**
+   * Trigger a manual sync from the admin dashboard.
+   * Runs asynchronously in the background — returns immediately.
+   */
+  @Post('sync-now')
+  triggerSync() {
+    this.cjService.runCatalogSync().catch(err => {
+      console.error('[CJ] Manual sync failed:', err);
+    });
+    return { message: 'Catalog sync started in the background. Check /cj/sync-status for progress.' };
+  }
+
+  /**
+   * Backwards-compatible crawl endpoint.
+   * @deprecated Use POST /cj/sync-now instead.
+   */
+  @Post('crawl-keywords')
+  crawlKeywords() {
+    this.cjService.runCatalogSync().catch(err => {
+      console.error('[CJ] Background crawl failed:', err);
+    });
+    return { message: 'Catalog sync started. Check /cj/sync-status for live progress.' };
+  }
+
+  // ── Legacy endpoints kept for admin panel compatibility ──────────────────
+
+  @Get('products')
+  getProducts() {
+    return this.cjService.getProducts();
   }
 
   @Get('products/by-category')
@@ -28,24 +70,9 @@ export class CjController {
     return this.cjService.getProductsByCategory(categoryId, pid);
   }
 
-  @Get('product-count')
-  async productCount() {
-    const count = await this.cjService.getProductCount();
-    return { count };
-  }
-
   @Post('sync-all')
   async syncAll(@Query('categoryId') categoryId?: string) {
     const products = await this.cjService.getAllProducts(categoryId);
-    return { total: products.length, products };
-  }
-
-  @Post('crawl-keywords')
-  crawlKeywords() {
-    // Run asynchronously in the background so the request doesn't hang
-    this.cjService.crawlAllByKeywords().catch(err => {
-      console.error('[CJ] Background crawl failed:', err);
-    });
-    return { message: 'Keyword crawl started in the background. Check backend terminal for progress and Navbar for the live count.' };
+    return { total: products.length };
   }
 }

@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { RootState } from '../../store/store';
 import { logout } from '../../store/slices/authSlice';
-import { useGetProductsQuery } from '../../store/slices/productApiSlice';
+import { useGetProductsQuery, productApiSlice } from '../../store/slices/productApiSlice';
 import { useGetCategoriesQuery } from '../../store/slices/categoryApiSlice';
 import { getProductId } from '../../lib/product';
 import { formatINR } from '../../lib/currency';
@@ -43,6 +43,7 @@ const Navbar = () => {
   const wishlistCount = wishlistItems.length;
   const userInfo = useSelector((state: RootState) => state.auth.userInfo);
   const { data: categoriesData = [] } = useGetCategoriesQuery(undefined);
+  const prefetchProducts = productApiSlice.usePrefetch('getProducts');
 
   const userDisplayName =
     userInfo?.firstName?.trim() ||
@@ -235,22 +236,26 @@ const Navbar = () => {
 
           {/* Center - Nav Links (Desktop) */}
           <nav className="hidden lg:flex items-center gap-[36px] ml-14">
-            {navItems.map((item) => (
-              <Link
-                key={item.to}
-                to={item.to}
-                className={`relative text-[17px] font-bold tracking-wider transition-colors duration-200 group ${isActive(item.to)
-                    ? 'text-black dark:text-white'
-                    : 'text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white'
-                  }`}
-              >
-                {item.label}
-                <span className={`absolute -bottom-[6px] left-0 h-[3px] rounded-full transition-all duration-300 ease-out ${isActive(item.to)
-                    ? 'w-full bg-black dark:bg-white'
-                    : 'w-0 bg-black dark:bg-white group-hover:w-full'
-                  }`} />
-              </Link>
-            ))}
+            {navItems.map((item) => {
+              const gender = item.label.toLowerCase() as 'men' | 'women';
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  onMouseEnter={() => prefetchProducts({ gender, pageNum: 1, pageSize: 200 }, { ifOlderThan: 300 })}
+                  className={`relative text-[17px] font-bold tracking-wider transition-colors duration-200 group ${isActive(item.to)
+                      ? 'text-black dark:text-white'
+                      : 'text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white'
+                    }`}
+                >
+                  {item.label}
+                  <span className={`absolute -bottom-[6px] left-0 h-[3px] rounded-full transition-all duration-300 ease-out ${isActive(item.to)
+                      ? 'w-full bg-black dark:bg-white'
+                      : 'w-0 bg-black dark:bg-white group-hover:w-full'
+                    }`} />
+                </Link>
+              );
+            })}
           </nav>
 
           {/* Right - Actions */}
