@@ -53,12 +53,13 @@ export default function AdminOrders() {
   };
 
   const filtered = orders.filter((o) => {
-    const matchTab = activeTab === 'All' || o.status.toLowerCase() === activeTab.toLowerCase();
+    const status = o.status || 'Pending'; // Default to Pending if missing
+    const matchTab = activeTab === 'All' || status.toLowerCase() === activeTab.toLowerCase();
     const customerName = o.userId
       ? (o.userId.name || `${o.userId.firstName ?? ''} ${o.userId.lastName ?? ''}`.trim() || (o.userId.email ?? ''))
       : '';
     const matchSearch = !search ||
-      o._id.toLowerCase().includes(search.toLowerCase()) ||
+      (o._id || '').toLowerCase().includes(search.toLowerCase()) ||
       customerName.toLowerCase().includes(search.toLowerCase());
     return matchTab && matchSearch;
   });

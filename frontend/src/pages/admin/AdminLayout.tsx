@@ -86,17 +86,17 @@ export default function AdminLayout() {
         </nav>
 
         <div className="p-4 border-t border-white/10">
-          <button className="w-full py-2.5 mb-4 bg-[#0066ff] text-white font-medium text-sm rounded-lg hover:opacity-90 transition-opacity cursor-pointer">
+          <button className="w-full py-2.5 mb-3 bg-[#0066ff] text-white font-medium text-sm rounded-lg hover:bg-[#0052cc] focus:outline-none focus:ring-2 focus:ring-[#0066ff]/50 transition-all cursor-pointer shadow-sm">
             Support
           </button>
           <div className="space-y-1">
-            <button className="w-full flex items-center px-4 py-2.5 gap-3 font-medium hover:text-white transition-colors cursor-pointer">
+            <button className="w-full flex items-center px-3 py-2.5 gap-3 font-medium text-[#cbdbf5] hover:text-white hover:bg-white/5 rounded-lg focus:outline-none focus:ring-2 focus:ring-white/20 transition-all cursor-pointer">
               <Bell className="h-5 w-5" strokeWidth={1.5} />
               <span className="text-sm">Notifications</span>
             </button>
             <button
               onClick={handleLogout}
-              className="w-full flex items-center px-4 py-2.5 gap-3 font-medium hover:text-white transition-colors cursor-pointer"
+              className="w-full flex items-center px-3 py-2.5 gap-3 font-medium text-[#cbdbf5] hover:text-red-400 hover:bg-red-400/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400/20 transition-all cursor-pointer"
             >
               <LogOut className="h-5 w-5" strokeWidth={1.5} />
               <span className="text-sm">Logout</span>

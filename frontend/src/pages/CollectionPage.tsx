@@ -51,7 +51,7 @@ const matchesCollection = (name: string, gender: string, group = '') => {
 // Client-side gender filter — strict match on collectionType or gender field
 const matchesProductGender = (product: any, gender: string): boolean => {
   if (!gender || gender === 'all') return true;
-  const ct = String(product?.collectionType ?? product?.gender ?? '').toLowerCase().trim();
+  const ct = String(product?._gender ?? product?.collectionType ?? product?.gender ?? '').toLowerCase().trim();
   return ct === gender.toLowerCase();
 };
 

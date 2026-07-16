@@ -16,7 +16,7 @@ const PRODUCT_COUNT_TTL = 60 * 60 * 24;
 const WAREHOUSE_KEY_MEN = 'products:warehouse:men';
 const WAREHOUSE_KEY_WOMEN = 'products:warehouse:women';
 const WAREHOUSE_KEY_ALL = 'products:warehouse:all';
-const WAREHOUSE_TTL = 60 * 60; // 1 hour (matches your friend's setup)
+const WAREHOUSE_TTL = 90 * 60; // 90 minutes (to overlap with 60-minute cron job)
 
 const DEFAULT_SIZES = ['S', 'M', 'L', 'XL'];
 const DEFAULT_COLORS = ['Black'];
@@ -301,21 +301,33 @@ export class CjService {
               _collectionType: gender,
             });
           }
-
           if (products.length < 100 || pageNum >= 50) break;
           pageNum++;
+          
+          if (allProducts.length >= 10000) {
+            console.log(`[CJ] Hit maximum limit of 10000 products.`);
+            break;
+          }
         } catch (e: any) {
           console.warn(`[CJ] Keyword search failed for "${keyword}" page ${pageNum}:`, e.message);
           break;
         }
       }
 
+      if (allProducts.length >= 10000) {
+        break;
+      }
     }
 
     console.log(`[CJ] Keyword crawl complete. Total unique products: ${allProducts.length}`);
     await this.saveProductCount(allProducts.length);
 
-    // ── Write to product warehouse (split by gender, TTL = 1 hour) ──────────
+    if (allProducts.length < 50) {
+      console.warn(`[CJ] Crawl failed or returned too few products (${allProducts.length}). Keeping existing Redis cache to serve users.`);
+      return allProducts;
+    }
+
+    // ── Write to product warehouse (split by gender, TTL = 90 minutes) ──────────
     const menProducts = allProducts.filter(
       p => String(p._gender ?? p.collectionType ?? p.gender ?? '').toLowerCase() === 'men',
     );
@@ -345,6 +357,7 @@ export class CjService {
     pageNum = 1,
     pageSize = 80,
     categoryId?: string,
+    subcategoryName?: string,
   ): Promise<{ products: any[]; total: number; warehouseHit: true } | null> {
     const key =
       gender === 'men' ? WAREHOUSE_KEY_MEN
@@ -359,8 +372,15 @@ export class CjService {
     let pool = warehouse;
 
     if (categoryId) {
-      pool = warehouse.filter(
+      pool = pool.filter(
         p => String(p.categoryId ?? p.category ?? '') === categoryId,
+      );
+    }
+    
+    if (subcategoryName) {
+      const normalizedSub = subcategoryName.trim().toLowerCase();
+      pool = pool.filter(
+        p => String(p.subcategoryName ?? p._category ?? p.category ?? '').trim().toLowerCase() === normalizedSub,
       );
     }
 

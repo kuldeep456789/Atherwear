@@ -287,7 +287,7 @@ export class ProductsService {
         const pageNum = Number(query.pageNum || query.page || 1);
         const pageSize = Number(query.pageSize || query.limit || 80);
         const warehouseResult = await this.cjService.getWarehouseProducts(
-          gender || 'all', pageNum, pageSize,
+          gender || 'all', pageNum, pageSize, query.categoryId, query.subcategoryName,
         );
         if (warehouseResult && warehouseResult.products.length > 0) {
           console.log(`[Products] Warehouse HIT gender=${gender} page=${pageNum} -> ${warehouseResult.products.length} products (total pool: ${warehouseResult.total})`);
