@@ -1,0 +1,30 @@
+import { Controller, Get, Param, Query } from '@nestjs/common';
+import { ProductsService } from './products.service';
+
+@Controller('collections')
+export class CollectionsController {
+  constructor(private readonly productsService: ProductsService) {}
+
+  @Get('men')
+  async getMenCollection(@Query() query: any) {
+    return this.productsService.getProducts({ ...query, gender: 'men' });
+  }
+
+  @Get('women')
+  async getWomenCollection(@Query() query: any) {
+    return this.productsService.getProducts({ ...query, gender: 'women' });
+  }
+
+  @Get(':gender/:categorySlug')
+  async getCategoryCollection(
+    @Param('gender') gender: string,
+    @Param('categorySlug') categorySlug: string,
+    @Query() query: any,
+  ) {
+    return this.productsService.getProducts({
+      ...query,
+      gender,
+      subcategoryName: categorySlug.replace(/-/g, ' '),
+    });
+  }
+}

@@ -7,6 +7,7 @@ import { RedisModule } from '../redis/redis.module';
 import { UsersModule } from '../users/users.module';
 
 import { ProductsController } from './products.controller';
+import { CollectionsController } from './collections.controller';
 import { ProductsService } from './products.service';
 
 import { Review, ReviewSchema } from './schemas/review.schema';
@@ -32,7 +33,7 @@ import { Review, ReviewSchema } from './schemas/review.schema';
     ]),
   ],
 
-  controllers: [ProductsController],
+  controllers: [ProductsController, CollectionsController],
 
   providers: [ProductsService],
 

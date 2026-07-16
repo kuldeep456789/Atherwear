@@ -7,7 +7,6 @@ import { CreateReviewDto } from './dto/create-review.dto';
 import { Review } from './schemas/review.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { SEARCH_KEYWORDS, BROAD_CATEGORY_KEYWORDS } from '../cj/keywords';
 
 type ProductQuery = {
   categoryId?: string;

@@ -43,6 +43,29 @@ export const productApiSlice = apiSlice.injectEndpoints({
     }),
 
     /**
+     * Dedicated endpoints for Men's and Women's collections as per Master Prompt
+     */
+    getMenCollection: builder.query({
+      query: (params: any = {}) => ({
+        url: '/api/collections/men',
+        params,
+      }),
+      transformResponse: transformListResponse,
+      providesTags: ['Product'],
+      keepUnusedDataFor: 600,
+    }),
+
+    getWomenCollection: builder.query({
+      query: (params: any = {}) => ({
+        url: '/api/collections/women',
+        params,
+      }),
+      transformResponse: transformListResponse,
+      providesTags: ['Product'],
+      keepUnusedDataFor: 600,
+    }),
+
+    /**
      * Single product detail (includes variant data from CJ).
      */
     getProductDetails: builder.query({
@@ -122,4 +145,6 @@ export const {
   useCreateReviewMutation,
   useGetProductCountQuery,
   useGetSyncStatusQuery,
+  useGetMenCollectionQuery,
+  useGetWomenCollectionQuery,
 } = productApiSlice;

@@ -8,25 +8,25 @@ import {
 import axios, { AxiosRequestConfig } from 'axios';
 import { RedisService } from '../redis/redis.service';
 import { isProductAllowed, isCategoryAllowed, isHardBlocked, BLOCKED } from './category.mapper';
-import { CRAWL_CATALOG, categoryToKey } from './keywords';
+import { isAllowedMenCollection, isAllowedWomenCollection, MEN_COLLECTIONS, WOMEN_COLLECTIONS } from './collections';
 
 // ─── Redis key constants ────────────────────────────────────────────────────
 
 /** Stable "current" warehouse keys — what users read from */
-const WAREHOUSE_KEY_MEN   = 'products:warehouse:men';
-const WAREHOUSE_KEY_WOMEN = 'products:warehouse:women';
-const WAREHOUSE_KEY_ALL   = 'products:warehouse:all';
+const WAREHOUSE_KEY_MEN   = 'products:men';
+const WAREHOUSE_KEY_WOMEN = 'products:women';
+const WAREHOUSE_KEY_ALL   = 'products:all';
 
 /** "Next" buffer keys — written during sync, swapped atomically on success */
-const WAREHOUSE_NEXT_MEN   = 'products:warehouse:next:men';
-const WAREHOUSE_NEXT_WOMEN = 'products:warehouse:next:women';
-const WAREHOUSE_NEXT_ALL   = 'products:warehouse:next:all';
+const WAREHOUSE_NEXT_MEN   = 'products:next:men';
+const WAREHOUSE_NEXT_WOMEN = 'products:next:women';
+const WAREHOUSE_NEXT_ALL   = 'products:next:all';
 
 /** Per-category granular keys e.g. products:warehouse:men:t-shirts */
 const categoryKey = (gender: string, cat: string) =>
-  `products:warehouse:${gender.toLowerCase()}:${categoryToKey(cat)}`;
+  `products:${gender.toLowerCase()}:${cat.toLowerCase().replace(/[\s_'&-]+/g, '')}`;
 const categoryNextKey = (gender: string, cat: string) =>
-  `products:warehouse:next:${gender.toLowerCase()}:${categoryToKey(cat)}`;
+  `products:next:${gender.toLowerCase()}:${cat.toLowerCase().replace(/[\s_'&-]+/g, '')}`;
 
 /** Sync metrics key */
 const SYNC_METRICS_KEY = 'cj:sync:metrics';
@@ -106,7 +106,7 @@ export class CjService {
   // ─── Public: categories ───────────────────────────────────────────────────
 
   async getCategories() {
-    const cacheKey = 'cj:categories';
+    const cacheKey = 'categories';
     const cached = await this.redisService.getJson<any>(cacheKey);
     if (cached) return cached;
 
@@ -126,7 +126,7 @@ export class CjService {
   async getProductById(pid: string) {
     if (!pid) throw new BadRequestException('product id is required');
 
-    const cacheKey = `cj:product:id:${pid}`;
+    const cacheKey = `product:${pid}`;
     const cached = await this.redisService.getJson<any>(cacheKey);
     if (cached) return cached;
 
@@ -385,7 +385,7 @@ export class CjService {
     const categoryGroups = this.groupByCategory(allProducts);
     const catWriteOps: Promise<void>[] = [];
     for (const [catKey, catProducts] of Object.entries(categoryGroups)) {
-      catWriteOps.push(this.redisService.setJson(`products:warehouse:next:${catKey}`, catProducts, WAREHOUSE_TTL));
+      catWriteOps.push(this.redisService.setJson(`products:next:${catKey}`, catProducts, WAREHOUSE_TTL));
     }
     await Promise.all(catWriteOps);
 
@@ -399,7 +399,7 @@ export class CjService {
     // Swap per-category keys
     const catSwapOps: Promise<void>[] = [];
     for (const catKey of Object.keys(categoryGroups)) {
-      catSwapOps.push(this.redisService.rename(`products:warehouse:next:${catKey}`, `products:warehouse:${catKey}`));
+      catSwapOps.push(this.redisService.rename(`products:next:${catKey}`, `products:${catKey}`));
     }
     await Promise.all(catSwapOps);
 
@@ -459,22 +459,54 @@ export class CjService {
     const allProducts: any[] = [];
     const seenPids = new Set<string>();
 
-    this.logger.log(`[CJ] Starting catalog sync with ${CRAWL_CATALOG.length} categories...`);
+    this.logger.log(`[CJ] Fetching categories to discover category IDs...`);
+    
+    // 1. Fetch categories
+    const categoriesResponse = await this.getCategories();
+    const categories: any[] = categoriesResponse?.categories ?? [];
+    
+    // 2. Map categories to Men/Women collections
+    const targetCategories: { categoryId: string; gender: string; categoryName: string }[] = [];
+    
+    for (const cat of categories) {
+      const name = cat.name || '';
+      if (!name) continue;
+      
+      // Determine if it matches Men or Women strict rules
+      if (isAllowedMenCollection(name)) {
+        // Find the canonical name it matched
+        const canonical = MEN_COLLECTIONS.find(allowed => name.toLowerCase().replace(/[\s_'&-]+/g, '').includes(allowed.replace(/-/g, ''))) || name;
+        targetCategories.push({ categoryId: cat._id || cat.categoryId, gender: 'men', categoryName: canonical });
+      } else if (isAllowedWomenCollection(name)) {
+        const canonical = WOMEN_COLLECTIONS.find(allowed => name.toLowerCase().replace(/[\s_'&-]+/g, '').includes(allowed.replace(/-/g, ''))) || name;
+        targetCategories.push({ categoryId: cat._id || cat.categoryId, gender: 'women', categoryName: canonical });
+      }
+    }
 
-    for (const entry of CRAWL_CATALOG) {
-      const { keyword, gender, category } = entry;
+    // De-duplicate category IDs just in case
+    const uniqueTargets = Array.from(new Map(targetCategories.map(item => [item.categoryId, item])).values());
+
+    this.logger.log(`[CJ] Discovered ${uniqueTargets.length} target categories for sync.`);
+
+    // 3. Fetch products for each targeted category
+    for (const entry of uniqueTargets) {
+      const { categoryId, gender, categoryName } = entry;
       let pageNum = 1;
       let consecutiveEmpty = 0;
 
       while (true) {
-        const response = await this.searchProducts(keyword, pageNum, 100, {
-          _gender: gender,
-          _category: category,
-          _collectionType: gender,
-        });
-        this.apiCallsThisSync++;
+        const url = `/v1/product/list?categoryId=${categoryId}&pageNum=${pageNum}&pageSize=100`;
+        let response;
+        try {
+          response = await this.scheduleRequest(url, { method: 'GET', headers: await this.authHeaders() });
+          this.apiCallsThisSync++;
+        } catch (err: any) {
+          this.logger.warn(`[CJ] Failed to fetch products for category ${categoryId}: ${err?.message}`);
+          break; // Skip this category if it fails completely
+        }
 
-        const products: any[] = response?.products ?? [];
+        const normalized = this.normalizeProductResponse(response, { categoryId });
+        const products: any[] = normalized?.products ?? [];
 
         if (products.length === 0) {
           consecutiveEmpty++;
@@ -494,16 +526,17 @@ export class CjService {
           allProducts.push({
             ...product,
             _gender: gender,
-            _category: category,
+            _category: categoryName,
             _collectionType: gender,
           });
         }
 
+        // Limit to 10 pages per category to avoid endless sync loops
         if (products.length < 100 || pageNum >= 10) break;
         pageNum++;
       }
 
-      this.logger.log(`[CJ] "${keyword}" → ${allProducts.length} products so far`);
+      this.logger.log(`[CJ] Category ID ${categoryId} ("${categoryName}") → ${allProducts.length} products total so far`);
     }
 
     this.logger.log(`[CJ] Catalog fetch complete. Unique products: ${allProducts.length}`);
@@ -518,7 +551,7 @@ export class CjService {
     for (const p of products) {
       const gender  = String(p._gender ?? '').toLowerCase();
       const catName = String(p._category ?? p.subcategoryName ?? p.category ?? 'other');
-      const key     = `${gender}:${categoryToKey(catName)}`;
+      const key     = `${gender}:${catName.toLowerCase().replace(/[\s_'&-]+/g, '')}`;
 
       if (!groups[key]) groups[key] = [];
       groups[key].push(p);
@@ -600,7 +633,11 @@ export class CjService {
         ...init,
         headers: { 'Content-Type': 'application/json', ...init.headers },
       });
-      return response.data;
+      const data = response.data;
+      if (data && data.result === false) {
+        throw new InternalServerErrorException(data.message || 'CJ Dropshipping API returned result: false');
+      }
+      return data;
     } catch (error: any) {
       const status = error?.response?.status;
 
