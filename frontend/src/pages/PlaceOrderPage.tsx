@@ -28,7 +28,7 @@ const PlaceOrderPage = () => {
   const dispatch = useDispatch();
   const cart = useSelector((state: RootState) => state.cart);
   const userInfo = useSelector((state: RootState) => state.auth.userInfo);
-  const [createOrder, { isLoading, error }] = useCreateOrderMutation();
+  const [createOrder, { isLoading }] = useCreateOrderMutation();
   const [createRazorpayOrder, { isLoading: isRazorpayLoading }] = useCreateRazorpayOrderMutation();
   const [verifyRazorpayPayment, { isLoading: isPaymentLoading }] = useVerifyRazorpayPaymentMutation();
   const [localError, setLocalError] = useState('');

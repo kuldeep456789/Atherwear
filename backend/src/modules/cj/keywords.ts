@@ -176,16 +176,13 @@ function generateWomenKeywords(): SearchKeyword[] {
         add(`women ${season} ${product}`, cat);
       }
     }
-
     // Occasion combos
     for (const occ of OCCASIONS.slice(0, 4)) {
       add(`women ${occ} ${product}`, cat);
     }
   }
-
   return result;
 }
-
 function generateUnisexKeywords(): SearchKeyword[] {
   const result: SearchKeyword[] = [];
   const seen = new Set<string>();
@@ -197,7 +194,6 @@ function generateUnisexKeywords(): SearchKeyword[] {
       result.push({ keyword: k, gender, category });
     }
   };
-
   const unisexItems = [
     { kw: 'unisex t shirt', cat: 'T-Shirts & Tops' },
     { kw: 'unisex hoodie', cat: 'Hoodies' },

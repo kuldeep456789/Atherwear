@@ -299,7 +299,12 @@ export class ProductsService {
         }
         // Warehouse empty — fall through to live CJ
         console.log(`[Products] Warehouse MISS gender=${gender}, falling through to live CJ`);
-        cjProducts = await this.cjService.getProducts(query);
+        if (query.subcategoryName) {
+          const searchKeyword = gender && gender !== 'all' ? `${gender} ${query.subcategoryName}` : query.subcategoryName;
+          cjProducts = await this.cjService.searchProducts(searchKeyword, pageNum, pageSize);
+        } else {
+          cjProducts = await this.cjService.getProducts(query);
+        }
       }
     } catch (err: any) {
       console.error('[Products] CJ API failed:', err?.message ?? err);

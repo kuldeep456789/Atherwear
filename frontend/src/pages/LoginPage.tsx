@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Lock, Mail, Phone, Smartphone, ArrowLeft, Check } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, Phone, Smartphone, ArrowLeft } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '../store/store';
 import { setCredentials } from '../store/slices/authSlice';
@@ -55,7 +55,13 @@ const LoginPage = () => {
   const isLoading = loginLoading || registerLoading || otpLoading;
 
   useEffect(() => {
-    if (userInfo) navigate(redirect);
+    if (userInfo) {
+      if (userInfo.role === 'admin' && redirect === '/') {
+        navigate('/admin');
+      } else {
+        navigate(redirect);
+      }
+    }
   }, [navigate, redirect, userInfo]);
 
   useEffect(() => {
@@ -115,7 +121,6 @@ const LoginPage = () => {
       const payload = await verifyOtp({ phone, code }).unwrap();
       dispatch(setCredentials({ ...payload.user, accessToken: payload.accessToken }));
       toast.success('Login successful');
-      navigate(redirect);
     } catch (err: any) {
       setErrorMessage(err?.data?.message || 'Invalid or expired OTP');
       toast.error(err?.data?.message || 'Invalid OTP');
@@ -134,11 +139,37 @@ const LoginPage = () => {
       const payload = await login({ email: loginEmail.trim(), password: loginPassword }).unwrap();
       dispatch(setCredentials({ ...payload.user, accessToken: payload.token || payload.accessToken }));
       toast.success('Login successful');
-      navigate(redirect);
     } catch (err: any) {
       const msg = err?.data?.message || 'Login failed. Please check your credentials.';
       setErrorMessage(msg);
       toast.error(msg);
+    }
+  };
+
+  const handleAdminDemoLogin = async () => {
+    try {
+      setErrorMessage('');
+      const toastId = toast.loading('Setting up Admin Demo...');
+      let userRes;
+      try {
+        userRes = await register({
+          firstName: 'Admin', lastName: 'Demo', email: 'admin@vastra.app', password: 'password123'
+        }).unwrap();
+      } catch {
+        userRes = await login({ email: 'admin@vastra.app', password: 'password123' }).unwrap();
+      }
+      
+      const token = userRes.token || userRes.accessToken;
+      await fetch('/api/admin/seed', { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+      
+      const finalRes = await login({ email: 'admin@vastra.app', password: 'password123' }).unwrap();
+      dispatch(setCredentials({ ...finalRes.user, accessToken: finalRes.token || finalRes.accessToken }));
+      toast.dismiss(toastId);
+      toast.success('Admin login successful!');
+      navigate('/admin');
+    } catch (err: any) {
+      toast.dismiss();
+      toast.error('Admin login failed');
     }
   };
 
@@ -159,7 +190,6 @@ const LoginPage = () => {
       }).unwrap();
       dispatch(setCredentials({ ...payload.user, accessToken: payload.token || payload.accessToken }));
       toast.success('Registration successful');
-      navigate(redirect);
     } catch (err: any) {
       const apiMessage = Array.isArray(err?.data?.message) ? err.data.message.join(', ') : typeof err?.data?.message === 'string' ? err.data.message : typeof err?.error === 'string' ? err.error : '';
       const msg = apiMessage || 'Registration failed. Please try again.';
@@ -316,9 +346,14 @@ const LoginPage = () => {
                       <div className="rounded-xl border border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/30 px-4 py-3 text-sm font-semibold text-red-700 dark:text-red-300">{errorMessage}</div>
                     )}
 
-                    <button type="submit" disabled={isLoading} className="mt-2 w-full rounded-xl bg-[hsl(var(--foreground))] text-[hsl(var(--background))] h-14 text-sm font-semibold tracking-wider transition hover:shadow-md disabled:opacity-60 cursor-pointer">
-                      {isLoading ? 'Signing in...' : 'Login'}
-                    </button>
+                    <div className="flex gap-3">
+                      <button type="submit" disabled={isLoading} className="mt-2 flex-1 rounded-xl bg-[hsl(var(--foreground))] text-[hsl(var(--background))] h-14 text-sm font-semibold tracking-wider transition hover:shadow-md disabled:opacity-60 cursor-pointer">
+                        {isLoading ? 'Signing in...' : 'Login'}
+                      </button>
+                      <button type="button" onClick={handleAdminDemoLogin} disabled={isLoading} className="mt-2 flex-1 rounded-xl bg-[#0050cb] text-white h-14 text-sm font-semibold tracking-wider transition hover:shadow-md disabled:opacity-60 cursor-pointer">
+                        Admin Login
+                      </button>
+                    </div>
                   </form>
                 )}
 

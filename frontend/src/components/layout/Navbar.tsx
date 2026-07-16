@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { ShoppingBag, Heart, UserRound, X, Search, Menu, Package, MapPin, Settings, LogOut, Clock, TrendingUp, Loader2, HelpCircle, Shield } from 'lucide-react';
+import { ShoppingBag, Heart, UserRound, X, Search, Menu, Package, MapPin, Settings, LogOut, Clock, TrendingUp, Loader2, HelpCircle, Shield, Sliders } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { RootState } from '../../store/store';
 import { logout } from '../../store/slices/authSlice';
 import { useGetProductsQuery } from '../../store/slices/productApiSlice';
+import { useGetCategoriesQuery } from '../../store/slices/categoryApiSlice';
 import { getProductId } from '../../lib/product';
 import { formatINR } from '../../lib/currency';
 import MiniCart from './MiniCart';
@@ -41,6 +42,7 @@ const Navbar = () => {
   const wishlistItems = useSelector((state: RootState) => state.wishlist.wishlistItems);
   const wishlistCount = wishlistItems.length;
   const userInfo = useSelector((state: RootState) => state.auth.userInfo);
+  const { data: categoriesData = [] } = useGetCategoriesQuery(undefined);
 
   const userDisplayName =
     userInfo?.firstName?.trim() ||
@@ -156,6 +158,19 @@ const Navbar = () => {
     TRENDING_SEARCHES.forEach((s) => suggestionList.push({ type: 'trending', label: s }));
     navItems.forEach((item) => suggestionList.push({ type: 'category', label: item.label, to: item.to }));
   } else {
+    const qLower = debouncedQuery.toLowerCase();
+    const toSlug = (n: string) => n.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    
+    categoriesData.forEach((cat: any) => {
+      if (cat.name?.toLowerCase().includes(qLower) || cat.group?.toLowerCase().includes(qLower)) {
+        suggestionList.push({ 
+          type: 'category', 
+          label: `${cat.group} > ${cat.name}`, 
+          to: `/collections/${cat.group.toLowerCase()}/${toSlug(cat.name)}` 
+        });
+      }
+    });
+
     products.forEach((p: any) => suggestionList.push({
       type: 'product',
       label: p.title || p.productName || p.name || '',
@@ -345,30 +360,49 @@ const Navbar = () => {
                           </div>
                         )}
                         {/* Results */}
-                        {!isSearchFetching && products.length > 0 && (
+                        {!isSearchFetching && (suggestionList.length > 0) && (
                           <div>
-                            {products.map((p: any, i: number) => (
-                              <Link
-                                key={getProductId(p)}
-                                to={`/product/${getProductId(p)}`}
-                                onClick={() => { setSearchFocused(false); setSearchQuery(''); }}
-                                onMouseEnter={() => setSelectedSuggestionIdx(i)}
-                                className={`flex items-center gap-3 px-4 py-2.5 transition-colors ${selectedSuggestionIdx === i ? 'bg-zinc-100 dark:bg-zinc-800' : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50'}`}
-                              >
-                                <div className="w-10 h-12 shrink-0 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 overflow-hidden rounded">
-                                  {p.images?.[0] && (
-                                    <img src={p.images[0]} alt="" className="w-full h-full object-cover" />
-                                  )}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200 truncate">
-                                    {highlightMatch(p.title || p.productName || p.name || '')}
-                                  </p>
-                                  <p className="text-xs text-zinc-500 mt-0.5 truncate">{p.collectionType || p.categoryName}</p>
-                                </div>
-                                <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 shrink-0">{formatINR(p.discountPrice || p.price)}</span>
-                              </Link>
-                            ))}
+                            {suggestionList.map((item: any, i: number) => {
+                              if (item.type === 'category') {
+                                return (
+                                  <Link
+                                    key={`cat-${item.label}-${i}`}
+                                    to={item.to}
+                                    onClick={() => { setSearchFocused(false); setSearchQuery(''); }}
+                                    onMouseEnter={() => setSelectedSuggestionIdx(i)}
+                                    className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${selectedSuggestionIdx === i ? 'bg-zinc-100 dark:bg-zinc-800' : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50'}`}
+                                  >
+                                    <Search className="h-3.5 w-3.5 text-zinc-400 shrink-0" strokeWidth={1.5} />
+                                    <span>{highlightMatch(item.label)}</span>
+                                  </Link>
+                                );
+                              }
+                              if (item.type === 'product') {
+                                return (
+                                  <Link
+                                    key={`prod-${item.to}-${i}`}
+                                    to={item.to}
+                                    onClick={() => { setSearchFocused(false); setSearchQuery(''); }}
+                                    onMouseEnter={() => setSelectedSuggestionIdx(i)}
+                                    className={`flex items-center gap-3 px-4 py-2.5 transition-colors ${selectedSuggestionIdx === i ? 'bg-zinc-100 dark:bg-zinc-800' : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50'}`}
+                                  >
+                                    <div className="w-10 h-12 shrink-0 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 overflow-hidden rounded">
+                                      {item.image && (
+                                        <img src={item.image} alt="" className="w-full h-full object-cover" />
+                                      )}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200 truncate">
+                                        {highlightMatch(item.label)}
+                                      </p>
+                                      <p className="text-xs text-zinc-500 mt-0.5 truncate">{item.category}</p>
+                                    </div>
+                                    <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 shrink-0">{item.price}</span>
+                                  </Link>
+                                );
+                              }
+                              return null;
+                            })}
                             <button
                               onClick={() => doSearchRefValue(searchQuery)}
                               className="w-full px-4 py-3 text-center text-xs font-semibold tracking-wider text-zinc-500 hover:text-black dark:hover:text-white hover:bg-zinc-50 dark:hover:bg-zinc-800 border-t border-zinc-100 dark:border-zinc-800 transition-colors cursor-pointer"
@@ -447,9 +481,14 @@ const Navbar = () => {
                     {userInfo ? (
                       <>
                         <div className="px-5 py-4 bg-gradient-to-br from-zinc-50 to-white dark:from-zinc-800 dark:to-zinc-900 border-b border-zinc-100 dark:border-zinc-800">
-                          <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">
-                            Hello, {userInfo.firstName || userDisplayName}
-                          </p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100 truncate">
+                              Hello, {userInfo.firstName || userDisplayName}
+                            </p>
+                            <span className={`shrink-0 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${userInfo.role === 'admin' ? 'bg-[#0050cb] text-white' : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300'}`}>
+                              {userInfo.role === 'admin' ? 'Admin' : 'User'}
+                            </span>
+                          </div>
                           <p className="text-xs text-zinc-500 mt-0.5 truncate">{userInfo.email}</p>
                         </div>
                         <div className="py-1">
@@ -553,6 +592,8 @@ const Navbar = () => {
                 </span>
               )}
             </button>
+
+
           </div>
         </div>
 
@@ -569,7 +610,12 @@ const Navbar = () => {
                       {(userInfo.lastName?.[0] || '')}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100 truncate">{userInfo.firstName || userDisplayName}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100 truncate">{userInfo.firstName || userDisplayName}</p>
+                        <span className={`shrink-0 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${userInfo.role === 'admin' ? 'bg-[#0050cb] text-white' : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300'}`}>
+                          {userInfo.role === 'admin' ? 'Admin' : 'User'}
+                        </span>
+                      </div>
                       <p className="text-xs text-zinc-500 truncate">{userInfo.email}</p>
                     </div>
                   </div>
@@ -712,25 +758,43 @@ const Navbar = () => {
                     <div className="flex justify-center py-8">
                       <Loader2 className="h-6 w-6 animate-spin text-zinc-400" strokeWidth={1.5} />
                     </div>
-                  ) : products.length > 0 ? (
+                  ) : suggestionList.length > 0 ? (
                     <div className="space-y-3">
-                      {products.map((p: any) => (
-                        <Link
-                          key={getProductId(p)}
-                          to={`/product/${getProductId(p)}`}
-                          onClick={() => { setMobileSearchOpen(false); setSearchQuery(''); }}
-                          className="flex items-center gap-3"
-                        >
-                          <div className="w-16 h-20 shrink-0 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 overflow-hidden rounded-lg">
-                            {p.images?.[0] && <img src={p.images[0]} alt="" className="w-full h-full object-cover" />}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-zinc-800 truncate">{p.title || p.productName}</p>
-                            <p className="text-xs text-zinc-500 mt-0.5">{p.collectionType || p.categoryName}</p>
-                            <p className="text-sm font-semibold text-zinc-800 mt-1">{formatINR(p.discountPrice || p.price)}</p>
-                          </div>
-                        </Link>
-                      ))}
+                      {suggestionList.map((item: any, i: number) => {
+                        if (item.type === 'category') {
+                          return (
+                            <Link
+                              key={`mcat-${item.label}-${i}`}
+                              to={item.to}
+                              onClick={() => { setMobileSearchOpen(false); setSearchQuery(''); }}
+                              className="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                            >
+                              <Search className="h-4 w-4 text-zinc-400 shrink-0" strokeWidth={1.5} />
+                              <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{highlightMatch(item.label)}</span>
+                            </Link>
+                          );
+                        }
+                        if (item.type === 'product') {
+                          return (
+                            <Link
+                              key={`mprod-${item.to}-${i}`}
+                              to={item.to}
+                              onClick={() => { setMobileSearchOpen(false); setSearchQuery(''); }}
+                              className="flex items-center gap-3"
+                            >
+                              <div className="w-16 h-20 shrink-0 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 overflow-hidden rounded-lg">
+                                {item.image && <img src={item.image} alt="" className="w-full h-full object-cover" />}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200 truncate">{highlightMatch(item.label)}</p>
+                                <p className="text-xs text-zinc-500 mt-0.5">{item.category}</p>
+                                <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 mt-1">{item.price}</p>
+                              </div>
+                            </Link>
+                          );
+                        }
+                        return null;
+                      })}
                       <button
                         onClick={() => doSearchRefValue(searchQuery)}
                         className="w-full py-3 text-center text-sm font-medium text-zinc-500 hover:text-black bg-zinc-50 dark:bg-zinc-800 rounded-lg transition-colors cursor-pointer"

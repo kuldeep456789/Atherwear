@@ -1,8 +1,8 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
-  LayoutDashboard, Package, Users, RotateCcw, MessageSquare, Banknote, Image,
-  LogOut, ChevronRight,
+  LayoutDashboard, Package, Users, RotateCcw, MessageSquare, Banknote,
+  LogOut, Search, Bell, Settings
 } from 'lucide-react';
 import type { RootState } from '../../store/store';
 import { logout } from '../../store/slices/authSlice';
@@ -10,14 +10,14 @@ import { logout } from '../../store/slices/authSlice';
 const navItems = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/admin/orders', label: 'Orders', icon: Package },
-  { to: '/admin/users', label: 'Users', icon: Users },
+  { to: '/admin/users', label: 'Customers', icon: Users },
   { to: '/admin/returns', label: 'Return Requests', icon: RotateCcw },
   { to: '/admin/customer-issues', label: 'Customer Issues', icon: MessageSquare },
-  { to: '/admin/commission-finance', label: 'Commission & Finance', icon: Banknote },
-  { to: '/admin/hero-banner', label: 'Hero Banner', icon: Image },
+  { to: '/admin/commission-finance', label: 'Finance', icon: Banknote },
+  { to: '/admin/hero-banner', label: 'Settings', icon: Settings },
 ];
 
-const SIDEBAR_WIDTH = 220;
+const SIDEBAR_WIDTH = 260;
 
 export default function AdminLayout() {
   const location = useLocation();
@@ -36,65 +36,89 @@ export default function AdminLayout() {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#F5F1EA]" style={{ fontFamily: "'Outfit', 'Space Grotesk', sans-serif" }}>
+    <div className="flex min-h-screen bg-[#f8f9ff]" style={{ fontFamily: "'Inter', sans-serif" }}>
       {/* Sidebar */}
       <aside
-        className="fixed left-0 top-0 h-screen bg-[#F5F1EA] border-r border-[#E5DDD3] flex flex-col z-50"
+        className="fixed left-0 top-0 h-full bg-[#213145] flex flex-col z-50 text-[#cbdbf5]"
         style={{ width: SIDEBAR_WIDTH }}
       >
-        {/* Logo */}
-        <div className="h-16 flex items-center px-5 border-b border-[#E5DDD3]">
-          <Link to="/admin" className="text-xl font-black tracking-tight text-[#2B2118]">
-            VASTRA
-          </Link>
-          <span className="ml-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#B08D57]">Admin</span>
+        <div className="px-6 py-8">
+          <h1 className="text-3xl font-bold text-white tracking-tight">VASTRA</h1>
+          <p className="text-xs font-mono text-[#cbdbf5] opacity-60 uppercase tracking-widest mt-1">Enterprise Admin</p>
         </div>
 
-        {/* Nav */}
-        <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
+        <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
           {navItems.map((item) => (
             <Link
               key={item.to}
               to={item.to}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+              className={`flex items-center gap-3 px-4 py-3 rounded-none transition-all duration-200 ${
                 isActive(item)
-                  ? 'bg-[#2B2118] text-white'
-                  : 'text-[#5C5246] hover:bg-[#E5DDD3] hover:text-[#2B2118]'
+                  ? 'bg-white/10 text-[#dae1ff] border-l-4 border-[#0066ff] font-bold'
+                  : 'font-medium hover:bg-white/5 hover:text-white border-l-4 border-transparent'
               }`}
             >
-              <item.icon className="h-4 w-4 shrink-0" strokeWidth={1.5} />
-              <span className="text-[11px] font-semibold uppercase tracking-wider">{item.label}</span>
-              {isActive(item) && <ChevronRight className="h-3 w-3 ml-auto" strokeWidth={2} />}
+              <item.icon className="h-5 w-5 shrink-0" strokeWidth={isActive(item) ? 2 : 1.5} />
+              <span className="text-sm font-medium">{item.label}</span>
             </Link>
           ))}
         </nav>
 
-        {/* User footer */}
-        <div className="px-4 py-4 border-t border-[#E5DDD3]">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-8 h-8 rounded-full bg-[#2B2118] flex items-center justify-center text-xs font-bold text-white uppercase">
-              {(userInfo?.firstName?.[0] || 'A').toUpperCase()}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold text-[#2B2118] truncate">
-                {userInfo?.firstName || 'Admin'}
-              </p>
-              <p className="text-[10px] text-[#8A7F72] truncate">{userInfo?.email || ''}</p>
-            </div>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-[11px] font-semibold uppercase tracking-wider text-[#8A7F72] hover:bg-[#E5DDD3] hover:text-[#2B2118] transition-all duration-200 cursor-pointer"
-          >
-            <LogOut className="h-3.5 w-3.5" strokeWidth={1.5} />
-            Sign Out
+        <div className="p-4 border-t border-white/10">
+          <button className="w-full py-2.5 mb-4 bg-[#0066ff] text-white font-medium text-sm rounded-lg hover:opacity-90 transition-opacity">
+            Support
           </button>
+          <div className="space-y-1">
+            <button className="w-full flex items-center px-4 py-2.5 gap-3 font-medium hover:text-white transition-colors">
+              <Bell className="h-5 w-5" strokeWidth={1.5} />
+              <span className="text-sm">Notifications</span>
+            </button>
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center px-4 py-2.5 gap-3 font-medium hover:text-white transition-colors"
+            >
+              <LogOut className="h-5 w-5" strokeWidth={1.5} />
+              <span className="text-sm">Logout</span>
+            </button>
+          </div>
         </div>
       </aside>
 
-      {/* Main content */}
-      <div className="flex-1" style={{ marginLeft: SIDEBAR_WIDTH }}>
-        <main className="p-8">
+      {/* Main Content Wrapper */}
+      <div className="flex-1 flex flex-col" style={{ marginLeft: SIDEBAR_WIDTH }}>
+        {/* Top Header */}
+        <header className="flex justify-between items-center px-10 h-16 bg-white/80 backdrop-blur-md sticky top-0 z-40 border-b border-gray-200 shadow-sm">
+          <div className="flex items-center gap-8">
+            <h2 className="text-xl font-semibold text-gray-900">Overview</h2>
+            <div className="relative flex items-center group hidden md:flex">
+              <Search className="absolute left-3 h-4 w-4 text-gray-400" />
+              <input 
+                type="text" 
+                placeholder="Search..." 
+                className="pl-10 pr-12 py-1.5 bg-gray-50 border border-gray-200 rounded-full text-sm w-64 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0066ff]/20 focus:border-[#0066ff]"
+              />
+              <span className="absolute right-3 text-[10px] font-bold opacity-60 border px-1 rounded bg-white">⌘K</span>
+            </div>
+            <nav className="hidden lg:flex gap-6">
+              <span className="text-[#0050cb] font-bold border-b-2 border-[#0050cb] pb-1 text-sm cursor-pointer">Overview</span>
+              <span className="text-gray-500 font-medium hover:text-[#0050cb] transition-all text-sm cursor-pointer">Reports</span>
+            </nav>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 border-l border-gray-200 pl-4">
+              <div className="text-right">
+                <p className="text-sm font-medium text-gray-900">{userInfo?.firstName || 'Admin'}</p>
+                <p className="text-[10px] text-gray-500 font-bold uppercase">SUPER ADMIN</p>
+              </div>
+              <div className="w-10 h-10 rounded-full bg-[#0066ff] flex items-center justify-center text-white font-bold border border-gray-200">
+                {(userInfo?.firstName?.[0] || 'A').toUpperCase()}
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Main Canvas */}
+        <main className="p-10 flex-1 max-w-[1600px] mx-auto w-full">
           <Outlet />
         </main>
       </div>

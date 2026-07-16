@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import Navbar from './components/layout/Navbar';
@@ -28,13 +28,12 @@ import AdminRoute from './components/auth/AdminRoute';
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminOrders from './pages/admin/AdminOrders';
+import AdminProducts from './pages/admin/AdminProducts';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminReturnRequests from './pages/admin/AdminReturnRequests';
 import AdminCustomerIssues from './pages/admin/AdminCustomerIssues';
 import AdminCommissionFinance from './pages/admin/AdminCommissionFinance';
 import AdminHeroBanner from './pages/admin/AdminHeroBanner';
-
-
 const ScrollToTop = () => {
   const { pathname } = useLocation();
   useEffect(() => {
@@ -64,6 +63,7 @@ function App() {
         <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
           <Route index element={<AdminDashboard />} />
           <Route path="orders" element={<AdminOrders />} />
+          <Route path="products" element={<AdminProducts />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="returns" element={<AdminReturnRequests />} />
           <Route path="customer-issues" element={<AdminCustomerIssues />} />

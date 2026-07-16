@@ -280,17 +280,38 @@ export function isProductAllowed(product: any): { allowed: boolean; gender: stri
   if (hasWomenSignal || (!hasMenSignal && matchesAny(WOMEN_ALLOWED) && !searchText.includes('men') && (searchText.includes('women') || searchText.includes('female') || searchText.includes('lady')))) {
     collectionType = 'Women';
     gender = 'Women';
-    if (searchText.includes('dress') || searchText.includes('skirt')) subcategoryName = 'Dresses & Skirts';
-    else if (searchText.includes('top') || searchText.includes('shirt') || searchText.includes('coord')) subcategoryName = 'Tops & Shirts';
-    else if (searchText.includes('jacket') || searchText.includes('suit')) subcategoryName = 'Jackets & Suits';
-    else if (searchText.includes('jean') || searchText.includes('pant')) subcategoryName = 'Bottoms';
+    if (searchText.includes('ethnic')) subcategoryName = 'Ethnic Wear';
+    else if (searchText.includes('coord') || searchText.includes('co-ord') || searchText.includes('set')) subcategoryName = 'Co-Ord Sets';
+    else if (searchText.includes('activewear') || searchText.includes('yoga') || searchText.includes('gym')) subcategoryName = 'Activewear';
+    else if (searchText.includes('dress')) subcategoryName = 'Dresses';
+    else if (searchText.includes('skirt')) subcategoryName = 'Skirts';
+    else if (searchText.includes('jacket') || searchText.includes('coat') || searchText.includes('blazer')) subcategoryName = 'Jackets';
+    else if (searchText.includes('hoodie')) subcategoryName = 'Hoodies';
+    else if (searchText.includes('sweatshirt') || searchText.includes('sweater') || searchText.includes('cardigan')) subcategoryName = 'Sweatshirts';
+    else if (searchText.includes('jean') || searchText.includes('denim')) subcategoryName = 'Jeans';
+    else if (searchText.includes('short')) subcategoryName = 'Shorts';
+    else if (searchText.includes('pant') || searchText.includes('trouser') || searchText.includes('legging') || searchText.includes('cargo') || searchText.includes('jogger')) subcategoryName = 'Pants';
+    else if (searchText.includes('tshirt') || searchText.includes('t-shirt') || searchText.includes('tee')) subcategoryName = 'T-Shirts';
+    else if (searchText.includes('shirt') || searchText.includes('blouse')) subcategoryName = 'Shirts';
+    else if (searchText.includes('top')) subcategoryName = 'Tops';
+    else subcategoryName = 'Tops'; // fallback for women
   } else if (hasMenSignal || (matchesAny(MEN_ALLOWED) && !hasWomenSignal && (searchText.includes('men') || searchText.includes('male') || searchText.includes('man')))) {
     collectionType = 'Men';
     gender = 'Men';
-    if (searchText.includes('shirt') || searchText.includes('tshirt') || searchText.includes('tee')) subcategoryName = 'T-Shirts & Shirts';
-    else if (searchText.includes('jacket') || searchText.includes('hoodie')) subcategoryName = 'Jackets & Hoodies';
-    else if (searchText.includes('jean') || searchText.includes('cargo') || searchText.includes('pant')) subcategoryName = 'Bottoms';
+    if (searchText.includes('ethnic')) subcategoryName = 'Ethnic Wear';
+    else if (searchText.includes('coord') || searchText.includes('co-ord') || searchText.includes('set')) subcategoryName = 'Co-Ord Sets';
+    else if (searchText.includes('jacket') || searchText.includes('coat') || searchText.includes('blazer')) subcategoryName = 'Jackets';
+    else if (searchText.includes('hoodie')) subcategoryName = 'Hoodies';
+    else if (searchText.includes('sweatshirt')) subcategoryName = 'Sweatshirts';
+    else if (searchText.includes('sweater') || searchText.includes('cardigan') || searchText.includes('knit')) subcategoryName = 'Sweaters';
+    else if (searchText.includes('cargo')) subcategoryName = 'Cargo Pants';
+    else if (searchText.includes('jean') || searchText.includes('denim')) subcategoryName = 'Jeans';
+    else if (searchText.includes('jogger') || searchText.includes('sweatpant')) subcategoryName = 'Joggers';
     else if (searchText.includes('short')) subcategoryName = 'Shorts';
+    else if (searchText.includes('polo')) subcategoryName = 'Polo Shirts';
+    else if (searchText.includes('tshirt') || searchText.includes('t-shirt') || searchText.includes('tee')) subcategoryName = 'T-Shirts';
+    else if (searchText.includes('shirt')) subcategoryName = 'Shirts';
+    else subcategoryName = 'Shirts'; // fallback for men
   } else {
     // If it doesn't match our whitelists with explicit gender signal, reject it
     return { allowed: false, gender: '', subcategoryName: '', collectionType: '' };

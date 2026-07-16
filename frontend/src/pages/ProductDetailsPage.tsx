@@ -5,7 +5,7 @@ import { useGetProductDetailsQuery, useCreateReviewMutation } from '../store/sli
 import { addToCart } from '../store/slices/cartSlice';
 import { toggleWishlist } from '../store/slices/wishlistSlice';
 import type { RootState } from '../store/store';
-import { ShoppingBag, Heart, Star, Check, ChevronRight, ChevronLeft, X, ZoomIn, SendHorizontal, ThumbsUp, Share2 } from 'lucide-react';
+import { ShoppingBag, Heart, Star, Check, ChevronRight, ChevronLeft, X, ZoomIn, SendHorizontal, ThumbsUp, Share2, Loader2, UserRound } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Loader from '../components/Loader';
 import WishlistLoginPopup from '../components/WishlistLoginPopup';
@@ -617,93 +617,115 @@ const ProductDetailsPage = () => {
       </div>
 
       {/* ───────── CUSTOMER REVIEWS ───────── */}
-      <div ref={reviewRef} className="border-t-2 border-black dark:border-white">
-        <div className="px-6 sm:px-10 py-10 border-b-2 border-black dark:border-white flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+      <div ref={reviewRef} className="max-w-[1920px] mx-auto px-6 sm:px-8 lg:px-12 py-16 border-t border-zinc-200 dark:border-zinc-800">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-12">
           <div>
-            <span className="text-xs font-black tracking-widest text-zinc-500">VERIFIED PURCHASES</span>
-            <h2 className="mt-2 text-3xl sm:text-4xl font-black tracking-tighter">CUSTOMER REVIEWS</h2>
+            <span className="text-sm font-semibold tracking-wider text-[#0050cb] uppercase mb-2 block">Verified Feedback</span>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">Customer Reviews</h2>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1 bg-[hsl(var(--foreground))] text-[hsl(var(--background))] px-4 py-2 text-sm font-black">
-              <Star size={14} fill="currentColor" />
-              {Number(averageRatingVal).toFixed(1)}
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl px-5 py-3 shadow-sm">
+              <Star size={18} fill="currentColor" className="text-amber-500" />
+              <span className="text-lg font-bold text-zinc-900 dark:text-zinc-100">{Number(averageRatingVal).toFixed(1)}</span>
             </div>
-            <span className="text-xs font-bold text-zinc-500 tracking-widest">{totalNumReviews} REVIEWS</span>
+            <span className="text-sm font-medium text-zinc-500">{totalNumReviews} Total Reviews</span>
           </div>
         </div>
 
-        <div className="max-w-[1920px] mx-auto grid lg:grid-cols-3 border-b-2 border-black dark:border-white">
-          {/* Rating Summary */}
-          <div className="border-b-2 lg:border-b-0 lg:border-r-2 border-black dark:border-white p-8 sm:p-10">
-            <div className="text-6xl font-black font-mono mb-3">{Number(averageRatingVal).toFixed(1)}</div>
-            <div className="flex gap-1 mb-4">
-              {[1, 2, 3, 4, 5].map(s => (
-                <Star key={s} size={18} strokeWidth={2}
-                  fill={s <= Math.round(averageRatingVal) ? 'currentColor' : 'none'}
-                  className={s <= Math.round(averageRatingVal) ? 'text-amber-500' : 'text-zinc-300 dark:text-zinc-600'}
-                />
-              ))}
-            </div>
-            <p className="text-xs text-zinc-500 font-bold tracking-widest mb-6">Based on {totalNumReviews} reviews</p>
-            {ratingDist.map(({ r, count, pct }) => (
-              <div key={r} className="flex items-center gap-3 mb-2">
-                <span className="text-xs font-black w-4 shrink-0">{r}</span>
-                <Star size={10} fill="currentColor" className="text-amber-500 shrink-0" />
-                <div className="flex-1 h-2 bg-zinc-200 dark:bg-zinc-700">
-                  <div className="h-full bg-amber-500 transition-all" style={{ width: `${pct}%` }} />
+        <div className="grid lg:grid-cols-12 gap-8 lg:gap-12">
+          {/* Rating Summary & Write Review */}
+          <div className="lg:col-span-4 space-y-8">
+            <div className="bg-white dark:bg-[#111111] border border-zinc-200 dark:border-zinc-800 rounded-3xl p-8 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] dark:shadow-none">
+              <div className="flex items-end gap-4 mb-8">
+                <div className="text-6xl font-bold tracking-tighter text-zinc-900 dark:text-zinc-100">{Number(averageRatingVal).toFixed(1)}</div>
+                <div className="pb-2">
+                  <div className="flex gap-1 mb-1.5">
+                    {[1, 2, 3, 4, 5].map(s => (
+                      <Star key={s} size={20} strokeWidth={2}
+                        fill={s <= Math.round(averageRatingVal) ? 'currentColor' : 'none'}
+                        className={s <= Math.round(averageRatingVal) ? 'text-amber-500' : 'text-zinc-300 dark:text-zinc-700'}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-xs text-zinc-500 font-medium">Based on {totalNumReviews} reviews</p>
                 </div>
-                <span className="text-[10px] font-bold text-zinc-500 w-6 text-right">{count}</span>
               </div>
-            ))}
+              
+              <div className="space-y-3.5">
+                {ratingDist.map(({ r, count, pct }) => (
+                  <div key={r} className="flex items-center gap-4">
+                    <div className="flex items-center gap-1.5 w-10 shrink-0 text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+                      {r} <Star size={12} fill="currentColor" className="text-amber-500" />
+                    </div>
+                    <div className="flex-1 h-2.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                      <div className="h-full bg-amber-500 rounded-full transition-all duration-500 ease-out" style={{ width: `${pct}%` }} />
+                    </div>
+                    <span className="text-xs font-medium text-zinc-400 w-8 text-right">{count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
 
             {/* Write a review */}
-            <div className="mt-8 pt-6 border-t-2 border-black dark:border-white">
-              <h3 className="text-xs font-black tracking-widest mb-4">WRITE A REVIEW</h3>
+            <div className="bg-zinc-50 dark:bg-[#151515] border border-zinc-200 dark:border-zinc-800/60 rounded-3xl p-8 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.02)] dark:shadow-none">
+              <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-6">Write a Review</h3>
               {reviewSubmitted ? (
-                <div className="bg-green-50 dark:bg-green-950/30 border-2 border-green-600 p-4">
-                  <p className="text-xs font-black text-green-600 tracking-widest">✓ REVIEW SUBMITTED!</p>
-                  <p className="text-[10px] text-zinc-500 mt-1 normal-case tracking-normal">Thank you for your feedback.</p>
+                <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800/50 rounded-2xl p-5 flex items-start gap-4">
+                  <div className="bg-green-100 dark:bg-green-900/50 p-2 rounded-full shrink-0">
+                    <Check className="w-4 h-4 text-green-600 dark:text-green-400" strokeWidth={3} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-green-800 dark:text-green-300">Review Submitted!</p>
+                    <p className="text-xs text-green-600 dark:text-green-400/80 mt-1 leading-relaxed">Thank you for sharing your experience. Your feedback helps others make better choices.</p>
+                  </div>
                 </div>
               ) : userInfo ? (
                 <form onSubmit={handleReviewSubmit}>
                   {errorMsg && (
-                    <div className="mb-3 text-[10px] font-black text-red-600 border-2 border-red-600 p-2 bg-red-50 dark:bg-red-950/20">
+                    <div className="mb-5 text-sm font-medium text-red-600 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 rounded-2xl p-4">
                       {errorMsg}
                     </div>
                   )}
-                  <div className="flex gap-1 mb-3">
-                    {[1, 2, 3, 4, 5].map(s => (
-                      <button type="button" key={s}
-                        onMouseEnter={() => setReviewHoverRating(s)}
-                        onMouseLeave={() => setReviewHoverRating(0)}
-                        onClick={() => setReviewRating(s)}
-                        className="cursor-pointer"
-                      >
-                        <Star size={20} strokeWidth={2}
-                          fill={s <= (reviewHoverRating || reviewRating) ? 'currentColor' : 'none'}
-                          className={s <= (reviewHoverRating || reviewRating) ? 'text-amber-500' : 'text-zinc-300 dark:text-zinc-600'}
-                        />
-                      </button>
-                    ))}
+                  <div className="mb-6">
+                    <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400 mb-3">Tap to rate</p>
+                    <div className="flex gap-2">
+                      {[1, 2, 3, 4, 5].map(s => (
+                        <button type="button" key={s}
+                          onMouseEnter={() => setReviewHoverRating(s)}
+                          onMouseLeave={() => setReviewHoverRating(0)}
+                          onClick={() => setReviewRating(s)}
+                          className="cursor-pointer transition-transform hover:scale-110 active:scale-95"
+                        >
+                          <Star size={32} strokeWidth={1.5}
+                            fill={s <= (reviewHoverRating || reviewRating) ? 'currentColor' : 'none'}
+                            className={s <= (reviewHoverRating || reviewRating) ? 'text-amber-500' : 'text-zinc-300 dark:text-zinc-700'}
+                          />
+                        </button>
+                      ))}
+                    </div>
                   </div>
                   <textarea
                     value={reviewText}
                     onChange={e => setReviewText(e.target.value)}
-                    rows={3}
-                    placeholder="Share your experience..."
-                    className="w-full border-2 border-black dark:border-white bg-[hsl(var(--card))] text-[hsl(var(--foreground))] px-4 py-3 text-sm normal-case tracking-normal resize-none focus:outline-none focus:border-zinc-400 placeholder:text-zinc-400 placeholder:normal-case"
+                    rows={4}
+                    placeholder="What did you like or dislike?"
+                    className="w-full bg-white dark:bg-[#0a0a0a] border border-zinc-200 dark:border-zinc-800 rounded-2xl px-5 py-4 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#0050cb]/20 focus:border-[#0050cb] transition-all placeholder:text-zinc-400 mb-5 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)]"
                   />
                   <button type="submit" disabled={isReviewLoading}
-                    className="mt-2 w-full bg-[hsl(var(--foreground))] text-[hsl(var(--background))] py-3 text-xs font-black tracking-widest border-2 border-black dark:border-white hover:bg-red-600 hover:text-white hover:border-red-600 transition-colors flex items-center justify-center gap-2 cursor-pointer uppercase"
+                    className="w-full bg-[#0050cb] hover:bg-[#003d99] text-white rounded-2xl py-4 text-sm font-bold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
                   >
-                    <SendHorizontal size={14} strokeWidth={2.5} /> {isReviewLoading ? 'Submitting...' : 'Submit Review'}
+                    {isReviewLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <SendHorizontal className="w-5 h-5" />}
+                    {isReviewLoading ? 'Submitting...' : 'Submit Review'}
                   </button>
                 </form>
               ) : (
-                <div className="border-2 border-dashed border-zinc-300 dark:border-zinc-700 p-6 text-center">
-                  <p className="text-xs font-bold text-zinc-500 dark:text-zinc-400 tracking-wider mb-4 uppercase leading-relaxed">Only registered members can submit reviews</p>
-                  <Link to="/login" className="inline-block w-full text-center bg-[hsl(var(--foreground))] text-[hsl(var(--background))] py-3 text-xs font-black tracking-widest border-2 border-black dark:border-white hover:bg-red-600 hover:text-white transition-colors">
-                    SIGN IN TO REVIEW
+                <div className="text-center py-4 px-2">
+                  <div className="bg-zinc-100 dark:bg-zinc-800/80 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5">
+                    <UserRound className="w-8 h-8 text-zinc-400" />
+                  </div>
+                  <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400 mb-6 leading-relaxed">Join our community to share your experience with this product.</p>
+                  <Link to="/login" className="inline-block w-full bg-zinc-900 hover:bg-black dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-black rounded-2xl py-4 text-sm font-bold transition-colors shadow-md">
+                    Sign In to Review
                   </Link>
                 </div>
               )}
@@ -711,37 +733,49 @@ const ProductDetailsPage = () => {
           </div>
 
           {/* Review Cards */}
-          <div className="lg:col-span-2 divide-y-2 divide-black dark:divide-white">
+          <div className="lg:col-span-8 space-y-5">
             {allReviews.map((review, idx) => (
-              <div key={idx} className="p-6 sm:p-8">
-                <div className="flex items-start justify-between gap-4 mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 border-2 border-black dark:border-white bg-[hsl(var(--foreground))] text-[hsl(var(--background))] flex items-center justify-center text-xs font-black shrink-0">
+              <div key={idx} className="bg-white dark:bg-[#111111] border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.08)] dark:shadow-none dark:hover:border-zinc-700 transition-all">
+                <div className="flex items-start justify-between gap-4 mb-5">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-zinc-100 to-zinc-200 dark:from-zinc-800 dark:to-zinc-900 flex items-center justify-center text-lg font-bold text-zinc-700 dark:text-zinc-300 shadow-inner shrink-0">
                       {review.user.charAt(0)}
                     </div>
                     <div>
-                      <p className="text-xs font-black tracking-widest">{review.user}</p>
-                      <p className="text-[10px] text-zinc-500 tracking-wider normal-case">{review.date}</p>
+                      <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100">{review.user}</p>
+                      <div className="flex items-center gap-3 mt-1.5">
+                        <div className="flex gap-0.5">
+                          {[1, 2, 3, 4, 5].map(s => (
+                            <Star key={s} size={14} strokeWidth={2}
+                              fill={s <= review.rating ? 'currentColor' : 'none'}
+                              className={s <= review.rating ? 'text-amber-500' : 'text-zinc-300 dark:text-zinc-700'}
+                            />
+                          ))}
+                        </div>
+                        <span className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700"></span>
+                        <span className="text-xs font-medium text-zinc-500">{review.date}</span>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex gap-0.5 shrink-0">
-                    {[1, 2, 3, 4, 5].map(s => (
-                      <Star key={s} size={13} strokeWidth={2}
-                        fill={s <= review.rating ? 'currentColor' : 'none'}
-                        className={s <= review.rating ? 'text-amber-500' : 'text-zinc-300 dark:text-zinc-600'}
-                      />
-                    ))}
-                  </div>
                 </div>
-                <p className="text-sm leading-relaxed normal-case tracking-normal text-zinc-700 dark:text-zinc-300">{review.comment}</p>
-                <button
-                  onClick={() => setHelpfulVotes(prev => ({ ...prev, [idx]: !prev[idx] }))}
-                  className={`mt-4 flex items-center gap-2 text-[10px] font-black tracking-widest cursor-pointer transition-colors ${helpfulVotes[idx] ? 'text-green-600 dark:text-green-400' : 'text-zinc-400 hover:text-[hsl(var(--foreground))]'
+                
+                <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300 mt-5 mb-6">
+                  {review.comment}
+                </p>
+                
+                <div className="flex items-center gap-4 border-t border-zinc-100 dark:border-zinc-800/60 pt-5 mt-auto">
+                  <button
+                    onClick={() => setHelpfulVotes(prev => ({ ...prev, [idx]: !prev[idx] }))}
+                    className={`flex items-center gap-2 text-xs font-bold px-4 py-2.5 rounded-full transition-all cursor-pointer ${
+                      helpfulVotes[idx] 
+                        ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 shadow-[inset_0_0_0_1px_rgba(22,163,74,0.2)]' 
+                        : 'bg-zinc-50 dark:bg-zinc-800/50 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-800 dark:hover:text-zinc-200'
                     }`}
-                >
-                  <ThumbsUp size={12} strokeWidth={2.5} fill={helpfulVotes[idx] ? 'currentColor' : 'none'} />
-                  HELPFUL ({(review.helpful || 0) + (helpfulVotes[idx] ? 1 : 0)})
-                </button>
+                  >
+                    <ThumbsUp size={14} strokeWidth={helpfulVotes[idx] ? 2.5 : 2} fill={helpfulVotes[idx] ? 'currentColor' : 'none'} />
+                    Helpful ({(review.helpful || 0) + (helpfulVotes[idx] ? 1 : 0)})
+                  </button>
+                </div>
               </div>
             ))}
           </div>

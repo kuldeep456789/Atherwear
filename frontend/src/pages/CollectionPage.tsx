@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useGetProductsByCategoryQuery, useGetProductsQuery } from '../store/slices/productApiSlice';
+import { useGetProductsQuery } from '../store/slices/productApiSlice';
 import { useGetCategoriesQuery } from '../store/slices/categoryApiSlice';
 import ProductCard from '../components/product/ProductCard';
 import Pagination from '../components/Pagination';
@@ -102,24 +102,13 @@ const CollectionPage = () => {
     ? collectionTabs.find((category: any) => normalizeSlug(String(category?.name || '')) === normalizeSlug(fromSlug(normalizedSubcategory)))
     : undefined;
 
-  const categoryId = activeCategory?._id;
-
-  const { data: categoryProductsData, isLoading: categoryLoading, error: categoryError } = useGetProductsByCategoryQuery(
-    categoryId ? { categoryId, pageNum: page, pageSize: 20 } : (undefined as any),
-    { skip: !categoryId } as any,
-  );
-
   // Main gender query — uses warehouse, server-side paginated
-  const { data: genderProductsData, isLoading: genderLoading, error: genderError } = useGetProductsQuery(
-    !categoryId
-      ? {
-          ...(normalizedGender && !isAllGender ? { gender: normalizedGender } : {}),
-          pageNum: page,
-          pageSize: 20,
-        }
-      : (undefined as any),
-    { skip: !!categoryId } as any,
-  );
+  const { data: genderProductsData, isLoading: genderLoading, error: genderError } = useGetProductsQuery({
+    ...(normalizedGender && !isAllGender ? { gender: normalizedGender } : {}),
+    ...(activeCategory?.name ? { subcategoryName: activeCategory.name } : {}),
+    pageNum: page,
+    pageSize: 20,
+  });
 
   // Fetch men product count (for getCategoryCount helper)
   const { data: menProductsData } = useGetProductsQuery(
@@ -133,9 +122,9 @@ const CollectionPage = () => {
     { skip: !isAllGender && normalizedGender !== 'women' },
   );
 
-  const data = categoryId ? categoryProductsData : genderProductsData;
-  const isLoading = categoryId ? categoryLoading : genderLoading;
-  const error = categoryId ? categoryError : genderError;
+  const data = genderProductsData;
+  const isLoading = genderLoading;
+  const error = genderError;
 
   const productsFromResponse = Array.isArray(data?.products)
     ? data.products
@@ -148,7 +137,7 @@ const CollectionPage = () => {
           : [];
 
   // Strictly filter products by gender — applied on ALL tab (no subcategory)
-  const genderFilteredProducts = !categoryId && normalizedGender && !isAllGender
+  const genderFilteredProducts = !activeCategory?.name && normalizedGender && !isAllGender
     ? productsFromResponse.filter((p: any) => matchesProductGender(p, normalizedGender))
     : productsFromResponse;
 
@@ -197,7 +186,7 @@ const CollectionPage = () => {
 
     return (
       <Link
-        key={tab._id}
+        key={tab.name}
         to={gender ? `/collections/${gender}/${tabSlug}` : `/collections/${tabSlug}`}
         className={`group relative shrink-0 py-2 px-2 text-[13px] sm:text-[15px] font-bold tracking-wider transition-all duration-200 cursor-pointer ${
           isActive
