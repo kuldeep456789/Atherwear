@@ -52,16 +52,16 @@ export default function AdminProducts() {
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Products</h1>
           <p className="text-sm text-gray-500 mt-1">Manage your store's inventory and categories.</p>
         </div>
-        <div className="flex gap-3">
-          <button onClick={fetchProducts} className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm">
+        <div className="flex flex-wrap gap-2 sm:gap-3">
+          <button onClick={fetchProducts} className="flex-1 sm:flex-none justify-center items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm flex">
             <RefreshCw className="h-4 w-4" />
             Refresh
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm">
+          <button className="flex-1 sm:flex-none justify-center items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm flex">
             <Download className="h-4 w-4" />
             Export
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-[#0050cb] text-white rounded text-sm font-medium hover:opacity-90 transition-opacity shadow-sm">
+          <button className="w-full sm:w-auto justify-center items-center gap-2 px-4 py-2 bg-[#0050cb] text-white rounded text-sm font-medium hover:opacity-90 transition-opacity shadow-sm flex">
             <Plus className="h-4 w-4" />
             Add Product
           </button>

@@ -1,8 +1,9 @@
+import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   LayoutDashboard, Package, Users, RotateCcw, MessageSquare, Banknote,
-  LogOut, Search, Bell, Settings
+  LogOut, Search, Bell, Settings, Menu, X
 } from 'lucide-react';
 import type { RootState } from '../../store/store';
 import { logout } from '../../store/slices/authSlice';
@@ -17,13 +18,17 @@ const navItems = [
   { to: '/admin/hero-banner', label: 'Settings', icon: Settings },
 ];
 
-const SIDEBAR_WIDTH = 260;
-
 export default function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const userInfo = useSelector((state: RootState) => state.auth.userInfo);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Close sidebar on route change on mobile
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [location.pathname]);
 
   const isActive = (item: typeof navItems[number]) => {
     if (item.end) return location.pathname === item.to;
@@ -37,17 +42,33 @@ export default function AdminLayout() {
 
   return (
     <div className="flex min-h-screen bg-[#f8f9ff]" style={{ fontFamily: "'Inter', sans-serif" }}>
+      
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 z-40 lg:hidden backdrop-blur-sm transition-opacity"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
       <aside
-        className="fixed left-0 top-0 h-full bg-[#213145] flex flex-col z-50 text-[#cbdbf5]"
-        style={{ width: SIDEBAR_WIDTH }}
+        className={`fixed left-0 top-0 h-full bg-[#213145] flex flex-col z-50 text-[#cbdbf5] w-[260px] transition-transform duration-300 ease-in-out lg:translate-x-0 ${sidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}`}
       >
-        <div className="px-6 py-8">
-          <h1 className="text-3xl font-bold text-white tracking-tight">VASTRA</h1>
-          <p className="text-xs font-mono text-[#cbdbf5] opacity-60 uppercase tracking-widest mt-1">Enterprise Admin</p>
+        <div className="px-6 py-6 lg:py-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">VASTRA</h1>
+            <p className="text-[10px] lg:text-xs font-mono text-[#cbdbf5] opacity-60 uppercase tracking-widest mt-1">Enterprise Admin</p>
+          </div>
+          <button 
+            className="lg:hidden text-white/70 hover:text-white p-2 -mr-2 cursor-pointer"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <X size={20} strokeWidth={2} />
+          </button>
         </div>
 
-        <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
+        <nav className="flex-1 px-4 space-y-1 overflow-y-auto mt-2">
           {navItems.map((item) => (
             <Link
               key={item.to}
@@ -65,17 +86,17 @@ export default function AdminLayout() {
         </nav>
 
         <div className="p-4 border-t border-white/10">
-          <button className="w-full py-2.5 mb-4 bg-[#0066ff] text-white font-medium text-sm rounded-lg hover:opacity-90 transition-opacity">
+          <button className="w-full py-2.5 mb-4 bg-[#0066ff] text-white font-medium text-sm rounded-lg hover:opacity-90 transition-opacity cursor-pointer">
             Support
           </button>
           <div className="space-y-1">
-            <button className="w-full flex items-center px-4 py-2.5 gap-3 font-medium hover:text-white transition-colors">
+            <button className="w-full flex items-center px-4 py-2.5 gap-3 font-medium hover:text-white transition-colors cursor-pointer">
               <Bell className="h-5 w-5" strokeWidth={1.5} />
               <span className="text-sm">Notifications</span>
             </button>
             <button
               onClick={handleLogout}
-              className="w-full flex items-center px-4 py-2.5 gap-3 font-medium hover:text-white transition-colors"
+              className="w-full flex items-center px-4 py-2.5 gap-3 font-medium hover:text-white transition-colors cursor-pointer"
             >
               <LogOut className="h-5 w-5" strokeWidth={1.5} />
               <span className="text-sm">Logout</span>
@@ -85,32 +106,42 @@ export default function AdminLayout() {
       </aside>
 
       {/* Main Content Wrapper */}
-      <div className="flex-1 flex flex-col" style={{ marginLeft: SIDEBAR_WIDTH }}>
+      <div className="flex-1 flex flex-col lg:pl-[260px] min-w-0 transition-all duration-300">
         {/* Top Header */}
-        <header className="flex justify-between items-center px-10 h-16 bg-white/80 backdrop-blur-md sticky top-0 z-40 border-b border-gray-200 shadow-sm">
-          <div className="flex items-center gap-8">
-            <h2 className="text-xl font-semibold text-gray-900">Overview</h2>
+        <header className="flex justify-between items-center px-4 sm:px-6 lg:px-10 h-16 bg-white/80 backdrop-blur-md sticky top-0 z-30 border-b border-gray-200 shadow-sm">
+          <div className="flex items-center gap-3 sm:gap-6 lg:gap-8">
+            <button 
+              className="lg:hidden p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <Menu size={22} strokeWidth={2} />
+            </button>
+            
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 hidden sm:block">Overview</h2>
+            
             <div className="relative flex items-center group hidden md:flex">
               <Search className="absolute left-3 h-4 w-4 text-gray-400" />
               <input 
                 type="text" 
                 placeholder="Search..." 
-                className="pl-10 pr-12 py-1.5 bg-gray-50 border border-gray-200 rounded-full text-sm w-64 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0066ff]/20 focus:border-[#0066ff]"
+                className="pl-10 pr-12 py-1.5 bg-gray-50 border border-gray-200 rounded-full text-sm w-48 lg:w-64 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0066ff]/20 focus:border-[#0066ff]"
               />
               <span className="absolute right-3 text-[10px] font-bold opacity-60 border px-1 rounded bg-white">⌘K</span>
             </div>
-            <nav className="hidden lg:flex gap-6">
+            
+            <nav className="hidden lg:flex gap-6 ml-2">
               <span className="text-[#0050cb] font-bold border-b-2 border-[#0050cb] pb-1 text-sm cursor-pointer">Overview</span>
               <span className="text-gray-500 font-medium hover:text-[#0050cb] transition-all text-sm cursor-pointer">Reports</span>
             </nav>
           </div>
+          
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3 border-l border-gray-200 pl-4">
-              <div className="text-right">
-                <p className="text-sm font-medium text-gray-900">{userInfo?.firstName || 'Admin'}</p>
-                <p className="text-[10px] text-gray-500 font-bold uppercase">SUPER ADMIN</p>
+              <div className="text-right hidden sm:block">
+                <p className="text-sm font-medium text-gray-900 leading-tight">{userInfo?.firstName || 'Admin'}</p>
+                <p className="text-[9px] text-gray-500 font-bold uppercase tracking-wider mt-0.5">SUPER ADMIN</p>
               </div>
-              <div className="w-10 h-10 rounded-full bg-[#0066ff] flex items-center justify-center text-white font-bold border border-gray-200">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#0066ff] flex items-center justify-center text-white font-bold border border-gray-200 text-sm sm:text-base">
                 {(userInfo?.firstName?.[0] || 'A').toUpperCase()}
               </div>
             </div>
@@ -118,7 +149,7 @@ export default function AdminLayout() {
         </header>
 
         {/* Main Canvas */}
-        <main className="p-10 flex-1 max-w-[1600px] mx-auto w-full">
+        <main className="p-4 sm:p-6 lg:p-10 flex-1 max-w-[1600px] mx-auto w-full overflow-x-hidden">
           <Outlet />
         </main>
       </div>
