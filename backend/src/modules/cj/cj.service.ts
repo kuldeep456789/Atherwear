@@ -7,8 +7,8 @@ import {
 } from '@nestjs/common';
 import axios, { AxiosRequestConfig } from 'axios';
 import { RedisService } from '../redis/redis.service';
-import { isProductAllowed, isCategoryAllowed, isHardBlocked, BLOCKED } from './category.mapper';
-import { isAllowedMenCollection, isAllowedWomenCollection, MEN_COLLECTIONS, WOMEN_COLLECTIONS } from './collections';
+import { isHardBlocked, BLOCKED, getCategoryInfoById } from './category.mapper';
+import { CLOTHING_CATEGORIES } from './collections';
 
 const WAREHOUSE_KEY_MEN = 'products:men';
 const WAREHOUSE_KEY_WOMEN = 'products:women';
@@ -71,7 +71,7 @@ export class CjService {
     process.env.CJ_API_BASE_URL ?? 'https://developers.cjdropshipping.com/api2.0';
   private readonly accessTokenCacheKey = 'cj:access_token';
   private readonly accessTokenTtlSeconds = 60 * 60 * 23;
-  private readonly requestDelayMs = 300;
+  private readonly requestDelayMs = 1500;
   private accessTokenCache: { token: string; expiresAt: number } | null = null;
   private requestQueue: Promise<void> = Promise.resolve();
   private apiCallsThisSync = 0;
@@ -185,7 +185,7 @@ export class CjService {
       let pageNum = 1;
       while (true) {
         try {
-          const pageSize = 100;
+          const pageSize = 20;
           const url = `/v1/product/list${this.buildSearch({ categoryId: catId, pageNum: String(pageNum), pageSize: String(pageSize) })}`;
           this.logger.log(`[CJ] GET ${url}`);
           const response = await this.scheduleRequest(url, { method: 'GET', headers: await this.authHeaders() });
@@ -266,12 +266,20 @@ export class CjService {
     return { products, total, warehouseHit: true };
   }
   async runCatalogSync(): Promise<{ success: boolean; count: number }> {
-    const syncStart = Date.now();
-    this.apiCallsThisSync = 0;
+    const lockKey = 'cj:sync:lock';
+    const locked = await this.redisService.setnx(lockKey, '1', 3600);
+    if (!locked) {
+      this.logger.warn('[Cron] Sync is already running (locked). Skipping.');
+      return { success: false, count: 0 };
+    }
 
-    await this.saveSyncMetrics({ status: 'running', error: null, lastSyncTime: null, productCount: 0, menCount: 0, womenCount: 0, lastSyncDurationMs: null, apiCallsUsed: 0, nextSyncIn: '60 minutes' });
+    try {
+      const syncStart = Date.now();
+      this.apiCallsThisSync = 0;
 
-    this.logger.log('[Cron] ✅ Sync Started');
+      await this.saveSyncMetrics({ status: 'running', error: null, lastSyncTime: null, productCount: 0, menCount: 0, womenCount: 0, lastSyncDurationMs: null, apiCallsUsed: 0, nextSyncIn: '60 minutes' });
+
+      this.logger.log('[Cron] ✅ Sync Started');
 
     const RETRY_DELAYS = [0, 30_000, 120_000];
     let lastError = '';
@@ -379,7 +387,10 @@ export class CjService {
       nextSyncIn: '60 minutes',
     });
 
-    return { success: true, count: allProducts.length };
+      return { success: true, count: allProducts.length };
+    } finally {
+      await this.redisService.del(lockKey);
+    }
   }
 
   /** Also expose the old name for backward compat (cj.controller.ts) */
@@ -418,29 +429,17 @@ export class CjService {
 
     this.logger.log(`[CJ] Fetching categories to discover category IDs...`);
 
-    // 1. Fetch categories
-    const categoriesResponse = await this.getCategories();
-    const categories: any[] = categoriesResponse?.categories ?? [];
-
-    // 2. Map categories to Men/Women collections
+    // 1 & 2. Map target categories directly from local CLOTHING_CATEGORIES
     const targetCategories: { categoryId: string; gender: string; categoryName: string }[] = [];
 
-    for (const cat of categories) {
-      const name = cat.name || '';
-      if (!name) continue;
-
-      // Determine if it matches Men or Women strict rules
-      if (isAllowedMenCollection(name)) {
-        // Find the canonical name it matched
-        const canonical = MEN_COLLECTIONS.find(allowed => name.toLowerCase().replace(/[\s_'&-]+/g, '').includes(allowed.replace(/-/g, ''))) || name;
-        targetCategories.push({ categoryId: cat._id || cat.categoryId, gender: 'men', categoryName: canonical });
-      } else if (isAllowedWomenCollection(name)) {
-        const canonical = WOMEN_COLLECTIONS.find(allowed => name.toLowerCase().replace(/[\s_'&-]+/g, '').includes(allowed.replace(/-/g, ''))) || name;
-        targetCategories.push({ categoryId: cat._id || cat.categoryId, gender: 'women', categoryName: canonical });
-      }
+    for (const cat of CLOTHING_CATEGORIES.men) {
+      targetCategories.push({ categoryId: cat.categoryId, gender: 'men', categoryName: cat.name });
+    }
+    
+    for (const cat of CLOTHING_CATEGORIES.women) {
+      targetCategories.push({ categoryId: cat.categoryId, gender: 'women', categoryName: cat.name });
     }
 
-    // De-duplicate category IDs just in case
     const uniqueTargets = Array.from(new Map(targetCategories.map(item => [item.categoryId, item])).values());
 
     this.logger.log(`[CJ] Discovered ${uniqueTargets.length} target categories for sync.`);
@@ -452,7 +451,7 @@ export class CjService {
       let consecutiveEmpty = 0;
 
       while (true) {
-        const url = `/v1/product/list?categoryId=${categoryId}&pageNum=${pageNum}&pageSize=100`;
+        const url = `/v1/product/list?categoryId=${categoryId}&pageNum=${pageNum}&pageSize=20`;
         let response;
         try {
           response = await this.scheduleRequest(url, { method: 'GET', headers: await this.authHeaders() });
@@ -599,7 +598,9 @@ export class CjService {
       const status = error?.response?.status;
 
       if (status === 429 && attempt < 5) {
-        const retryDelay = 2000 * Math.pow(2, attempt);
+        const baseDelay = 2000 * Math.pow(2, attempt);
+        const jitter = Math.floor(Math.random() * 1000);
+        const retryDelay = baseDelay + jitter;
         this.logger.warn(`[CJ] Rate limited — retrying in ${retryDelay}ms (attempt ${attempt + 1})`);
         await this.delay(retryDelay);
         return this.request(path, init, attempt + 1);
@@ -645,7 +646,6 @@ export class CjService {
       ).toLowerCase();
 
       if (catName && this.isBlocked(catName)) return;
-      if (depth === 0 && catName && !isCategoryAllowed(catName)) return;
 
       const childArrayKey = Object.keys(item).find(
         key => Array.isArray(item[key]) && item[key].length > 0 && typeof item[key][0] === 'object',
@@ -656,7 +656,7 @@ export class CjService {
         const branchName = item?.categorySecondName ?? item?.categoryFirstName;
         const nextGroup = group || item?.categoryFirstName || '';
 
-        if (branchId && branchName && isCategoryAllowed(branchName)) {
+        if (branchId && branchName) {
           results.push(this.normalizeCategory({ categoryId: branchId, categoryName: branchName }, nextGroup));
         }
 
@@ -664,7 +664,7 @@ export class CjService {
         return;
       }
 
-      if (catName && isCategoryAllowed(catName)) {
+      if (catName) {
         results.push(this.normalizeCategory(item, group));
       }
     };
@@ -708,21 +708,12 @@ export class CjService {
     let subcategoryName = product._category || query?._category;
     let collectionType = product._collectionType || query?._collectionType;
 
-    if (!gender) {
-      const check = isProductAllowed(product);
-      if (!check.allowed) return null;
-      gender = check.gender;
-      subcategoryName = check.subcategoryName;
-      collectionType = check.collectionType;
-    } else {
-      const productName = String(product?.productNameEn ?? product?.productName ?? product?.nameEn ?? product?.name ?? '').toLowerCase();
-      const catName = String(product?.categoryName ?? product?.categoryThirdName ?? product?.categorySecondName ?? product?.categoryFirstName ?? '').toLowerCase();
-      const combined = `${productName} ${catName}`;
-      const hasWomenSignal = /\b(women|woman|womens|ladies|lady|female)\b/i.test(combined);
-      const hasMenSignal = /\b(men|man|mens|male|gents)\b/i.test(combined) && !hasWomenSignal;
-
-      if (hasWomenSignal && gender !== 'Women') { gender = 'Women'; collectionType = 'Women'; }
-      else if (hasMenSignal && gender !== 'Men') { gender = 'Men'; collectionType = 'Men'; }
+    if (!gender || !subcategoryName) {
+      const info = getCategoryInfoById(categoryId);
+      if (!info) return null; // If category ID is totally unknown, reject the product
+      gender = info.gender;
+      subcategoryName = info.subcategoryName;
+      collectionType = info.collectionType;
     }
 
     const images = [

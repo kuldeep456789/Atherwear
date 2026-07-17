@@ -4,7 +4,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../app.module';
 import { Model } from 'mongoose';
 import { Product } from '../modules/products/schemas/product.schema';
-import { isProductAllowed } from '../modules/cj/category.mapper';
+import { getCategoryInfoById } from '../modules/cj/category.mapper';
 
 async function bootstrap() {
   const app = await NestFactory.createApplicationContext(AppModule);
@@ -15,9 +15,9 @@ async function bootstrap() {
 
   let updatedCount = 0;
   for (const product of products) {
-    const mapping = isProductAllowed(product);
+    const mapping = getCategoryInfoById(product.categoryId);
 
-    if (mapping.allowed && mapping.subcategoryName) {
+    if (mapping && mapping.subcategoryName) {
       if (
         product.subcategoryName !== mapping.subcategoryName ||
         product.gender !== mapping.gender ||
