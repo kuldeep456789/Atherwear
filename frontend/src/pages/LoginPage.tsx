@@ -258,68 +258,19 @@ const LoginPage = () => {
               </p>
             </div>
 
-            {/* Login / Register tabs */}
-            <div className="mb-6 grid grid-cols-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 p-1 gap-0">
-              <button
-                type="button"
-                onClick={() => switchMode(false)}
-                className={`rounded-lg px-3 py-2.5 text-sm font-semibold uppercase tracking-wider transition-all duration-200 cursor-pointer ${
-                  !isRegister
-                    ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm'
-                    : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
-                }`}
-              >
-                Login
-              </button>
-              <button
-                type="button"
-                onClick={() => switchMode(true)}
-                className={`rounded-lg px-3 py-2.5 text-sm font-semibold uppercase tracking-wider transition-all duration-200 cursor-pointer ${
-                  isRegister
-                    ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm'
-                    : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
-                }`}
-              >
-                Register
-              </button>
-            </div>
-
             {/* LOGIN FORM */}
             {!isRegister && (
               <>
-                {/* Login method selector */}
-                {!otpSent && (
-                  <div className="flex gap-2 mb-6">
-                    <button
-                      type="button"
-                      onClick={() => { setLoginMethod('email'); setErrorMessage(''); }}
-                      className={`flex-1 h-12 rounded-xl text-[13px] font-semibold tracking-wide transition-all duration-200 cursor-pointer border-2 ${
-                        loginMethod === 'email'
-                          ? 'bg-[hsl(var(--foreground))] text-[hsl(var(--background))] border-[hsl(var(--foreground))]'
-                          : 'bg-transparent text-zinc-500 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400'
-                      }`}
-                    >
-                      <Mail size={16} className="inline mr-1.5 -mt-0.5" strokeWidth={1.5} /> Email
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => { setLoginMethod('mobile'); setErrorMessage(''); }}
-                      className={`flex-1 h-12 rounded-xl text-[13px] font-semibold tracking-wide transition-all duration-200 cursor-pointer border-2 ${
-                        loginMethod === 'mobile'
-                          ? 'bg-[hsl(var(--foreground))] text-[hsl(var(--background))] border-[hsl(var(--foreground))]'
-                          : 'bg-transparent text-zinc-500 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400'
-                      }`}
-                    >
-                      <Smartphone size={16} className="inline mr-1.5 -mt-0.5" strokeWidth={1.5} /> Mobile
-                    </button>
-                  </div>
-                )}
-
                 {/* Email Login */}
                 {loginMethod === 'email' && !otpSent && (
                   <form onSubmit={handleLogin} className="space-y-4" noValidate>
                     <div>
-                      <label className="mb-2 block text-[11px] font-semibold uppercase tracking-widest text-zinc-500">Email address</label>
+                      <div className="flex justify-between items-center mb-2">
+                        <label className="block text-[11px] font-semibold uppercase tracking-widest text-zinc-500">Email address</label>
+                        <button type="button" onClick={() => { setLoginMethod('mobile'); setErrorMessage(''); }} className="text-[11px] font-semibold text-[hsl(var(--foreground))] hover:underline cursor-pointer">
+                          Use Mobile Instead
+                        </button>
+                      </div>
                       <div className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-[hsl(var(--card))] px-4 py-3.5 transition focus-within:border-zinc-500">
                         <Mail size={17} className="shrink-0 text-zinc-400" />
                         <input type="email" placeholder="you@example.com" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-400" />
@@ -346,14 +297,9 @@ const LoginPage = () => {
                       <div className="rounded-xl border border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/30 px-4 py-3 text-sm font-semibold text-red-700 dark:text-red-300">{errorMessage}</div>
                     )}
 
-                    <div className="flex gap-3">
-                      <button type="submit" disabled={isLoading} className="mt-2 flex-1 rounded-xl bg-[hsl(var(--foreground))] text-[hsl(var(--background))] h-14 text-sm font-semibold tracking-wider transition hover:shadow-md disabled:opacity-60 cursor-pointer">
-                        {isLoading ? 'Signing in...' : 'Login'}
-                      </button>
-                      <button type="button" onClick={handleAdminDemoLogin} disabled={isLoading} className="mt-2 flex-1 rounded-xl bg-[#0050cb] text-white h-14 text-sm font-semibold tracking-wider transition hover:shadow-md disabled:opacity-60 cursor-pointer">
-                        Admin Login
-                      </button>
-                    </div>
+                    <button type="submit" disabled={isLoading} className="mt-2 w-full rounded-xl bg-[hsl(var(--foreground))] text-[hsl(var(--background))] h-14 text-sm font-semibold tracking-wider transition hover:shadow-md disabled:opacity-60 cursor-pointer">
+                      {isLoading ? 'Signing in...' : 'Login'}
+                    </button>
                   </form>
                 )}
 
@@ -363,7 +309,12 @@ const LoginPage = () => {
                     {!otpSent ? (
                       <>
                         <div>
-                          <label className="mb-2 block text-[11px] font-semibold uppercase tracking-widest text-zinc-500">Mobile Number</label>
+                          <div className="flex justify-between items-center mb-2">
+                            <label className="block text-[11px] font-semibold uppercase tracking-widest text-zinc-500">Mobile Number</label>
+                            <button type="button" onClick={() => { setLoginMethod('email'); setErrorMessage(''); }} className="text-[11px] font-semibold text-[hsl(var(--foreground))] hover:underline cursor-pointer">
+                              Use Email Instead
+                            </button>
+                          </div>
                           <div className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-[hsl(var(--card))] px-4 py-3.5 transition focus-within:border-zinc-500">
                             <Phone size={17} className="shrink-0 text-zinc-400" />
                             <span className="text-sm font-semibold text-zinc-500">+91</span>
@@ -416,6 +367,17 @@ const LoginPage = () => {
                     )}
                   </div>
                 )}
+                
+                <div className="mt-8 text-center space-y-4">
+                  <p className="text-xs text-zinc-500 normal-case tracking-normal">
+                    Don't have an account?{' '}
+                    <button type="button" onClick={() => switchMode(true)} className="font-semibold text-[hsl(var(--foreground))] underline underline-offset-2 cursor-pointer">Sign up</button>
+                  </p>
+                  
+                  <button type="button" onClick={handleAdminDemoLogin} disabled={isLoading} className="text-[12px] font-semibold text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors cursor-pointer">
+                    Login as Administrator
+                  </button>
+                </div>
               </>
             )}
 

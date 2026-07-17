@@ -542,15 +542,26 @@ const ProductDetailsPage = () => {
 
               {/* Action Buttons */}
               <div className="flex flex-col space-y-3 pt-2">
-                <button
-                  onClick={handleAddToCart}
-                  className={`w-full h-[62px] rounded-[31px] text-[16px] font-medium transition-all duration-200 cursor-pointer active:scale-[0.98] ${isAdded
-                      ? 'bg-green-600 text-white'
-                      : 'bg-[#111111] dark:bg-white text-white dark:text-[#111111] hover:bg-black/80 dark:hover:bg-white/80'
-                    }`}
-                >
-                  {isAdded ? 'Added to Bag' : 'Add to Bag'}
-                </button>
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleAddToCart}
+                    className={`flex-1 h-[62px] rounded-[31px] text-[16px] font-medium transition-all duration-200 cursor-pointer active:scale-[0.98] ${isAdded
+                        ? 'bg-green-600 text-white'
+                        : 'bg-[#111111] dark:bg-white text-white dark:text-[#111111] hover:bg-black/80 dark:hover:bg-white/80'
+                      }`}
+                  >
+                    {isAdded ? 'Added to Bag' : 'Add to Bag'}
+                  </button>
+                  <button
+                    onClick={handleAddToCart}
+                    className={`flex-1 h-[62px] rounded-[31px] text-[16px] font-medium transition-all duration-200 cursor-pointer active:scale-[0.98] ${isAdded
+                        ? 'bg-yellow-400 text-black hover:bg-yellow-500'
+                        : 'bg-[#111111] dark:bg-white text-white dark:text-[#111111] hover:bg-yellow-400 hover:text-black dark:hover:bg-yellow-400 dark:hover:text-black'
+                      }`}
+                  >
+                    {isAdded ? 'Added to Cart' : 'Add to Cart'}
+                  </button>
+                </div>
                 <button
                   onClick={handleWishlistToggle}
                   className={`w-full h-[62px] rounded-[31px] border flex items-center justify-center gap-2 text-[16px] font-medium transition-all duration-200 cursor-pointer active:scale-[0.98] ${isWishlisted
