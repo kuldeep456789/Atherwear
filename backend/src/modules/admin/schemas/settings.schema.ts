@@ -31,6 +31,22 @@ export class Settings {
 
   @Prop({ trim: true })
   faviconUrl?: string;
+
+  // Finance & Commission Settings
+  @Prop({ default: 18 })
+  gstRate: number;
+
+  @Prop({ default: 10 })
+  commissionRate: number;
+
+  @Prop({ default: 2.9 })
+  gatewayFeePercent: number;
+
+  @Prop({ default: 0.3 })
+  gatewayFixedFee: number;
+
+  @Prop({ default: 7 })
+  settlementCycleDays: number;
 }
 
 export const SettingsSchema = SchemaFactory.createForClass(Settings);

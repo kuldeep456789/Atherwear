@@ -32,6 +32,34 @@ export default function AdminDashboard() {
     fetchDashboard();
   }, []);
 
+  const handleExport = () => {
+    if (!recentOrders || recentOrders.length === 0) {
+      alert("No data to export");
+      return;
+    }
+
+    const headers = ['Order ID', 'Customer Name', 'Customer Email', 'Amount', 'Status', 'Date'];
+    const csvContent = [
+      headers.join(','),
+      ...recentOrders.map(order => {
+        const customer = order.userId;
+        const name = (customer ? (customer.name || `${customer.firstName ?? ''} ${customer.lastName ?? ''}`.trim() || customer.email) : 'Unknown') || 'Unknown';
+        const email = customer?.email || 'N/A';
+        const date = new Date(order.createdAt).toLocaleDateString();
+        return `"${order._id}","${name}","${email}","${order.totalAmount}","${order.status}","${date}"`;
+      })
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `dashboard_export_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   if (loading) {
     return (
       <div className="space-y-8 pb-10 animate-pulse">
@@ -61,6 +89,13 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-8 pb-10">
+      <style>
+        {`
+          @keyframes drawChartPath {
+            to { stroke-dashoffset: 0; }
+          }
+        `}
+      </style>
       {/* Breadcrumbs & Quick Actions */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <nav className="flex items-center gap-2 text-sm text-gray-500">
@@ -69,16 +104,12 @@ export default function AdminDashboard() {
           <span className="font-medium text-gray-900">Dashboard</span>
         </nav>
         <div className="flex gap-2">
-          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded font-mono text-xs font-medium hover:bg-gray-50 transition-all text-gray-700 shadow-sm">
+          <button 
+            onClick={handleExport}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded font-mono text-xs font-medium hover:bg-gray-50 transition-all text-gray-700 shadow-sm cursor-pointer"
+          >
             <Download className="h-4 w-4" />
             Export
-          </button>
-          <button
-            onClick={fetchDashboard}
-            className="flex items-center gap-2 px-4 py-2 bg-[#0050cb] text-white rounded shadow-sm font-mono text-xs font-medium hover:opacity-90 transition-all"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Refresh
           </button>
         </div>
       </div>
@@ -90,24 +121,28 @@ export default function AdminDashboard() {
           title="Total Revenue" value={`₹${((stats?.totalRevenue ?? 0) / 100000).toFixed(1)}L`}
           subtitle={`₹${(stats?.totalRevenue ?? 0).toLocaleString()} lifetime`}
           chartColor="#0050cb"
+          chartPath="M0 25 Q 15 25, 25 15 T 45 25 T 60 5 T 80 25 T 95 10"
         />
         <StatCard
           icon={Calendar} iconBg="bg-gray-100 text-gray-600"
           title="Total Orders" value={String(stats?.totalOrders ?? 0)}
           subtitle="All time orders"
           chartColor="#565e74"
+          chartPath="M0 25 Q 10 20, 20 25 T 40 10 T 60 25 T 75 5 T 95 20"
         />
         <StatCard
           icon={ShoppingBag} iconBg="bg-orange-50 text-orange-600"
           title="Pending Returns" value={String(stats?.pendingReturns ?? 0)}
           subtitle="Awaiting processing"
           chartColor="#ba1a1a"
+          chartPath="M0 25 Q 10 20, 25 25 T 45 10 T 65 25 T 80 5 T 95 15"
         />
         <StatCard
           icon={MousePointerClick} iconBg="bg-blue-50 text-blue-600"
           title="Total Users" value={String(stats?.totalUsers ?? 0)}
           subtitle="Registered customers"
           chartColor="#0054d6"
+          chartPath="M0 25 Q 15 25, 25 15 T 45 25 T 60 5 T 80 25 T 95 10"
         />
       </section>
 
@@ -220,9 +255,10 @@ export default function AdminDashboard() {
   );
 }
 
-function StatCard({ icon: Icon, iconBg, title, value, subtitle, chartColor }: any) {
+function StatCard({ icon: Icon, iconBg, title, value, subtitle, chartColor, chartPath }: any) {
+  const path = chartPath || "M0 25 Q 10 15, 20 20 T 40 10 T 60 18 T 80 5 T 100 15";
   return (
-    <div className="bg-white border border-gray-200 p-6 rounded-xl shadow-sm hover:border-[#0050cb] transition-colors">
+    <div className="bg-white border border-gray-200 p-6 rounded-xl shadow-sm hover:border-[#0050cb] transition-colors group">
       <div className="flex justify-between items-start mb-4">
         <div className={`p-2 rounded-lg ${iconBg}`}>
           <Icon className="h-5 w-5" />
@@ -233,7 +269,15 @@ function StatCard({ icon: Icon, iconBg, title, value, subtitle, chartColor }: an
       <p className="text-xs text-gray-400 mt-1">{subtitle}</p>
       <div className="mt-4 h-12 w-full">
         <svg className="w-full h-full" viewBox="0 0 100 30">
-          <path d="M0 25 Q 10 15, 20 20 T 40 10 T 60 18 T 80 5 T 100 15" fill="none" stroke={chartColor} strokeWidth="2" />
+          <path 
+            d={path} 
+            fill="none" 
+            stroke={chartColor} 
+            strokeWidth="2" 
+            strokeDasharray="200"
+            strokeDashoffset="200"
+            style={{ animation: 'drawChartPath 2s ease-out forwards' }}
+          />
         </svg>
       </div>
     </div>

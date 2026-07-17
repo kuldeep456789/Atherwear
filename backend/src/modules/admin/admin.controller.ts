@@ -1,6 +1,6 @@
 import {
   Controller, Get, Post, Patch, Delete,
-  Headers, Param, Body,
+  Headers, Param, Body, Query,
   UnauthorizedException, ConflictException, NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -73,15 +73,16 @@ export class AdminController {
 
   // ─── Analytics ────────────────────────────────────────────────────────────
   @Get('analytics')
-  async getAnalytics(@Headers('authorization') authorization?: string) {
+  async getAnalytics(@Headers('authorization') authorization?: string, @Query('days') daysStr?: string) {
     await this.requireAdmin(authorization);
 
+    const days = parseInt(daysStr || '30', 10);
     const now = new Date();
-    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const daysAgo = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
 
     const [revenueByDay, ordersByStatus, topCustomers, monthlyRevenue] = await Promise.all([
       this.orderModel.aggregate([
-        { $match: { paymentStatus: 'paid', createdAt: { $gte: thirtyDaysAgo } } },
+        { $match: { paymentStatus: 'paid', createdAt: { $gte: daysAgo } } },
         { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }, revenue: { $sum: '$totalAmount' }, count: { $sum: 1 } } },
         { $sort: { _id: 1 } },
       ]).exec(),
@@ -105,6 +106,45 @@ export class AdminController {
     ]);
 
     return { revenueByDay, ordersByStatus, topCustomers, monthlyRevenue };
+  }
+
+  // ─── Search ───────────────────────────────────────────────────────────────
+  @Get('search')
+  async search(@Headers('authorization') authorization?: string, @Query('q') query?: string) {
+    await this.requireAdmin(authorization);
+    
+    if (!query || query.trim() === '') {
+      return { users: [], orders: [] };
+    }
+
+    const searchRegex = new RegExp(query, 'i');
+    
+    // Search users by name or email
+    const users = await this.userModel.find({
+      $or: [
+        { name: searchRegex },
+        { firstName: searchRegex },
+        { lastName: searchRegex },
+        { email: searchRegex }
+      ]
+    }).select('-password').limit(5).lean().exec();
+
+    // Search orders by ID or status
+    // Mongoose ObjectIds can be queried if it's a valid hex string
+    let orderQuery: any = {};
+    if (query.match(/^[0-9a-fA-F]{24}$/)) {
+      orderQuery = { _id: query };
+    } else {
+      orderQuery = { status: searchRegex };
+    }
+
+    const orders = await this.orderModel.find(orderQuery)
+      .populate('userId', 'name email firstName lastName')
+      .limit(5)
+      .lean()
+      .exec();
+
+    return { users, orders };
   }
 
   // ─── Users ────────────────────────────────────────────────────────────────

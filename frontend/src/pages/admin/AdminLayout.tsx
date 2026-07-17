@@ -1,17 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   LayoutDashboard, Package, Users, RotateCcw, MessageSquare, Banknote,
-  LogOut, Search, Bell, Settings, Menu, X
+  LogOut, Search as SearchIcon, Bell, Settings, Menu, X, Loader2
 } from 'lucide-react';
 import type { RootState } from '../../store/store';
 import { logout } from '../../store/slices/authSlice';
+import { adminApi, type AdminUser, type AdminOrder } from '../../services/adminApi';
 
 const navItems = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/admin/orders', label: 'Orders', icon: Package },
   { to: '/admin/users', label: 'Customers', icon: Users },
+  { to: '/admin/commission-finance', label: 'Finance', icon: Banknote },
   { to: '/admin/returns', label: 'Return Requests', icon: RotateCcw },
   { to: '/admin/customer-issues', label: 'Customer Issues', icon: MessageSquare },
   { to: '/admin/hero-banner', label: 'Settings', icon: Settings },
@@ -24,10 +26,74 @@ export default function AdminLayout() {
   const userInfo = useSelector((state: RootState) => state.auth.userInfo);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  // Search State
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searching, setSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<{ users: AdminUser[]; orders: AdminOrder[] }>({ users: [], orders: [] });
+
   // Close sidebar on route change on mobile
   useEffect(() => {
     setSidebarOpen(false);
+    setSearchOpen(false);
   }, [location.pathname]);
+
+  // Handle ⌘K shortcut
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+      if (e.key === 'Escape') {
+        setSearchOpen(false);
+        searchInputRef.current?.blur();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Handle outside click for dropdown
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        dropdownRef.current && 
+        !dropdownRef.current.contains(e.target as Node) &&
+        searchInputRef.current &&
+        !searchInputRef.current.contains(e.target as Node)
+      ) {
+        setSearchOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Debounced Search API Call
+  useEffect(() => {
+    const handler = setTimeout(async () => {
+      if (!searchQuery.trim()) {
+        setSearchResults({ users: [], orders: [] });
+        setSearching(false);
+        return;
+      }
+      
+      try {
+        setSearching(true);
+        const res = await adminApi.search(searchQuery.trim());
+        setSearchResults(res);
+      } catch (err) {
+        console.error('Search error', err);
+      } finally {
+        setSearching(false);
+      }
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
 
   const isActive = (item: typeof navItems[number]) => {
     if (item.end) return location.pathname === item.to;
@@ -118,20 +184,92 @@ export default function AdminLayout() {
             
             <h2 className="text-lg sm:text-xl font-semibold text-gray-900 hidden sm:block">Overview</h2>
             
-            <div className="relative flex items-center group hidden md:flex">
-              <Search className="absolute left-3 h-4 w-4 text-gray-400" />
-              <input 
-                type="text" 
-                placeholder="Search..." 
-                className="pl-10 pr-12 py-1.5 bg-gray-50 border border-gray-200 rounded-full text-sm w-48 lg:w-64 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0066ff]/20 focus:border-[#0066ff]"
-              />
-              <span className="absolute right-3 text-[10px] font-bold opacity-60 border px-1 rounded bg-white">⌘K</span>
+            <div className="relative group hidden md:block">
+              <div className="flex items-center">
+                <SearchIcon className="absolute left-3 h-4 w-4 text-gray-400" />
+                <input 
+                  ref={searchInputRef}
+                  type="text" 
+                  placeholder="Search..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => setSearchOpen(true)}
+                  className="pl-10 pr-12 py-1.5 bg-gray-50 border border-gray-200 rounded-full text-sm w-48 lg:w-64 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0066ff]/20 focus:border-[#0066ff]"
+                />
+                <span className="absolute right-3 text-[10px] font-bold opacity-60 border px-1 rounded bg-white pointer-events-none">⌘K</span>
+              </div>
+
+              {/* Search Dropdown */}
+              {searchOpen && searchQuery.trim() !== '' && (
+                <div 
+                  ref={dropdownRef}
+                  className="absolute top-full left-0 mt-2 w-[350px] bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden z-50 flex flex-col max-h-[400px]"
+                >
+                  {searching ? (
+                    <div className="p-4 flex items-center justify-center text-gray-500 gap-2 text-sm">
+                      <Loader2 className="h-4 w-4 animate-spin" /> Searching...
+                    </div>
+                  ) : searchResults.users.length === 0 && searchResults.orders.length === 0 ? (
+                    <div className="p-4 text-center text-sm text-gray-500">
+                      No results found for "{searchQuery}"
+                    </div>
+                  ) : (
+                    <div className="overflow-y-auto py-2">
+                      {searchResults.orders.length > 0 && (
+                        <div className="mb-2">
+                          <h4 className="px-4 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider bg-gray-50">Orders</h4>
+                          <ul>
+                            {searchResults.orders.map(order => (
+                              <li key={order._id}>
+                                <Link 
+                                  to="/admin/orders" 
+                                  className="block px-4 py-2 hover:bg-[#0066ff]/5 transition-colors"
+                                  onClick={() => setSearchOpen(false)}
+                                >
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-sm font-medium text-gray-900">#{order._id?.slice(-6).toUpperCase()}</span>
+                                    <span className="text-xs text-gray-500 capitalize">{order.status}</span>
+                                  </div>
+                                  <div className="text-xs text-gray-500 mt-0.5 truncate">
+                                    {(order.userId as unknown as AdminUser)?.name || (order.userId as unknown as AdminUser)?.email || 'Unknown User'}
+                                  </div>
+                                </Link>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      {searchResults.users.length > 0 && (
+                        <div>
+                          <h4 className="px-4 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider bg-gray-50">Customers</h4>
+                          <ul>
+                            {searchResults.users.map(user => (
+                              <li key={user._id}>
+                                <Link 
+                                  to="/admin/users" 
+                                  className="block px-4 py-2 hover:bg-[#0066ff]/5 transition-colors"
+                                  onClick={() => setSearchOpen(false)}
+                                >
+                                  <div className="text-sm font-medium text-gray-900">
+                                    {user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'No Name'}
+                                  </div>
+                                  <div className="text-xs text-gray-500 mt-0.5 truncate">
+                                    {user.email}
+                                  </div>
+                                </Link>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             
-            <nav className="hidden lg:flex gap-6 ml-2">
-              <span className="text-[#0050cb] font-bold border-b-2 border-[#0050cb] pb-1 text-[15px] cursor-pointer">Overview</span>
-              <span className="text-gray-500 font-medium hover:text-[#0050cb] transition-all text-[15px] cursor-pointer">Reports</span>
-            </nav>
+
           </div>
           
           <div className="flex items-center gap-4">

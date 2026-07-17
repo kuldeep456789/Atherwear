@@ -142,6 +142,11 @@ export interface StoreSettings {
   socialLinks: Record<string, string>;
   logoUrl?: string;
   faviconUrl?: string;
+  gstRate?: number;
+  commissionRate?: number;
+  gatewayFeePercent?: number;
+  gatewayFixedFee?: number;
+  settlementCycleDays?: number;
 }
 
 export interface AnalyticsData {
@@ -160,9 +165,13 @@ export const adminApi = {
       request<{ stats: DashboardStats; recentOrders: AdminOrder[] }>('GET', '/dashboard'),
   },
 
+  // Search
+  search: (query: string) =>
+    request<{ users: AdminUser[]; orders: AdminOrder[] }>('GET', `/search?q=${encodeURIComponent(query)}`),
+
   // Analytics
   analytics: {
-    get: () => request<AnalyticsData>('GET', '/analytics'),
+    get: (days?: number) => request<AnalyticsData>('GET', `/analytics${days ? `?days=${days}` : ''}`),
   },
 
   // Orders
