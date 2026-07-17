@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 
 import { DatabaseModule } from './modules/database/database.module';
 import { RedisModule } from './modules/redis/redis.module';
+import { MailModule } from './modules/mail/mail.module';
 
 import { CjModule } from './modules/cj/cj.module';
 import { CategoriesModule } from './modules/categories/categories.module';
@@ -23,6 +24,7 @@ import { UsersModule } from './modules/users/users.module';
     ScheduleModule.forRoot(),
     DatabaseModule,
     RedisModule,
+    MailModule,
 
     CjModule,
     CategoriesModule,

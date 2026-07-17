@@ -5,7 +5,7 @@ import { UsersService, SafeUser } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { TwilioService } from './services/twilio.service';
-import { EmailOtpService } from './services/email-otp.service';
+import { MailService } from '../mail/mail.service';
 import { OtpStoreService } from './services/otp-store.service';
 @Injectable()
 export class AuthService {
@@ -13,7 +13,7 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly twilioService: TwilioService,
-    private readonly emailOtpService: EmailOtpService,
+    private readonly mailService: MailService,
     private readonly otpStore: OtpStoreService,
   ) { }
   async register(registerDto: RegisterDto) {
@@ -31,6 +31,52 @@ export class AuthService {
       passwordHash,
       registerDto.phone,
     );
+    return this.authResponse(user);
+  }
+
+  async sendRegisterOtp(registerDto: RegisterDto) {
+    if (!registerDto.firstName || !registerDto.email || !registerDto.password) {
+      throw new BadRequestException('firstName, email, and password are required');
+    }
+    const normalized = registerDto.email.toLowerCase().trim();
+    const existingUser = await this.usersService.findByEmail(normalized);
+    if (existingUser) {
+      throw new BadRequestException('Email already in use');
+    }
+    
+    const code = this.otpStore.generate(`register:${normalized}`);
+    
+    // DEV HELPER: Log OTP to the backend terminal so you can test easily without waiting for emails
+    console.log(`\n=========================================`);
+    console.log(`[DEV MODE] Registration OTP for ${normalized}: ${code}`);
+    console.log(`=========================================\n`);
+
+    await this.mailService.sendOtp(registerDto.firstName, normalized, code);
+    return { message: 'Registration OTP sent successfully' };
+  }
+
+  async verifyRegisterOtp(registerDto: RegisterDto, code: string) {
+    const normalized = registerDto.email.toLowerCase().trim();
+    if (!code) throw new BadRequestException('OTP is required');
+    
+    const valid = this.otpStore.verify(`register:${normalized}`, code);
+    if (!valid) throw new BadRequestException('Invalid or expired OTP');
+    
+    this.otpStore.markVerified(`register_verified:${normalized}`);
+    
+    // Create the user now
+    const name = `${registerDto.firstName} ${registerDto.lastName || ''}`.trim();
+    const passwordHash = await bcrypt.hash(registerDto.password, 12);
+    const user = await this.usersService.create(
+      name,
+      normalized,
+      passwordHash,
+      registerDto.phone,
+    );
+    
+    // Send Welcome Email
+    await this.mailService.sendWelcome(registerDto.firstName, normalized);
+    
     return this.authResponse(user);
   }
 
@@ -98,7 +144,7 @@ export class AuthService {
     const user = await this.usersService.findByEmail(normalized);
     if (!user) throw new BadRequestException('No account found with this email');
     const code = this.otpStore.generate(`email:${normalized}`);
-    await this.emailOtpService.sendOTP(normalized, code);
+    await this.mailService.sendForgotPassword(user.firstName, normalized, code);
     return { message: 'OTP sent successfully' };
   }
 

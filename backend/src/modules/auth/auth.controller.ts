@@ -12,6 +12,16 @@ export class AuthController {
     return this.authService.register(registerDto);
   }
 
+  @Post('send-register-otp')
+  sendRegisterOtp(@Body() registerDto: RegisterDto) {
+    return this.authService.sendRegisterOtp(registerDto);
+  }
+
+  @Post('verify-register-otp')
+  verifyRegisterOtp(@Body() body: { registerDto: RegisterDto; code: string }) {
+    return this.authService.verifyRegisterOtp(body.registerDto, body.code);
+  }
+
   @Post('login')
   login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);

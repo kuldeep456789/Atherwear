@@ -9,6 +9,8 @@ import {
   useRegisterMutation,
   useSendMobileOtpMutation,
   useVerifyMobileOtpMutation,
+  useSendRegisterOtpMutation,
+  useVerifyRegisterOtpMutation,
 } from '../store/slices/userApiSlice';
 import toast from 'react-hot-toast';
 
@@ -52,6 +54,8 @@ const LoginPage = () => {
   const [register, { isLoading: registerLoading }] = useRegisterMutation();
   const [sendOtp] = useSendMobileOtpMutation();
   const [verifyOtp] = useVerifyMobileOtpMutation();
+  const [sendRegisterOtp] = useSendRegisterOtpMutation();
+  const [verifyRegisterOtp] = useVerifyRegisterOtpMutation();
   const isLoading = loginLoading || registerLoading || otpLoading;
 
   useEffect(() => {
@@ -180,21 +184,54 @@ const LoginPage = () => {
     if (!registerEmail.trim()) { setErrorMessage('Email is required.'); return; }
     if (registerPassword.length < 6) { setErrorMessage('Password must be at least 6 characters.'); return; }
     if (registerPassword !== confirmPassword) { setErrorMessage('Passwords do not match.'); return; }
+    
+    setOtpLoading(true);
     try {
-      const payload = await register({
+      await sendRegisterOtp({
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         email: registerEmail.trim(),
         password: registerPassword,
         ...(registerPhone ? { phone: `+91${registerPhone.replace(/\D/g, '')}` } : {}),
       }).unwrap();
-      dispatch(setCredentials({ ...payload.user, accessToken: payload.token || payload.accessToken }));
-      toast.success('Registration successful');
+      setOtpSent(true);
+      setCountdown(60);
+      toast.success('Verification OTP sent to your email');
+      setTimeout(() => otpRefs.current[0]?.focus(), 100);
     } catch (err: any) {
-      const apiMessage = Array.isArray(err?.data?.message) ? err.data.message.join(', ') : typeof err?.data?.message === 'string' ? err.data.message : typeof err?.error === 'string' ? err.error : '';
-      const msg = apiMessage || 'Registration failed. Please try again.';
+      const msg = err?.data?.message || 'Failed to send OTP. Please try again.';
       setErrorMessage(msg);
       toast.error(msg);
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleVerifyRegisterOtp = async () => {
+    const code = otpValues.join('');
+    if (code.length !== 6) { setErrorMessage('Enter the 6-digit OTP'); return; }
+    setErrorMessage('');
+    setOtpLoading(true);
+    try {
+      const payload = await verifyRegisterOtp({
+        registerDto: {
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          email: registerEmail.trim(),
+          password: registerPassword,
+          ...(registerPhone ? { phone: `+91${registerPhone.replace(/\D/g, '')}` } : {}),
+        },
+        code
+      }).unwrap();
+      dispatch(setCredentials({ ...payload.user, accessToken: payload.token || payload.accessToken }));
+      toast.success('Registration successful! Welcome to VASTRA');
+    } catch (err: any) {
+      setErrorMessage(err?.data?.message || 'Invalid or expired OTP');
+      toast.error(err?.data?.message || 'Invalid OTP');
+      setOtpValues(['', '', '', '', '', '']);
+      otpRefs.current[0]?.focus();
+    } finally {
+      setOtpLoading(false);
     }
   };
 
@@ -383,64 +420,108 @@ const LoginPage = () => {
 
             {/* REGISTER FORM */}
             {isRegister && (
-              <form onSubmit={handleRegister} className="space-y-4" noValidate>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="mb-2 block text-[11px] font-semibold uppercase tracking-widest text-zinc-500">First name</label>
-                    <div className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-[hsl(var(--card))] px-4 py-3.5 transition focus-within:border-zinc-500">
-                      <input type="text" placeholder="Aarav" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-400" />
+              <div className="space-y-4">
+                {otpSent ? (
+                  <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <div className="mb-6 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 px-6 py-8 text-center">
+                      <Mail className="mx-auto mb-4 h-10 w-10 text-zinc-400" />
+                      <h3 className="mb-2 text-lg font-bold">Check your email</h3>
+                      <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                        We've sent a 6-digit verification code to <br />
+                        <span className="font-semibold text-[hsl(var(--foreground))]">{registerEmail}</span>
+                      </p>
+                    </div>
+
+                    <div className="mb-6 flex justify-center gap-2">
+                      {otpValues.map((val, i) => (
+                        <input
+                          key={i}
+                          ref={(el) => (otpRefs.current[i] = el)}
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={1}
+                          value={val}
+                          onChange={(e) => handleOtpChange(i, e.target.value)}
+                          onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                          className={`w-11 h-12 text-center text-lg font-bold rounded-xl border-2 bg-[hsl(var(--card))] outline-none transition-all duration-150 ${
+                            val ? 'border-[hsl(var(--foreground))]' : 'border-zinc-200 dark:border-zinc-700 focus:border-zinc-500'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    {errorMessage && <div className="mb-4 rounded-xl border border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/30 px-4 py-3 text-sm font-semibold text-red-700 dark:text-red-300">{errorMessage}</div>}
+                    <button type="button" onClick={handleVerifyRegisterOtp} disabled={otpLoading || otpValues.join('').length !== 6} className="mb-4 w-full rounded-xl bg-[hsl(var(--foreground))] text-[hsl(var(--background))] h-14 text-sm font-semibold tracking-wider transition hover:opacity-90 disabled:opacity-50 cursor-pointer">
+                      {otpLoading ? 'Verifying...' : 'Verify Email & Create Account'}
+                    </button>
+                    <div className="text-center">
+                      {countdown > 0 ? (
+                        <span className="text-[12px] text-zinc-400">Resend code in {countdown}s</span>
+                      ) : (
+                        <button type="button" onClick={handleRegister} className="text-[12px] font-semibold text-[hsl(var(--foreground))] underline underline-offset-2 hover:opacity-80 cursor-pointer">
+                          Resend Code
+                        </button>
+                      )}
                     </div>
                   </div>
-                  <div>
-                    <label className="mb-2 block text-[11px] font-semibold uppercase tracking-widest text-zinc-500">Last name</label>
-                    <div className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-[hsl(var(--card))] px-4 py-3.5 transition focus-within:border-zinc-500">
-                      <input type="text" placeholder="Sharma" value={lastName} onChange={(e) => setLastName(e.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-400" />
+                ) : (
+                  <form onSubmit={handleRegister} className="space-y-4" noValidate>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="mb-2 block text-[11px] font-semibold uppercase tracking-widest text-zinc-500">First name</label>
+                        <div className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-[hsl(var(--card))] px-4 py-3.5 transition focus-within:border-zinc-500">
+                          <input type="text" placeholder="Aarav" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-400" />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="mb-2 block text-[11px] font-semibold uppercase tracking-widest text-zinc-500">Last name</label>
+                        <div className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-[hsl(var(--card))] px-4 py-3.5 transition focus-within:border-zinc-500">
+                          <input type="text" placeholder="Sharma" value={lastName} onChange={(e) => setLastName(e.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-400" />
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
 
-                <div>
-                  <label className="mb-2 block text-[11px] font-semibold uppercase tracking-widest text-zinc-500">Email address</label>
-                  <div className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-[hsl(var(--card))] px-4 py-3.5 transition focus-within:border-zinc-500">
-                    <Mail size={17} className="shrink-0 text-zinc-400" />
-                    <input type="email" placeholder="you@example.com" value={registerEmail} onChange={(e) => setRegisterEmail(e.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-400" />
-                  </div>
-                </div>
+                    <div>
+                      <label className="mb-2 block text-[11px] font-semibold uppercase tracking-widest text-zinc-500">Email address</label>
+                      <div className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-[hsl(var(--card))] px-4 py-3.5 transition focus-within:border-zinc-500">
+                        <Mail size={17} className="shrink-0 text-zinc-400" />
+                        <input type="email" placeholder="you@example.com" value={registerEmail} onChange={(e) => setRegisterEmail(e.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-400" />
+                      </div>
+                    </div>
 
-                <div>
-                  <label className="mb-2 block text-[11px] font-semibold uppercase tracking-widest text-zinc-500">Mobile number (optional)</label>
-                  <div className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-[hsl(var(--card))] px-4 py-3.5 transition focus-within:border-zinc-500">
-                    <Phone size={17} className="shrink-0 text-zinc-400" />
-                    <span className="text-sm font-semibold text-zinc-500">+91</span>
-                    <input type="tel" placeholder="9876543210" value={registerPhone} onChange={(e) => setRegisterPhone(e.target.value.replace(/\D/g, '').slice(0, 10))} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-400" />
-                  </div>
-                </div>
+                    <div>
+                      <label className="mb-2 block text-[11px] font-semibold uppercase tracking-widest text-zinc-500">Mobile number (optional)</label>
+                      <div className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-[hsl(var(--card))] px-4 py-3.5 transition focus-within:border-zinc-500">
+                        <Phone size={17} className="shrink-0 text-zinc-400" />
+                        <span className="text-sm font-semibold text-zinc-500">+91</span>
+                        <input type="tel" placeholder="9876543210" value={registerPhone} onChange={(e) => setRegisterPhone(e.target.value.replace(/\D/g, '').slice(0, 10))} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-400" />
+                      </div>
+                    </div>
 
-                <div>
-                  <label className="mb-2 block text-[11px] font-semibold uppercase tracking-widest text-zinc-500">Password</label>
-                  <div className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-[hsl(var(--card))] px-4 py-3.5 transition focus-within:border-zinc-500">
-                    <Lock size={17} className="shrink-0 text-zinc-400" />
-                    <input type={showRegisterPassword ? 'text' : 'password'} placeholder="Minimum 6 characters" value={registerPassword} onChange={(e) => setRegisterPassword(e.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-400" />
-                    <button type="button" onClick={() => setShowRegisterPassword((p) => !p)} className="text-zinc-400 hover:text-zinc-700 dark:hover:text-white cursor-pointer">
-                      {showRegisterPassword ? <EyeOff size={17} /> : <Eye size={17} />}
-                    </button>
-                  </div>
-                </div>
+                    <div>
+                      <label className="mb-2 block text-[11px] font-semibold uppercase tracking-widest text-zinc-500">Password</label>
+                      <div className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-[hsl(var(--card))] px-4 py-3.5 transition focus-within:border-zinc-500">
+                        <Lock size={17} className="shrink-0 text-zinc-400" />
+                        <input type={showRegisterPassword ? 'text' : 'password'} placeholder="Minimum 6 characters" value={registerPassword} onChange={(e) => setRegisterPassword(e.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-400" />
+                        <button type="button" onClick={() => setShowRegisterPassword((p) => !p)} className="text-zinc-400 hover:text-zinc-700 dark:hover:text-white cursor-pointer">
+                          {showRegisterPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                        </button>
+                      </div>
+                    </div>
 
-                <div>
-                  <label className="mb-2 block text-[11px] font-semibold uppercase tracking-widest text-zinc-500">Confirm password</label>
-                  <div className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-[hsl(var(--card))] px-4 py-3.5 transition focus-within:border-zinc-500">
-                    <Lock size={17} className="shrink-0 text-zinc-400" />
-                    <input type={showConfirmPassword ? 'text' : 'password'} placeholder="Re-enter your password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-400" />
-                    <button type="button" onClick={() => setShowConfirmPassword((p) => !p)} className="text-zinc-400 hover:text-zinc-700 dark:hover:text-white cursor-pointer">
-                      {showConfirmPassword ? <EyeOff size={17} /> : <Eye size={17} />}
-                    </button>
-                  </div>
-                </div>
+                    <div>
+                      <label className="mb-2 block text-[11px] font-semibold uppercase tracking-widest text-zinc-500">Confirm password</label>
+                      <div className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-[hsl(var(--card))] px-4 py-3.5 transition focus-within:border-zinc-500">
+                        <Lock size={17} className="shrink-0 text-zinc-400" />
+                        <input type={showConfirmPassword ? 'text' : 'password'} placeholder="Re-enter your password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-400" />
+                        <button type="button" onClick={() => setShowConfirmPassword((p) => !p)} className="text-zinc-400 hover:text-zinc-700 dark:hover:text-white cursor-pointer">
+                          {showConfirmPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                        </button>
+                      </div>
+                    </div>
 
-                {errorMessage && (
-                  <div className="rounded-xl border border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/30 px-4 py-3 text-sm font-semibold text-red-700 dark:text-red-300">{errorMessage}</div>
-                )}
+                    {errorMessage && (
+                      <div className="rounded-xl border border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/30 px-4 py-3 text-sm font-semibold text-red-700 dark:text-red-300">{errorMessage}</div>
+                    )}
 
                 <button type="submit" disabled={isLoading} className="mt-2 w-full rounded-xl bg-[hsl(var(--foreground))] text-[hsl(var(--background))] h-14 text-sm font-semibold tracking-wider transition hover:shadow-md disabled:opacity-60 cursor-pointer">
                   {isLoading ? 'Creating account...' : 'Create account'}
@@ -451,6 +532,8 @@ const LoginPage = () => {
                   <button type="button" onClick={() => switchMode(false)} className="font-semibold text-[hsl(var(--foreground))] underline underline-offset-2 cursor-pointer">Login</button>
                 </p>
               </form>
+                )}
+              </div>
             )}
           </div>
         </section>

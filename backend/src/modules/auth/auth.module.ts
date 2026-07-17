@@ -5,7 +5,6 @@ import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { TwilioService } from './services/twilio.service';
-import { EmailOtpService } from './services/email-otp.service';
 import { OtpStoreService } from './services/otp-store.service';
 
 @Module({
@@ -19,6 +18,6 @@ import { OtpStoreService } from './services/otp-store.service';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, TwilioService, EmailOtpService, OtpStoreService],
+  providers: [AuthService, TwilioService, OtpStoreService],
 })
 export class AuthModule {}

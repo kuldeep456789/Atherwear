@@ -1,9 +1,8 @@
-import { Link } from 'react-router-dom';
 
 const AnnouncementBanner = () => {
   return (
     <div
-      className="bg-[#f5f5f5] text-black text-[13px] py-2.5 overflow-hidden w-full flex items-center border-b border-gray-200 z-40"
+      className="bg-[#f5f5f5] text-black text-[20px] py-2.5 overflow-hidden w-full flex items-center border-b border-gray-200 z-40"
       style={{ marginTop: '88px' }}
     >
       <style>
@@ -22,7 +21,7 @@ const AnnouncementBanner = () => {
       </style>
       <div className="w-full overflow-hidden">
         <div className="animate-marquee font-medium items-center justify-center">
-          <span className="mr-3">Enjoy 10% Off On The VASTRA App. Use: VASTRA10</span>
+          <span className="mr-3">Enjoy 10% Off On The VASTRA App. Use: VASTRA10 & Vastra  order accept minimum 50,000 </span>
           {/* <Link to="/" className="underline hover:text-gray-600 transition-colors mx-2">Download Now</Link>
           <Link to="/" className="underline hover:text-gray-600 transition-colors">T&Cs</Link> */}
         </div>

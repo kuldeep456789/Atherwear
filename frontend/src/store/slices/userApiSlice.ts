@@ -10,6 +10,12 @@ export const userApiSlice = apiSlice.injectEndpoints({
     register: builder.mutation({
       query: (data) => ({ url: `${AUTH_URL}/register`, method: 'POST', body: data }),
     }),
+    sendRegisterOtp: builder.mutation({
+      query: (data) => ({ url: `${AUTH_URL}/send-register-otp`, method: 'POST', body: data }),
+    }),
+    verifyRegisterOtp: builder.mutation({
+      query: (data) => ({ url: `${AUTH_URL}/verify-register-otp`, method: 'POST', body: data }),
+    }),
     sendMobileOtp: builder.mutation({
       query: (data) => ({ url: `${AUTH_URL}/send-mobile-otp`, method: 'POST', body: data }),
     }),
@@ -42,6 +48,8 @@ export const userApiSlice = apiSlice.injectEndpoints({
 export const {
   useLoginMutation,
   useRegisterMutation,
+  useSendRegisterOtpMutation,
+  useVerifyRegisterOtpMutation,
   useSendMobileOtpMutation,
   useVerifyMobileOtpMutation,
   useSendEmailOtpMutation,
