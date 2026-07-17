@@ -7,7 +7,6 @@ import { RegisterDto } from './dto/register.dto';
 import { TwilioService } from './services/twilio.service';
 import { EmailOtpService } from './services/email-otp.service';
 import { OtpStoreService } from './services/otp-store.service';
-
 @Injectable()
 export class AuthService {
   constructor(
@@ -16,8 +15,7 @@ export class AuthService {
     private readonly twilioService: TwilioService,
     private readonly emailOtpService: EmailOtpService,
     private readonly otpStore: OtpStoreService,
-  ) {}
-
+  ) { }
   async register(registerDto: RegisterDto) {
     if (!registerDto.firstName || !registerDto.email || !registerDto.password) {
       throw new BadRequestException('firstName, email, and password are required');

@@ -3,7 +3,7 @@ import { CjService } from './cj.service';
 
 @Controller('cj')
 export class CjController {
-  constructor(private readonly cjService: CjService) {}
+  constructor(private readonly cjService: CjService) { }
 
   @Post('authentication')
   authenticate() {
@@ -20,21 +20,10 @@ export class CjController {
     const count = await this.cjService.getProductCount();
     return { count };
   }
-
-  /**
-   * Returns the latest sync metrics: last sync time, product counts,
-   * status, errors, and API calls used.
-   * This powers the admin dashboard sync health widget.
-   */
   @Get('sync-status')
   async syncStatus() {
     return this.cjService.getSyncMetrics();
   }
-
-  /**
-   * Trigger a manual sync from the admin dashboard.
-   * Runs asynchronously in the background — returns immediately.
-   */
   @Post('sync-now')
   triggerSync() {
     this.cjService.runCatalogSync().catch(err => {
@@ -54,9 +43,6 @@ export class CjController {
     });
     return { message: 'Catalog sync started. Check /cj/sync-status for live progress.' };
   }
-
-  // ── Legacy endpoints kept for admin panel compatibility ──────────────────
-
   @Get('products')
   getProducts() {
     return this.cjService.getProducts();

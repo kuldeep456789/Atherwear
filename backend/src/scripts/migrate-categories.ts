@@ -16,7 +16,7 @@ async function bootstrap() {
   let updatedCount = 0;
   for (const product of products) {
     const mapping = isProductAllowed(product);
-    
+
     if (mapping.allowed && mapping.subcategoryName) {
       if (
         product.subcategoryName !== mapping.subcategoryName ||
@@ -26,13 +26,11 @@ async function bootstrap() {
         product.subcategoryName = mapping.subcategoryName;
         product.gender = mapping.gender;
         product.collectionType = mapping.collectionType;
-        
         await product.save();
         updatedCount++;
       }
     }
   }
-
   console.log(`Migration completed. Updated ${updatedCount} products.`);
   await app.close();
 }

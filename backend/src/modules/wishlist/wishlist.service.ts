@@ -12,7 +12,7 @@ export class WishlistService {
     @InjectModel(Wishlist.name) private readonly wishlistModel: Model<Wishlist>,
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
-  ) {}
+  ) { }
 
   async getWishlist(token: string) {
     const user = await this.resolveUser(token);

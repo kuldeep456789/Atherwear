@@ -7,12 +7,9 @@ export type ActivityLogDocument = HydratedDocument<ActivityLog>;
 export class ActivityLog {
   @Prop({ required: true })
   action: string;
-
   @Prop({ required: true })
   description: string;
-
   @Prop()
   userId?: string;
 }
-
 export const ActivityLogSchema = SchemaFactory.createForClass(ActivityLog);

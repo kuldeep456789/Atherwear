@@ -214,10 +214,6 @@ export function isCategoryAllowed(categoryName: string): boolean {
     WOMEN_ALLOWED.some(cat => name.includes(normalizeCategoryText(cat)))
   );
 }
-
-// Lightweight blocker used during keyword crawl.
-// Only rejects products that are CLEARLY not clothing (shoes, electronics, pets, etc).
-// Does NOT require whitelist matches — the search keyword already guarantees clothing.
 export function isHardBlocked(product: any): boolean {
   const name = String(product?.productNameEn ?? product?.productName ?? product?.nameEn ?? product?.name ?? '').toLowerCase();
   const categoryName = String(product?.categoryName ?? product?.categoryThirdName ?? product?.categorySecondName ?? product?.categoryFirstName ?? '').toLowerCase();

@@ -21,7 +21,7 @@ export type SafeUser = {
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectModel(User.name) private readonly userModel: Model<User>) {}
+  constructor(@InjectModel(User.name) private readonly userModel: Model<User>) { }
 
   async create(name: string, email: string, password: string, phone?: string): Promise<SafeUser> {
     const existingUser = await this.userModel.exists({ email });
@@ -102,7 +102,7 @@ export class UsersService {
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
     if (!passwordRegex.test(dto.newPassword)) {
       throw new BadRequestException(
-        'Password must contain at least 8 characters, one uppercase letter, one lowercase letter, one number, and one special character',
+        'Password must contain at least 8 char',
       );
     }
 

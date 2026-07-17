@@ -7,7 +7,6 @@ export class TwilioService {
   private client: ReturnType<typeof Twilio> | null = null;
   private verifyServiceSid: string | null = null;
   private enabled = false;
-
   constructor() {
     const accountSid = process.env.TWILIO_ACCOUNT_SID;
     const authToken = process.env.TWILIO_AUTH_TOKEN;
@@ -20,7 +19,6 @@ export class TwilioService {
       this.logger.warn('Twilio not configured — OTPs will be logged to console in dev mode');
     }
   }
-
   async sendOTP(phone: string): Promise<{ sid?: string; status: string }> {
     if (!this.enabled || !this.client || !this.verifyServiceSid) {
       const code = Math.floor(100000 + Math.random() * 900000).toString();
@@ -32,7 +30,6 @@ export class TwilioService {
       .verifications.create({ to: phone, channel: 'sms' });
     return { sid: verification.sid, status: verification.status };
   }
-
   async verifyOTP(phone: string, code: string): Promise<{ valid: boolean }> {
     if (!this.enabled || !this.client || !this.verifyServiceSid) {
       this.logger.log(`[DEV] Verify OTP for ${phone}: ${code}`);

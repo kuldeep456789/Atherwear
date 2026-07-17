@@ -1,8 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
-
 export type OrderDocument = HydratedDocument<Order>;
-
 @Schema({ _id: false })
 export class OrderItem {
   @Prop({ type: String, required: true })

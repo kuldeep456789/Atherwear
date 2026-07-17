@@ -1,55 +1,35 @@
-import { config } from 'dotenv';
-config();
 import axios from 'axios';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
-async function testCJ() {
+async function testCJAuth() {
   const apiKey = process.env.CJ_API_KEY;
-  const email = process.env.CJ_EMAIL;
-  console.log(`Testing with Email: ${email}`);
+  const baseUrl = process.env.CJ_API_BASE_URL || 'https://developers.cjdropshipping.com/api2.0';
+
+  console.log(`Using Base URL: ${baseUrl}`);
+  console.log(`Using API Key: ${apiKey ? apiKey.substring(0, 15) + '...' : 'MISSING'}`);
+
+  if (!apiKey) {
+    console.error('❌ CJ_API_KEY is not set in .env');
+    process.exit(1);
+  }
 
   try {
-    // 1. Get Access Token
-    console.log('\n--- 1. Testing Authentication ---');
-    const authRes = await axios.post('https://developers.cjdropshipping.com/api2.0/v1/authentication/getAccessToken', {
-      apiKey
+    const response = await axios.post(`${baseUrl}/v1/authentication/getAccessToken`, {
+      apiKey,
     });
-    console.log('Auth Response Status:', authRes.status);
-    const token = authRes.data.data?.accessToken;
-    if (!token) {
-      console.error('Failed to get token:', authRes.data);
-      return;
-    }
-    console.log('Successfully retrieved Access Token (truncated):', token.slice(0, 10) + '...');
 
-    const headers = {
-      'CJ-Access-Token': token,
-      'Content-Type': 'application/json'
-    };
-
-    // 2. Get Categories
-    console.log('\n--- 2. Testing Categories ---');
-    const catRes = await axios.get('https://developers.cjdropshipping.com/api2.0/v1/product/getCategory', { headers });
-    console.log('Categories Response Status:', catRes.status);
-    console.log('Categories count:', catRes.data?.data?.length || 0);
-
-    // 3. Get Products
-    console.log('\n--- 3. Testing Products List ---');
-    const prodRes = await axios.get('https://developers.cjdropshipping.com/api2.0/v1/product/list?pageNum=1&pageSize=20', { headers });
-    console.log('Products Response Status:', prodRes.status);
-    console.log('Total Products returned from CJ:', prodRes.data?.data?.list?.length || 0);
-    
-    // Summary
-    console.log('\n✅ All APIs are working properly with the new credentials!');
-
-  } catch (error: any) {
-    console.error('\n❌ Error occurred:');
-    if (error.response) {
-      console.error('Response data:', error.response.data);
-      console.error('Response status:', error.response.status);
+    if (response.data && response.data.result) {
+      console.log('✅ CJ ID is WORKING!');
+      console.log('Token received successfully.');
     } else {
-      console.error(error.message);
+      console.log('❌ CJ API returned an error:');
+      console.log(response.data);
     }
+  } catch (error: any) {
+    console.error('❌ Request failed:');
+    console.error(error.response?.data || error.message);
   }
 }
 
-testCJ();
+testCJAuth();

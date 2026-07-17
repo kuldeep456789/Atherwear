@@ -10,35 +10,27 @@ import { RedisService } from '../redis/redis.service';
 import { isProductAllowed, isCategoryAllowed, isHardBlocked, BLOCKED } from './category.mapper';
 import { isAllowedMenCollection, isAllowedWomenCollection, MEN_COLLECTIONS, WOMEN_COLLECTIONS } from './collections';
 
-// ─── Redis key constants ────────────────────────────────────────────────────
-
-/** Stable "current" warehouse keys — what users read from */
-const WAREHOUSE_KEY_MEN   = 'products:men';
+const WAREHOUSE_KEY_MEN = 'products:men';
 const WAREHOUSE_KEY_WOMEN = 'products:women';
-const WAREHOUSE_KEY_ALL   = 'products:all';
+const WAREHOUSE_KEY_ALL = 'products:all';
 
-/** "Next" buffer keys — written during sync, swapped atomically on success */
-const WAREHOUSE_NEXT_MEN   = 'products:next:men';
+const WAREHOUSE_NEXT_MEN = 'products:next:men';
 const WAREHOUSE_NEXT_WOMEN = 'products:next:women';
-const WAREHOUSE_NEXT_ALL   = 'products:next:all';
+const WAREHOUSE_NEXT_ALL = 'products:next:all';
 
-/** Per-category granular keys e.g. products:warehouse:men:t-shirts */
 const categoryKey = (gender: string, cat: string) =>
   `products:${gender.toLowerCase()}:${cat.toLowerCase().replace(/[\s_'&-]+/g, '')}`;
 const categoryNextKey = (gender: string, cat: string) =>
   `products:next:${gender.toLowerCase()}:${cat.toLowerCase().replace(/[\s_'&-]+/g, '')}`;
 
-/** Sync metrics key */
 const SYNC_METRICS_KEY = 'cj:sync:metrics';
 
-/** Warehouse TTL — 90 minutes (cron runs every 60 min so there's always overlap) */
 const WAREHOUSE_TTL = 90 * 60;
 
-/** Per-product details cache */
 const PRODUCT_COUNT_CACHE_KEY = 'cj:product_count';
 const PRODUCT_COUNT_TTL = 60 * 60 * 24;
 
-const DEFAULT_SIZES  = ['S', 'M', 'L', 'XL'];
+const DEFAULT_SIZES = ['S', 'M', 'L', 'XL'];
 const DEFAULT_COLORS = ['Black'];
 
 const EXCLUDED_CATEGORY_IDS = new Set([
@@ -59,8 +51,6 @@ const EXCLUDED_PRODUCT_PIDS = new Set([
   '2607150846361621600',
 ]);
 
-// ─── Sync metrics type ──────────────────────────────────────────────────────
-
 export interface SyncMetrics {
   lastSyncTime: string | null;
   lastSyncDurationMs: number | null;
@@ -73,24 +63,20 @@ export interface SyncMetrics {
   nextSyncIn: string;
 }
 
-// ─── Service ────────────────────────────────────────────────────────────────
 
 @Injectable()
 export class CjService {
   private readonly logger = new Logger(CjService.name);
   private readonly baseUrl =
     process.env.CJ_API_BASE_URL ?? 'https://developers.cjdropshipping.com/api2.0';
-  private readonly accessTokenCacheKey   = 'cj:access_token';
+  private readonly accessTokenCacheKey = 'cj:access_token';
   private readonly accessTokenTtlSeconds = 60 * 60 * 23;
-  /** 300ms between requests ≈ 3 req/s — well under CJ limits */
   private readonly requestDelayMs = 300;
   private accessTokenCache: { token: string; expiresAt: number } | null = null;
   private requestQueue: Promise<void> = Promise.resolve();
   private apiCallsThisSync = 0;
 
-  constructor(private readonly redisService: RedisService) {}
-
-  // ─── Public: access token ─────────────────────────────────────────────────
+  constructor(private readonly redisService: RedisService) { }
 
   async getAccessToken() {
     const apiKey = process.env.CJ_API_KEY;
@@ -102,8 +88,6 @@ export class CjService {
       data: { apiKey },
     });
   }
-
-  // ─── Public: categories ───────────────────────────────────────────────────
 
   async getCategories() {
     const cacheKey = 'categories';
@@ -120,8 +104,6 @@ export class CjService {
     await this.redisService.setJson(cacheKey, normalized, 60 * 60 * 24 * 7);
     return normalized;
   }
-
-  // ─── Public: single product detail ────────────────────────────────────────
 
   async getProductById(pid: string) {
     if (!pid) throw new BadRequestException('product id is required');
@@ -157,8 +139,6 @@ export class CjService {
     await this.redisService.setJson(cacheKey, product, 60 * 60 * 24);
     return product;
   }
-
-  // ─── Public: raw product list (used by admin / category listing) ──────────
 
   async getProducts(query: Record<string, string | undefined> = {}) {
     const cacheKey = `cj:products:list:${JSON.stringify(query)}`;
@@ -236,13 +216,6 @@ export class CjService {
     };
     return this.getProducts(query);
   }
-
-  // ─── Public: warehouse read (used by products.service.ts) ─────────────────
-
-  /**
-   * Read products from the Redis warehouse.
-   * This is the ONLY path users ever see — never falls back to live CJ.
-   */
   async getWarehouseProducts(
     gender: 'men' | 'women' | 'all' | '' = 'all',
     pageNum = 1,
@@ -250,8 +223,6 @@ export class CjService {
     categoryId?: string,
     subcategoryName?: string,
   ): Promise<{ products: any[]; total: number; warehouseHit: true } | null> {
-
-    // If a specific subcategory is requested, use the per-category Redis key (fast path)
     if (subcategoryName && gender && gender !== 'all') {
       const catKey = categoryKey(gender, subcategoryName);
       const catData = await this.redisService.getJson<any[]>(catKey);
@@ -264,12 +235,10 @@ export class CjService {
         return { products, total, warehouseHit: true };
       }
     }
-
-    // Fall back to main gender warehouse and filter in-memory
     const key =
-      gender === 'men'   ? WAREHOUSE_KEY_MEN
-      : gender === 'women' ? WAREHOUSE_KEY_WOMEN
-      : WAREHOUSE_KEY_ALL;
+      gender === 'men' ? WAREHOUSE_KEY_MEN
+        : gender === 'women' ? WAREHOUSE_KEY_WOMEN
+          : WAREHOUSE_KEY_ALL;
 
     const warehouse = await this.redisService.getJson<any[]>(key);
     if (!warehouse || !Array.isArray(warehouse) || warehouse.length === 0) {
@@ -296,17 +265,6 @@ export class CjService {
     this.logger.log(`[CJ] Warehouse READ gender=${gender} page=${pageNum} size=${pageSize} → ${products.length}/${total}`);
     return { products, total, warehouseHit: true };
   }
-
-  // ─── Public: catalog sync (called by cron) ────────────────────────────────
-
-  /**
-   * Main cron sync — fetches all categories page-by-page (one keyword per category)
-   * and uses a double-buffer strategy: writes to :next keys first, then swaps
-   * atomically so users never read partial data.
-   *
-   * Retry: if CJ fails, waits 30s then 2m before giving up.
-   * If all retries fail, existing warehouse data is preserved untouched.
-   */
   async runCatalogSync(): Promise<{ success: boolean; count: number }> {
     const syncStart = Date.now();
     this.apiCallsThisSync = 0;
@@ -315,8 +273,7 @@ export class CjService {
 
     this.logger.log('[Cron] ✅ Sync Started');
 
-    // ── Attempt with retry ──────────────────────────────────────────────────
-    const RETRY_DELAYS = [0, 30_000, 120_000]; // Immediate, 30s, 2m
+    const RETRY_DELAYS = [0, 30_000, 120_000];
     let lastError = '';
     let allProducts: any[] | null = null;
 
@@ -369,15 +326,15 @@ export class CjService {
     }
 
     // ── Double-buffer: write to :next keys, then swap ───────────────────────
-    const menProducts   = allProducts.filter(p => String(p._gender ?? '').toLowerCase() === 'men');
+    const menProducts = allProducts.filter(p => String(p._gender ?? '').toLowerCase() === 'men');
     const womenProducts = allProducts.filter(p => String(p._gender ?? '').toLowerCase() === 'women');
 
     this.logger.log(`[Cron] ✅ Products Fetched — Men: ${menProducts.length}, Women: ${womenProducts.length}, Total: ${allProducts.length}`);
 
     // Write to :next buffer
     await Promise.all([
-      this.redisService.setJson(WAREHOUSE_NEXT_ALL,   allProducts,   WAREHOUSE_TTL),
-      this.redisService.setJson(WAREHOUSE_NEXT_MEN,   menProducts,   WAREHOUSE_TTL),
+      this.redisService.setJson(WAREHOUSE_NEXT_ALL, allProducts, WAREHOUSE_TTL),
+      this.redisService.setJson(WAREHOUSE_NEXT_MEN, menProducts, WAREHOUSE_TTL),
       this.redisService.setJson(WAREHOUSE_NEXT_WOMEN, womenProducts, WAREHOUSE_TTL),
     ]);
 
@@ -391,8 +348,8 @@ export class CjService {
 
     // Atomic swap: :next → :current
     await Promise.all([
-      this.redisService.rename(WAREHOUSE_NEXT_ALL,   WAREHOUSE_KEY_ALL),
-      this.redisService.rename(WAREHOUSE_NEXT_MEN,   WAREHOUSE_KEY_MEN),
+      this.redisService.rename(WAREHOUSE_NEXT_ALL, WAREHOUSE_KEY_ALL),
+      this.redisService.rename(WAREHOUSE_NEXT_MEN, WAREHOUSE_KEY_MEN),
       this.redisService.rename(WAREHOUSE_NEXT_WOMEN, WAREHOUSE_KEY_WOMEN),
     ]);
 
@@ -460,18 +417,18 @@ export class CjService {
     const seenPids = new Set<string>();
 
     this.logger.log(`[CJ] Fetching categories to discover category IDs...`);
-    
+
     // 1. Fetch categories
     const categoriesResponse = await this.getCategories();
     const categories: any[] = categoriesResponse?.categories ?? [];
-    
+
     // 2. Map categories to Men/Women collections
     const targetCategories: { categoryId: string; gender: string; categoryName: string }[] = [];
-    
+
     for (const cat of categories) {
       const name = cat.name || '';
       if (!name) continue;
-      
+
       // Determine if it matches Men or Women strict rules
       if (isAllowedMenCollection(name)) {
         // Find the canonical name it matched
@@ -549,9 +506,9 @@ export class CjService {
     const groups: Record<string, any[]> = {};
 
     for (const p of products) {
-      const gender  = String(p._gender ?? '').toLowerCase();
+      const gender = String(p._gender ?? '').toLowerCase();
       const catName = String(p._category ?? p.subcategoryName ?? p.category ?? 'other');
-      const key     = `${gender}:${catName.toLowerCase().replace(/[\s_'&-]+/g, '')}`;
+      const key = `${gender}:${catName.toLowerCase().replace(/[\s_'&-]+/g, '')}`;
 
       if (!groups[key]) groups[key] = [];
       groups[key].push(p);
@@ -695,9 +652,9 @@ export class CjService {
       );
 
       if (childArrayKey) {
-        const branchId   = item?.categorySecondId ?? item?.categoryFirstId;
+        const branchId = item?.categorySecondId ?? item?.categoryFirstId;
         const branchName = item?.categorySecondName ?? item?.categoryFirstName;
-        const nextGroup  = group || item?.categoryFirstName || '';
+        const nextGroup = group || item?.categoryFirstName || '';
 
         if (branchId && branchName && isCategoryAllowed(branchName)) {
           results.push(this.normalizeCategory({ categoryId: branchId, categoryName: branchName }, nextGroup));
@@ -747,22 +704,22 @@ export class CjService {
     );
     if (EXCLUDED_PRODUCT_PIDS.has(pid)) return null;
 
-    let gender         = product._gender || query?._gender;
+    let gender = product._gender || query?._gender;
     let subcategoryName = product._category || query?._category;
-    let collectionType  = product._collectionType || query?._collectionType;
+    let collectionType = product._collectionType || query?._collectionType;
 
     if (!gender) {
       const check = isProductAllowed(product);
       if (!check.allowed) return null;
       gender = check.gender;
       subcategoryName = check.subcategoryName;
-      collectionType  = check.collectionType;
+      collectionType = check.collectionType;
     } else {
       const productName = String(product?.productNameEn ?? product?.productName ?? product?.nameEn ?? product?.name ?? '').toLowerCase();
-      const catName     = String(product?.categoryName ?? product?.categoryThirdName ?? product?.categorySecondName ?? product?.categoryFirstName ?? '').toLowerCase();
-      const combined    = `${productName} ${catName}`;
+      const catName = String(product?.categoryName ?? product?.categoryThirdName ?? product?.categorySecondName ?? product?.categoryFirstName ?? '').toLowerCase();
+      const combined = `${productName} ${catName}`;
       const hasWomenSignal = /\b(women|woman|womens|ladies|lady|female)\b/i.test(combined);
-      const hasMenSignal   = /\b(men|man|mens|male|gents)\b/i.test(combined) && !hasWomenSignal;
+      const hasMenSignal = /\b(men|man|mens|male|gents)\b/i.test(combined) && !hasWomenSignal;
 
       if (hasWomenSignal && gender !== 'Women') { gender = 'Women'; collectionType = 'Women'; }
       else if (hasMenSignal && gender !== 'Men') { gender = 'Men'; collectionType = 'Men'; }
@@ -786,10 +743,10 @@ export class CjService {
     }).filter(Boolean);
 
     const uniqueImages = Array.from(new Set(images));
-    const name  = product?.productNameEn ?? product?.productName ?? product?.nameEn ?? product?.name ?? '';
+    const name = product?.productNameEn ?? product?.productName ?? product?.nameEn ?? product?.name ?? '';
     const price = Number(product?.sellPrice ?? product?.price ?? 0) || 0;
-    const sizes    = Array.isArray(product?.sizes)    && product.sizes.length    ? product.sizes    : DEFAULT_SIZES;
-    const colors   = Array.isArray(product?.colors)   && product.colors.length   ? product.colors   : DEFAULT_COLORS;
+    const sizes = Array.isArray(product?.sizes) && product.sizes.length ? product.sizes : DEFAULT_SIZES;
+    const colors = Array.isArray(product?.colors) && product.colors.length ? product.colors : DEFAULT_COLORS;
     const variants = Array.isArray(product?.variants) && product.variants.length
       ? product.variants
       : colors.flatMap((color: string) => sizes.map((size: string) => ({ color, size, stock: 999 })));
@@ -835,14 +792,14 @@ export class CjService {
     if (rawVariants.length === 0) return product;
 
     const colorSet = new Set<string>();
-    const sizeSet  = new Set<string>();
+    const sizeSet = new Set<string>();
     const variantImages: string[] = [];
     const enrichedVariants: any[] = [];
 
     for (const v of rawVariants) {
       const parsed = this.parseVariantKey(v.variantKey || '');
-      const color  = parsed.color || v.variantNameEn || 'Default';
-      const size   = parsed.size || 'One Size';
+      const color = parsed.color || v.variantNameEn || 'Default';
+      const size = parsed.size || 'One Size';
 
       colorSet.add(color);
       sizeSet.add(size);
@@ -860,15 +817,15 @@ export class CjService {
     }
 
     const colors = Array.from(colorSet).filter(Boolean);
-    const sizes  = Array.from(sizeSet).filter(Boolean);
+    const sizes = Array.from(sizeSet).filter(Boolean);
     const mergedImages = [...new Set([...variantImages, ...(product.images || [])])];
 
     return {
       ...product,
-      colors:   colors.length   > 0 ? colors   : product.colors,
-      sizes:    sizes.length    > 0 ? sizes     : product.sizes,
+      colors: colors.length > 0 ? colors : product.colors,
+      sizes: sizes.length > 0 ? sizes : product.sizes,
       variants: enrichedVariants.length > 0 ? enrichedVariants : product.variants,
-      images:   mergedImages,
+      images: mergedImages,
     };
   }
 
@@ -887,7 +844,7 @@ export class CjService {
 
   private buildSearch(query: Record<string, string | undefined>) {
     const cjParams = this.filterCjParams(query);
-    const search   = new URLSearchParams(cjParams).toString();
+    const search = new URLSearchParams(cjParams).toString();
     return search ? `?${search}` : '';
   }
 

@@ -32,7 +32,6 @@ type ProductQuery = {
 @Injectable()
 export class ProductsService {
   private readonly logger = new Logger(ProductsService.name);
-  /** TTL for per-query API response cache (not warehouse) */
   private readonly productTtlSeconds = 60 * 60 * 6;
   private readonly inFlightRequests = new Map<string, Promise<any>>();
 
@@ -42,18 +41,8 @@ export class ProductsService {
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     @InjectModel(Review.name) private readonly reviewModel: Model<Review>,
-  ) {}
+  ) { }
 
-  // ─── Public: product listing (Redis-only) ──────────────────────────────────
-
-  /**
-   * Main product listing endpoint.
-   *
-   * ARCHITECTURE: This method NEVER calls the live CJ API.
-   * All products are served from the Redis warehouse populated by the hourly cron job.
-   * If the warehouse is empty (e.g. first boot before cron runs), we return an empty
-   * response with a helpful flag. No CJ requests are made.
-   */
   async getProducts(query: ProductQuery = {}) {
     const cacheKey = this.buildCacheKey(query);
     const cached = await this.redisService.getJson(cacheKey);
@@ -73,9 +62,6 @@ export class ProductsService {
 
     return result;
   }
-
-  // ─── Public: single product detail ────────────────────────────────────────
-
   async getProduct(id: string) {
     const cacheKey = `product:${id}`;
     const cached = await this.redisService.getJson<Record<string, any>>(cacheKey);
@@ -134,7 +120,6 @@ export class ProductsService {
     return { products: [] };
   }
 
-  // ─── Public: reviews ───────────────────────────────────────────────────────
 
   async createReview(id: string, token: string, dto: CreateReviewDto) {
     if (!dto.comment?.trim()) throw new BadRequestException('comment is required');
@@ -152,21 +137,11 @@ export class ProductsService {
     return { review };
   }
 
-  // ─── Private: warehouse fetch (no CJ fallback) ────────────────────────────
 
-  /**
-   * Fetch products from Redis warehouse only.
-   *
-   * For search queries (q=), we still search the warehouse in-memory — we do NOT
-   * call the live CJ search API.
-   *
-   * If the warehouse is empty, we return an empty result with source='warehouse_empty'
-   * so the frontend can show a friendly "syncing..." message rather than an error.
-   */
   private async fetchFromWarehouse(query: ProductQuery) {
-    const gender      = (query.gender ?? '').toLowerCase() as 'men' | 'women' | 'all' | '';
-    const pageNum     = Number(query.pageNum || query.page || 1);
-    const pageSize    = Number(query.pageSize || query.limit || 80);
+    const gender = (query.gender ?? '').toLowerCase() as 'men' | 'women' | 'all' | '';
+    const pageNum = Number(query.pageNum || query.page || 1);
+    const pageSize = Number(query.pageSize || query.limit || 80);
 
     // ── Search query: filter warehouse in-memory ───────────────────────────
     if (query.q) {

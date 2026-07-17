@@ -13,7 +13,7 @@ import { CartService } from './cart.service';
 
 @Controller('cart')
 export class CartController {
-  constructor(private readonly cartService: CartService) {}
+  constructor(private readonly cartService: CartService) { }
 
   @Get()
   getCart(@Headers('authorization') authorization?: string) {
@@ -42,7 +42,6 @@ export class CartController {
     if (!token) {
       throw new UnauthorizedException('Bearer token is required');
     }
-
     return token;
   }
 }

@@ -8,7 +8,7 @@ async function bootstrap() {
   const app = await NestFactory.createApplicationContext(AppModule);
   const redisService = app.get(RedisService);
 
-  await redisService['client'].connect().catch(() => {});
+  await redisService['client'].connect().catch(() => { });
   const keys = await redisService['client'].keys('products:*');
   for (const key of keys) {
     if (!key.includes('warehouse')) {

@@ -7,9 +7,8 @@
 
 # Backend
 >> cd backend
->> npm run start 
-
-
+>> npm run start:dev (if u run the cammand it run and install all the deepency u edited)
+>>> npm run start (is used for run the backend file normally we start)
 
 ## frontend
 

@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
-
-const OTP_TTL_MS = 10 * 60 * 1000; // 10 minutes
+const OTP_TTL_MS = 10 * 60 * 1000;
 
 interface OtpEntry {
   code: string;
