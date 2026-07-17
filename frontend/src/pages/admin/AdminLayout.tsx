@@ -14,7 +14,6 @@ const navItems = [
   { to: '/admin/users', label: 'Customers', icon: Users },
   { to: '/admin/returns', label: 'Return Requests', icon: RotateCcw },
   { to: '/admin/customer-issues', label: 'Customer Issues', icon: MessageSquare },
-  { to: '/admin/commission-finance', label: 'Finance', icon: Banknote },
   { to: '/admin/hero-banner', label: 'Settings', icon: Settings },
 ];
 
@@ -58,7 +57,7 @@ export default function AdminLayout() {
         <div className="px-6 py-6 lg:py-8 flex items-center justify-between">
           <div>
             <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">VASTRA</h1>
-            <p className="text-[10px] lg:text-xs font-mono text-[#cbdbf5] opacity-60 uppercase tracking-widest mt-1">Enterprise Admin</p>
+            <p className="text-xs font-mono text-[#cbdbf5] opacity-60 uppercase tracking-widest mt-1">Enterprise Admin</p>
           </div>
           <button 
             className="lg:hidden text-white/70 hover:text-white p-2 -mr-2 cursor-pointer"
@@ -80,7 +79,7 @@ export default function AdminLayout() {
               }`}
             >
               <item.icon className="h-5 w-5 shrink-0" strokeWidth={isActive(item) ? 2 : 1.5} />
-              <span className="text-sm font-medium">{item.label}</span>
+              <span className="text-[15px] font-medium">{item.label}</span>
             </Link>
           ))}
         </nav>
@@ -130,16 +129,16 @@ export default function AdminLayout() {
             </div>
             
             <nav className="hidden lg:flex gap-6 ml-2">
-              <span className="text-[#0050cb] font-bold border-b-2 border-[#0050cb] pb-1 text-sm cursor-pointer">Overview</span>
-              <span className="text-gray-500 font-medium hover:text-[#0050cb] transition-all text-sm cursor-pointer">Reports</span>
+              <span className="text-[#0050cb] font-bold border-b-2 border-[#0050cb] pb-1 text-[15px] cursor-pointer">Overview</span>
+              <span className="text-gray-500 font-medium hover:text-[#0050cb] transition-all text-[15px] cursor-pointer">Reports</span>
             </nav>
           </div>
           
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3 border-l border-gray-200 pl-4">
               <div className="text-right hidden sm:block">
-                <p className="text-sm font-medium text-gray-900 leading-tight">{userInfo?.firstName || 'Admin'}</p>
-                <p className="text-[9px] text-gray-500 font-bold uppercase tracking-wider mt-0.5">SUPER ADMIN</p>
+                <p className="text-base font-medium text-gray-900 leading-tight">{userInfo?.firstName || 'Admin'}</p>
+                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mt-0.5">SUPER ADMIN</p>
               </div>
               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#0066ff] flex items-center justify-center text-white font-bold border border-gray-200 text-sm sm:text-base">
                 {(userInfo?.firstName?.[0] || 'A').toUpperCase()}

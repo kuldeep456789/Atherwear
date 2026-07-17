@@ -85,17 +85,16 @@ export default function AdminUsers() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
-              <thead className="bg-gray-50 border-b border-gray-200 text-xs font-mono text-gray-500 uppercase tracking-wider">
+              <thead className="bg-gray-50 border-b border-gray-200 text-sm font-mono text-gray-500 uppercase tracking-wider">
                 <tr>
                   <th className="px-6 py-4 font-medium">User</th>
                   <th className="px-6 py-4 font-medium">Email</th>
                   <th className="px-6 py-4 font-medium">Phone</th>
                   <th className="px-6 py-4 font-medium">Role</th>
                   <th className="px-6 py-4 font-medium">Joined</th>
-                  <th className="px-6 py-4 font-medium text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="text-sm">
+              <tbody className="text-[15px]">
                 {filtered.map((user) => {
                   const isDeleting = deletingId === user._id;
                   const initials = String(user.name || user.email || 'Unknown').substring(0, 2).toUpperCase();
@@ -112,26 +111,13 @@ export default function AdminUsers() {
                       <td className="px-6 py-4 text-gray-600">{user.email}</td>
                       <td className="px-6 py-4 text-gray-600">{user.phone || '—'}</td>
                       <td className="px-6 py-4">
-                        <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${
+                        <span className={`px-2.5 py-1.5 rounded-full text-xs font-bold ${
                           user.role === 'admin' ? 'bg-[#0050cb] text-white' : 'bg-gray-100 text-gray-700'
                         }`}>
                           {user.role}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-gray-500 text-xs">{new Date(user.createdAt).toLocaleDateString()}</td>
-                      <td className="px-6 py-4 text-right">
-                        {user.role !== 'admin' && (
-                          <button
-                            onClick={() => handleDelete(user._id, user.name || user.email)}
-                            disabled={isDeleting}
-                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
-                          >
-                            {isDeleting
-                              ? <div className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
-                              : <UserX className="h-4 w-4" />}
-                          </button>
-                        )}
-                      </td>
                     </tr>
                   );
                 })}

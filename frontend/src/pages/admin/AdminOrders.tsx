@@ -13,7 +13,7 @@ const statusColors: Record<string, string> = {
   unpaid: 'bg-gray-100 text-gray-700',
 };
 
-const orderStatuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+const orderStatuses = ['pending', 'processing', 'shipped', 'delivered'];
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState<AdminOrder[]>([]);
@@ -126,7 +126,7 @@ export default function AdminOrders() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
-              <thead className="bg-gray-50 border-b border-gray-200 text-xs font-mono text-gray-500 uppercase tracking-wider">
+              <thead className="bg-gray-50 border-b border-gray-200 text-sm font-mono text-gray-500 uppercase tracking-wider">
                 <tr>
                   <th className="px-6 py-4 font-medium w-10"><input type="checkbox" className="rounded border-gray-300" /></th>
                   <th className="px-6 py-4 font-medium">Order ID</th>
@@ -135,10 +135,9 @@ export default function AdminOrders() {
                   <th className="px-6 py-4 font-medium">Date</th>
                   <th className="px-6 py-4 font-medium">Payment</th>
                   <th className="px-6 py-4 font-medium">Order Status</th>
-                  <th className="px-6 py-4 font-medium text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="text-sm">
+              <tbody className="text-[15px]">
                 {filtered.map((order) => {
                   const customer = order.userId;
                   const name = (customer
@@ -150,7 +149,7 @@ export default function AdminOrders() {
                   return (
                     <tr key={order._id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors">
                       <td className="px-6 py-4"><input type="checkbox" className="rounded border-gray-300" /></td>
-                      <td className="px-6 py-4 font-mono text-xs text-gray-600">#{order._id.slice(-8).toUpperCase()}</td>
+                      <td className="px-6 py-4 font-mono text-sm font-medium text-gray-700">#{order._id.slice(-8).toUpperCase()}</td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs bg-blue-50 text-blue-700 border border-blue-100">
@@ -165,7 +164,7 @@ export default function AdminOrders() {
                       <td className="px-6 py-4 font-bold text-gray-900">₹{(order.totalAmount ?? 0).toLocaleString()}</td>
                       <td className="px-6 py-4 text-gray-600">{new Date(order.createdAt).toLocaleDateString()}</td>
                       <td className="px-6 py-4">
-                        <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${statusColors[order.paymentStatus] ?? 'bg-gray-100 text-gray-700'}`}>
+                        <span className={`px-2.5 py-1.5 rounded-full text-xs font-bold ${statusColors[order.paymentStatus] ?? 'bg-gray-100 text-gray-700'}`}>
                           {order.paymentStatus}
                         </span>
                       </td>
@@ -176,18 +175,13 @@ export default function AdminOrders() {
                           <select
                             value={order.status}
                             onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                            className="text-xs border border-gray-200 rounded px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-[#0050cb] cursor-pointer"
+                            className="text-sm border border-gray-200 rounded px-3 py-1.5 w-36 bg-white focus:outline-none focus:ring-1 focus:ring-[#0050cb] cursor-pointer"
                           >
                             {orderStatuses.map(s => (
                               <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
                             ))}
                           </select>
                         )}
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <button className="text-gray-400 hover:text-gray-700 transition-colors p-1">
-                          <MoreVertical className="h-5 w-5" />
-                        </button>
                       </td>
                     </tr>
                   );

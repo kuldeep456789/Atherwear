@@ -99,130 +99,85 @@ export default function AdminHeroBanner() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="max-w-3xl mx-auto mt-8">
         {/* Store Details */}
-        <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 space-y-5">
-          <div className="flex items-center gap-2 mb-2">
-            <Settings className="h-5 w-5 text-[#0050cb]" />
-            <h2 className="text-base font-semibold text-gray-900">Store Details</h2>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Store Name</label>
-            <input
-              type="text"
-              value={settings?.storeName ?? ''}
-              onChange={(e) => setSettings(p => p ? { ...p, storeName: e.target.value } : p)}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0066ff]/20 focus:border-[#0066ff]"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Store Email</label>
-            <input
-              type="email"
-              value={settings?.storeEmail ?? ''}
-              onChange={(e) => setSettings(p => p ? { ...p, storeEmail: e.target.value } : p)}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0066ff]/20 focus:border-[#0066ff]"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Currency</label>
-            <select
-              value={settings?.currency ?? 'INR'}
-              onChange={(e) => setSettings(p => p ? { ...p, currency: e.target.value } : p)}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0066ff]/20 focus:border-[#0066ff]"
-            >
-              <option value="INR">INR (₹)</option>
-              <option value="USD">USD ($)</option>
-              <option value="EUR">EUR (€)</option>
-              <option value="GBP">GBP (£)</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Free Shipping Threshold (₹)</label>
-            <input
-              type="number"
-              value={settings?.freeShippingThreshold ?? 499}
-              onChange={(e) => setSettings(p => p ? { ...p, freeShippingThreshold: Number(e.target.value) } : p)}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0066ff]/20 focus:border-[#0066ff]"
-            />
-          </div>
-
-          <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+        <div className="bg-white border border-gray-200/60 rounded-2xl shadow-sm hover:shadow-md transition-shadow p-6 sm:p-8 space-y-8">
+          <div className="flex items-center gap-4 pb-6 border-b border-gray-100">
+            <div className="p-3 bg-blue-50/50 rounded-xl text-[#0050cb] border border-blue-100/50">
+              <Settings className="h-6 w-6" />
+            </div>
             <div>
-              <p className="text-sm font-medium text-gray-900">Maintenance Mode</p>
-              <p className="text-xs text-gray-500 mt-0.5">Disables storefront for customers</p>
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900 tracking-tight">Store Details</h2>
+              <p className="text-sm text-gray-500 mt-1">Manage your store's primary identity and preferences</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-1.5 md:col-span-2">
+              <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-widest">Store Name</label>
+              <input
+                type="text"
+                value={settings?.storeName ?? ''}
+                onChange={(e) => setSettings(p => p ? { ...p, storeName: e.target.value } : p)}
+                className="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#0066ff]/20 focus:border-[#0066ff] transition-all"
+                placeholder="Enter store name"
+              />
+            </div>
+
+            <div className="space-y-1.5 md:col-span-2">
+              <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-widest">Store Email</label>
+              <input
+                type="email"
+                value={settings?.storeEmail ?? ''}
+                onChange={(e) => setSettings(p => p ? { ...p, storeEmail: e.target.value } : p)}
+                className="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#0066ff]/20 focus:border-[#0066ff] transition-all"
+                placeholder="support@yourstore.com"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-widest">Currency</label>
+              <select
+                value={settings?.currency ?? 'INR'}
+                onChange={(e) => setSettings(p => p ? { ...p, currency: e.target.value } : p)}
+                className="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#0066ff]/20 focus:border-[#0066ff] transition-all cursor-pointer"
+              >
+                <option value="INR">INR (₹)</option>
+                <option value="USD">USD ($)</option>
+                <option value="EUR">EUR (€)</option>
+                <option value="GBP">GBP (£)</option>
+              </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-widest">Free Shipping Over (₹)</label>
+              <input
+                type="number"
+                value={settings?.freeShippingThreshold ?? 499}
+                onChange={(e) => setSettings(p => p ? { ...p, freeShippingThreshold: Number(e.target.value) } : p)}
+                className="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#0066ff]/20 focus:border-[#0066ff] transition-all"
+                placeholder="e.g. 499"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between p-5 bg-gray-50/50 border border-gray-200/60 rounded-xl mt-4">
+            <div>
+              <p className="text-sm font-bold text-gray-900">Maintenance Mode</p>
+              <p className="text-xs text-gray-500 mt-1">Temporarily disable storefront for customers</p>
             </div>
             <button
               onClick={() => setSettings(p => p ? { ...p, maintenanceMode: !p.maintenanceMode } : p)}
-              className={`w-11 h-6 rounded-full transition-colors ${settings?.maintenanceMode ? 'bg-orange-500' : 'bg-gray-200'}`}
+              className={`w-12 h-6 rounded-full transition-colors relative focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0050cb] ${settings?.maintenanceMode ? 'bg-orange-500' : 'bg-gray-300'}`}
             >
-              <div className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform mx-0.5 ${settings?.maintenanceMode ? 'translate-x-5' : 'translate-x-0'}`} />
+              <div className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform absolute top-0.5 left-0.5 ${settings?.maintenanceMode ? 'translate-x-6' : 'translate-x-0'}`} />
             </button>
           </div>
         </div>
 
-        {/* Hero Banner Images */}
-        <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 space-y-5">
-          <h2 className="text-base font-semibold text-gray-900">Hero Banner Images</h2>
-          <p className="text-xs text-gray-500">Paste image URLs to add to the hero banner slideshow.</p>
 
-          <div className="flex gap-2">
-            <input
-              type="url"
-              placeholder="https://example.com/banner.jpg"
-              value={newBannerUrl}
-              onChange={(e) => setNewBannerUrl(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && addBanner()}
-              className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0066ff]/20 focus:border-[#0066ff]"
-            />
-            <button
-              onClick={addBanner}
-              className="px-3 py-2 bg-[#0050cb] text-white rounded-lg hover:opacity-90 transition-opacity"
-            >
-              <Plus className="h-4 w-4" />
-            </button>
-          </div>
 
-          <div className="space-y-3 max-h-80 overflow-y-auto">
-            {(settings?.heroBannerImages ?? []).map((url, i) => (
-              <div key={i} className="flex items-center gap-3 p-2 border border-gray-200 rounded-lg group">
-                <img src={url} alt={`Banner ${i + 1}`} className="w-16 h-10 object-cover rounded border border-gray-200 shrink-0" onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')} />
-                <p className="flex-1 text-xs text-gray-600 truncate">{url}</p>
-                <button onClick={() => removeBanner(i)} className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors shrink-0">
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            ))}
-            {(settings?.heroBannerImages ?? []).length === 0 && (
-              <p className="text-sm text-gray-400 text-center py-6">No banner images added yet</p>
-            )}
-          </div>
-        </div>
 
-        {/* Social Links */}
-        <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 space-y-4 lg:col-span-2">
-          <h2 className="text-base font-semibold text-gray-900">Social Media Links</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {['instagram', 'facebook', 'twitter', 'youtube'].map(platform => (
-              <div key={platform}>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5 capitalize">{platform}</label>
-                <input
-                  type="url"
-                  placeholder={`https://${platform}.com/yourstore`}
-                  value={settings?.socialLinks?.[platform] ?? ''}
-                  onChange={(e) => setSettings(p => p ? {
-                    ...p, socialLinks: { ...p.socialLinks, [platform]: e.target.value }
-                  } : p)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0066ff]/20 focus:border-[#0066ff]"
-                />
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
     </div>
   );
