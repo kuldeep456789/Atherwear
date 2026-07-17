@@ -221,7 +221,7 @@ export class ProductsService {
       .map(([key, value]) => `${key}:${String(value).trim().toLowerCase()}`)
       .sort();
 
-    return normalized.length > 0 ? `products:${normalized.join(':')}` : 'products:all';
+    return normalized.length > 0 ? `api:products:${normalized.join(':')}` : 'api:products:all';
   }
 
   private runSingleFlight<T>(key: string, factory: () => Promise<T>): Promise<T> {

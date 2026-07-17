@@ -14,3 +14,9 @@
 
 >> cd frontend
 >> npm run dev
+
+
+
+
+#### run to get the product from Cj 
+npx ts-node src/scripts/sync-products.ts

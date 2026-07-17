@@ -33,9 +33,9 @@ async function checkWarehouse() {
 
   // ── Warehouse Counts ──────────────────────────────────────────────────────
   const [menStr, womenStr, allStr] = await Promise.all([
-    client.get('products:warehouse:men'),
-    client.get('products:warehouse:women'),
-    client.get('products:warehouse:all'),
+    client.get('products:men'),
+    client.get('products:women'),
+    client.get('products:all'),
   ]);
 
   const menCount   = menStr   ? JSON.parse(menStr).length   : 0;
@@ -49,9 +49,9 @@ async function checkWarehouse() {
   console.log(`  All:     ${allCount} products`);
 
   // ── Per-Category Keys ─────────────────────────────────────────────────────
-  const catKeys = await client.keys('products:warehouse:*:*');
+  const catKeys = await client.keys('products:*:*');
   // Filter out :next buffer keys and the top-level gender keys
-  const currentCatKeys = catKeys.filter(k => !k.includes(':next:') && !['products:warehouse:men', 'products:warehouse:women', 'products:warehouse:all'].includes(k));
+  const currentCatKeys = catKeys.filter(k => !k.includes(':next:') && !['products:men', 'products:women', 'products:all'].includes(k));
 
   if (currentCatKeys.length > 0) {
     console.log('\n📂 PER-CATEGORY BREAKDOWN');
@@ -72,7 +72,7 @@ async function checkWarehouse() {
     });
 
     for (const { key, count } of catCounts) {
-      const label = key.replace('products:warehouse:', '').padEnd(30, '.');
+      const label = key.replace('products:', '').padEnd(30, '.');
       console.log(`  ${label} ${count} items`);
     }
   } else {

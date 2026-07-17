@@ -80,12 +80,15 @@ export class CjService {
 
   async getAccessToken() {
     const apiKey = process.env.CJ_API_KEY;
+    const email = process.env.CJ_EMAIL;
+    
     if (!apiKey) throw new InternalServerErrorException('CJ_API_KEY is not configured');
+    if (!email) throw new InternalServerErrorException('CJ_EMAIL is not configured');
 
     this.logger.log('[CJ] POST /v1/authentication/getAccessToken');
     return this.scheduleRequest('/v1/authentication/getAccessToken', {
       method: 'POST',
-      data: { apiKey },
+      data: { email, password: apiKey },
     });
   }
 
