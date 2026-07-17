@@ -81,7 +81,7 @@ export class CjService {
   async getAccessToken() {
     const apiKey = process.env.CJ_API_KEY;
     const email = process.env.CJ_EMAIL;
-    
+
     if (!apiKey) throw new InternalServerErrorException('CJ_API_KEY is not configured');
     if (!email) throw new InternalServerErrorException('CJ_EMAIL is not configured');
 
@@ -284,111 +284,111 @@ export class CjService {
 
       this.logger.log('[Cron] ✅ Sync Started');
 
-    const RETRY_DELAYS = [0, 30_000, 120_000];
-    let lastError = '';
-    let allProducts: any[] | null = null;
+      const RETRY_DELAYS = [0, 30_000, 120_000];
+      let lastError = '';
+      let allProducts: any[] | null = null;
 
-    for (let attempt = 0; attempt < RETRY_DELAYS.length; attempt++) {
-      if (RETRY_DELAYS[attempt] > 0) {
-        this.logger.warn(`[Cron] ⏳ Retrying sync in ${RETRY_DELAYS[attempt] / 1000}s (attempt ${attempt + 1})...`);
-        await this.delay(RETRY_DELAYS[attempt]);
+      for (let attempt = 0; attempt < RETRY_DELAYS.length; attempt++) {
+        if (RETRY_DELAYS[attempt] > 0) {
+          this.logger.warn(`[Cron] ⏳ Retrying sync in ${RETRY_DELAYS[attempt] / 1000}s (attempt ${attempt + 1})...`);
+          await this.delay(RETRY_DELAYS[attempt]);
+        }
+
+        try {
+          allProducts = await this.fetchCatalog();
+          break; // success — exit retry loop
+        } catch (e: any) {
+          lastError = e?.message ?? String(e);
+          this.logger.error(`[Cron] ❌ Sync attempt ${attempt + 1} failed: ${lastError}`);
+        }
       }
 
-      try {
-        allProducts = await this.fetchCatalog();
-        break; // success — exit retry loop
-      } catch (e: any) {
-        lastError = e?.message ?? String(e);
-        this.logger.error(`[Cron] ❌ Sync attempt ${attempt + 1} failed: ${lastError}`);
+      // ── All retries failed — keep existing cache ────────────────────────────
+      if (!allProducts) {
+        this.logger.error('[Cron] ❌ All sync attempts failed. Existing warehouse cache preserved.');
+        await this.saveSyncMetrics({
+          status: 'failed',
+          error: lastError,
+          lastSyncTime: new Date().toISOString(),
+          productCount: 0,
+          menCount: 0,
+          womenCount: 0,
+          lastSyncDurationMs: Date.now() - syncStart,
+          apiCallsUsed: this.apiCallsThisSync,
+          nextSyncIn: '60 minutes',
+        });
+        return { success: false, count: 0 };
       }
-    }
 
-    // ── All retries failed — keep existing cache ────────────────────────────
-    if (!allProducts) {
-      this.logger.error('[Cron] ❌ All sync attempts failed. Existing warehouse cache preserved.');
+      if (allProducts.length < 50) {
+        this.logger.warn(`[Cron] ⚠️ Fetch returned only ${allProducts.length} products — too few to be valid. Keeping existing cache.`);
+        await this.saveSyncMetrics({
+          status: 'failed',
+          error: `Only ${allProducts.length} products returned — refusing to overwrite warehouse`,
+          lastSyncTime: new Date().toISOString(),
+          productCount: 0,
+          menCount: 0,
+          womenCount: 0,
+          lastSyncDurationMs: Date.now() - syncStart,
+          apiCallsUsed: this.apiCallsThisSync,
+          nextSyncIn: '60 minutes',
+        });
+        return { success: false, count: allProducts.length };
+      }
+
+      // ── Double-buffer: write to :next keys, then swap ───────────────────────
+      const menProducts = allProducts.filter(p => String(p._gender ?? '').toLowerCase() === 'men');
+      const womenProducts = allProducts.filter(p => String(p._gender ?? '').toLowerCase() === 'women');
+
+      this.logger.log(`[Cron] ✅ Products Fetched — Men: ${menProducts.length}, Women: ${womenProducts.length}, Total: ${allProducts.length}`);
+
+      // Write to :next buffer
+      await Promise.all([
+        this.redisService.setJson(WAREHOUSE_NEXT_ALL, allProducts, WAREHOUSE_TTL),
+        this.redisService.setJson(WAREHOUSE_NEXT_MEN, menProducts, WAREHOUSE_TTL),
+        this.redisService.setJson(WAREHOUSE_NEXT_WOMEN, womenProducts, WAREHOUSE_TTL),
+      ]);
+
+      // Write per-category keys to :next buffer
+      const categoryGroups = this.groupByCategory(allProducts);
+      const catWriteOps: Promise<void>[] = [];
+      for (const [catKey, catProducts] of Object.entries(categoryGroups)) {
+        catWriteOps.push(this.redisService.setJson(`products:next:${catKey}`, catProducts, WAREHOUSE_TTL));
+      }
+      await Promise.all(catWriteOps);
+
+      // Atomic swap: :next → :current
+      await Promise.all([
+        this.redisService.rename(WAREHOUSE_NEXT_ALL, WAREHOUSE_KEY_ALL),
+        this.redisService.rename(WAREHOUSE_NEXT_MEN, WAREHOUSE_KEY_MEN),
+        this.redisService.rename(WAREHOUSE_NEXT_WOMEN, WAREHOUSE_KEY_WOMEN),
+      ]);
+
+      // Swap per-category keys
+      const catSwapOps: Promise<void>[] = [];
+      for (const catKey of Object.keys(categoryGroups)) {
+        catSwapOps.push(this.redisService.rename(`products:next:${catKey}`, `products:${catKey}`));
+      }
+      await Promise.all(catSwapOps);
+
+      const durationMs = Date.now() - syncStart;
+      this.logger.log(`[Cron] ✅ Redis Updated`);
+      this.logger.log(`[Cron] ✅ Execution Time: ${(durationMs / 1000).toFixed(1)}s`);
+      this.logger.log(`[Cron] ✅ API Calls Used: ~${this.apiCallsThisSync}`);
+      this.logger.log(`[Cron] ✅ Sync Completed Successfully`);
+
+      await this.saveProductCount(allProducts.length);
       await this.saveSyncMetrics({
-        status: 'failed',
-        error: lastError,
+        status: 'success',
+        error: null,
         lastSyncTime: new Date().toISOString(),
-        productCount: 0,
-        menCount: 0,
-        womenCount: 0,
-        lastSyncDurationMs: Date.now() - syncStart,
+        productCount: allProducts.length,
+        menCount: menProducts.length,
+        womenCount: womenProducts.length,
+        lastSyncDurationMs: durationMs,
         apiCallsUsed: this.apiCallsThisSync,
         nextSyncIn: '60 minutes',
       });
-      return { success: false, count: 0 };
-    }
-
-    if (allProducts.length < 50) {
-      this.logger.warn(`[Cron] ⚠️ Fetch returned only ${allProducts.length} products — too few to be valid. Keeping existing cache.`);
-      await this.saveSyncMetrics({
-        status: 'failed',
-        error: `Only ${allProducts.length} products returned — refusing to overwrite warehouse`,
-        lastSyncTime: new Date().toISOString(),
-        productCount: 0,
-        menCount: 0,
-        womenCount: 0,
-        lastSyncDurationMs: Date.now() - syncStart,
-        apiCallsUsed: this.apiCallsThisSync,
-        nextSyncIn: '60 minutes',
-      });
-      return { success: false, count: allProducts.length };
-    }
-
-    // ── Double-buffer: write to :next keys, then swap ───────────────────────
-    const menProducts = allProducts.filter(p => String(p._gender ?? '').toLowerCase() === 'men');
-    const womenProducts = allProducts.filter(p => String(p._gender ?? '').toLowerCase() === 'women');
-
-    this.logger.log(`[Cron] ✅ Products Fetched — Men: ${menProducts.length}, Women: ${womenProducts.length}, Total: ${allProducts.length}`);
-
-    // Write to :next buffer
-    await Promise.all([
-      this.redisService.setJson(WAREHOUSE_NEXT_ALL, allProducts, WAREHOUSE_TTL),
-      this.redisService.setJson(WAREHOUSE_NEXT_MEN, menProducts, WAREHOUSE_TTL),
-      this.redisService.setJson(WAREHOUSE_NEXT_WOMEN, womenProducts, WAREHOUSE_TTL),
-    ]);
-
-    // Write per-category keys to :next buffer
-    const categoryGroups = this.groupByCategory(allProducts);
-    const catWriteOps: Promise<void>[] = [];
-    for (const [catKey, catProducts] of Object.entries(categoryGroups)) {
-      catWriteOps.push(this.redisService.setJson(`products:next:${catKey}`, catProducts, WAREHOUSE_TTL));
-    }
-    await Promise.all(catWriteOps);
-
-    // Atomic swap: :next → :current
-    await Promise.all([
-      this.redisService.rename(WAREHOUSE_NEXT_ALL, WAREHOUSE_KEY_ALL),
-      this.redisService.rename(WAREHOUSE_NEXT_MEN, WAREHOUSE_KEY_MEN),
-      this.redisService.rename(WAREHOUSE_NEXT_WOMEN, WAREHOUSE_KEY_WOMEN),
-    ]);
-
-    // Swap per-category keys
-    const catSwapOps: Promise<void>[] = [];
-    for (const catKey of Object.keys(categoryGroups)) {
-      catSwapOps.push(this.redisService.rename(`products:next:${catKey}`, `products:${catKey}`));
-    }
-    await Promise.all(catSwapOps);
-
-    const durationMs = Date.now() - syncStart;
-    this.logger.log(`[Cron] ✅ Redis Updated`);
-    this.logger.log(`[Cron] ✅ Execution Time: ${(durationMs / 1000).toFixed(1)}s`);
-    this.logger.log(`[Cron] ✅ API Calls Used: ~${this.apiCallsThisSync}`);
-    this.logger.log(`[Cron] ✅ Sync Completed Successfully`);
-
-    await this.saveProductCount(allProducts.length);
-    await this.saveSyncMetrics({
-      status: 'success',
-      error: null,
-      lastSyncTime: new Date().toISOString(),
-      productCount: allProducts.length,
-      menCount: menProducts.length,
-      womenCount: womenProducts.length,
-      lastSyncDurationMs: durationMs,
-      apiCallsUsed: this.apiCallsThisSync,
-      nextSyncIn: '60 minutes',
-    });
 
       return { success: true, count: allProducts.length };
     } finally {
@@ -438,7 +438,7 @@ export class CjService {
     for (const cat of CLOTHING_CATEGORIES.men) {
       targetCategories.push({ categoryId: cat.categoryId, gender: 'men', categoryName: cat.name });
     }
-    
+
     for (const cat of CLOTHING_CATEGORIES.women) {
       targetCategories.push({ categoryId: cat.categoryId, gender: 'women', categoryName: cat.name });
     }

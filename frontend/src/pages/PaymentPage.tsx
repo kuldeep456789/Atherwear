@@ -31,10 +31,12 @@ const PaymentPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!shippingAddress.address) {
+    if (cart.totalPrice < 50000) {
+      navigate('/cart');
+    } else if (!shippingAddress.address) {
       navigate('/shipping');
     }
-  }, [shippingAddress, navigate]);
+  }, [shippingAddress, cart.totalPrice, navigate]);
 
   const submitHandler = () => {
     dispatch(savePaymentMethod(paymentMethod));

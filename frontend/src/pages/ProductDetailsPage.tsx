@@ -139,7 +139,6 @@ const ProductDetailsPage = () => {
   console.log("Colors:", colors);
   console.log("Sizes:", sizes);
 
-  const collabTag = product.tags?.find((t: string) => t.startsWith('Collab:'))?.replace('Collab:', '') || null;
   const discountPct =
     product.discountPrice && product.price > product.discountPrice
       ? Math.round(((product.price - product.discountPrice) / product.price) * 100)
@@ -314,24 +313,10 @@ const ProductDetailsPage = () => {
           {/* ─── Left — Gallery (55%) ─── */}
           <div className="w-full lg:w-[700px] lg:min-w-[580px] lg:flex-shrink-0">
             <div className="flex gap-3">
-              {/* Thumbnail column */}
-              <div className="hidden lg:flex flex-col gap-3 w-[80px] shrink-0">
-                {displayImages.map((img: string, i: number) => (
-                  <button
-                    key={i}
-                    onClick={() => setSelectedImage(i)}
-                    className={`w-[80px] h-[110px] rounded-xl overflow-hidden cursor-pointer transition-all duration-200 border-2 flex-shrink-0 hover:scale-105 ${selectedImage === i
-                        ? 'border-black dark:border-white'
-                        : 'border-transparent opacity-60 hover:opacity-100'
-                      }`}
-                  >
-                    <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" />
-                  </button>
-                ))}
-              </div>
+
 
               {/* Main Image */}
-              <div className="flex-1 min-w-0 group" ref={imageRef}>
+              <div className="flex-1 min-w-0 group relative" ref={imageRef}>
                 <div
                   onMouseMove={handleImageZoom}
                   onMouseLeave={() => setZoomLens((p) => ({ ...p, active: false }))}
@@ -436,26 +421,12 @@ const ProductDetailsPage = () => {
                   </div>
                 </div>
 
-                {/* Mobile thumbnails — horizontal slider */}
-                <div className="flex lg:hidden gap-2 mt-3 overflow-x-auto pb-1">
-                  {displayImages.map((img: string, i: number) => (
-                    <button
-                      key={i}
-                      onClick={() => setSelectedImage(i)}
-                      className={`flex-shrink-0 w-16 h-20 rounded-lg overflow-hidden border-2 transition-all duration-200 ${selectedImage === i
-                          ? 'border-black dark:border-white'
-                          : 'border-transparent opacity-60 hover:opacity-100'
-                        }`}
-                    >
-                      <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" />
-                    </button>
-                  ))}
-                </div>
 
-                {/* Zoom preview — xl screens */}
+
+                {/* Zoom preview — lg screens */}
                 {zoomLens.active && (
-                  <div className="hidden xl:block mt-3">
-                    <div className="w-full h-[200px] overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-lg bg-white dark:bg-zinc-900">
+                  <div className="hidden lg:block absolute top-0 left-full ml-6 z-[100] pointer-events-none">
+                    <div className="w-[450px] xl:w-[500px] h-[620px] lg:h-[720px] overflow-hidden rounded-[18px] border border-zinc-200 dark:border-zinc-800 shadow-2xl bg-white dark:bg-zinc-900">
                       <img
                         src={displayImages[selectedImage] || displayImages[0]}
                         alt=""
@@ -470,93 +441,97 @@ const ProductDetailsPage = () => {
                   </div>
                 )}
               </div>
+
+
             </div>
           </div>
 
           {/* ─── Right — Product Details (45%) ─── */}
-          <div className="w-full lg:w-[500px] lg:min-w-[380px] lg:flex-shrink-0 lg:sticky lg:top-6 self-start">
-            <div className="space-y-4">
-              {/* Brand */}
-              <span className="block text-sm font-medium uppercase text-gray-500 dark:text-gray-400 tracking-wider">
-                {collabTag ? `VASTRA × ${collabTag}` : 'VASTRA'}
+          <div className="w-full lg:w-[480px] lg:min-w-[380px] lg:flex-shrink-0 lg:sticky lg:top-6 self-start pl-0 lg:pl-4 xl:pl-8">
+            <div className="space-y-1">
+              {/* Brand / Just In */}
+              <span className="block text-base font-medium text-[#c93b3b]">
+                Just In
               </span>
 
               {/* Product Name */}
-              <h1 className="text-2xl font-semibold leading-tight line-clamp-2 text-zinc-900 dark:text-white">
+              <h1 className="text-[26px] font-medium leading-tight text-[#111111] dark:text-white pt-1">
                 {productName || 'Product'}
               </h1>
-
-              {/* Rating Badge */}
-              <div className="flex items-center gap-2 text-sm">
-                <span className="text-amber-500">&#9733;</span>
-                <span className="font-semibold text-zinc-800 dark:text-zinc-200">{Number(averageRatingVal).toFixed(1)}</span>
-                <span className="text-zinc-400">| {totalNumReviews} Reviews</span>
-              </div>
+              <p className="text-base text-zinc-500 pb-2">
+                Men's Heavyweight Short-Sleeve Top
+              </p>
 
               {/* Price */}
-              <div className="flex items-baseline gap-3">
-                <span className="text-4xl font-bold text-zinc-900 dark:text-white">
-                  {formatINR(product.discountPrice || product.price)}
-                </span>
-                {product.discountPrice && (
-                  <>
-                    <span className="text-lg text-zinc-400 line-through">{formatINR(product.price)}</span>
-                    <span className="text-sm font-bold text-green-600">{discountPct}% OFF</span>
-                  </>
-                )}
+              <div className="flex flex-col pt-2 pb-6">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-lg font-medium text-[#111111] dark:text-white">
+                    {formatINR(product.discountPrice || product.price)}
+                  </span>
+                  {product.discountPrice && (
+                    <>
+                      <span className="text-sm text-zinc-500 line-through">{formatINR(product.price)}</span>
+                      <span className="text-sm font-medium text-green-600">{discountPct}% OFF</span>
+                    </>
+                  )}
+                </div>
+                <span className="text-[15px] text-zinc-500 mt-1">Inclusive of all taxes</span>
               </div>
 
               {/* Error message */}
               {errorMsg && (
-                <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-red-600 text-sm font-medium p-3 rounded-xl">
+                <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-red-600 text-sm font-medium p-3 rounded-xl mb-4">
                   {errorMsg}
                 </div>
               )}
 
-              {/* Colour */}
-              <div>
-                <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200 mb-3">Colour</p>
-                <div className="flex gap-3 flex-wrap">
-                  {colors.map((color: any) => (
-                    <button
-                      key={color}
-                      onClick={() => setSelectedColor(color)}
-                      className={`w-[28px] h-[28px] rounded-full border transition-all duration-200 cursor-pointer hover:scale-105 flex items-center justify-center ${selectedColor === color
-                          ? 'border-black dark:border-white'
-                          : 'border-zinc-300 dark:border-zinc-600'
-                        }`}
-                      style={{ backgroundColor: getColorHex(color) }}
-                      title={color}
-                    >
-                      {selectedColor === color && (
-                        <svg className="w-3.5 h-3.5 text-white drop-shadow-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3}>
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg>
-                      )}
-                    </button>
-                  ))}
+              {/* Colour Variants as Images */}
+              <div className="pb-8">
+                <div className="flex gap-2 flex-wrap mt-2">
+                  {colors.map((color: any) => {
+                    const variantImg = product.variants?.find((v: any) => v.color === color)?.variantImage 
+                                       || product.variants?.find((v: any) => v.color === color)?.image 
+                                       || displayImages[0];
+                    return (
+                      <button
+                        key={color}
+                        onClick={() => setSelectedColor(color)}
+                        className={`w-[70px] h-[70px] rounded-md overflow-hidden border transition-all duration-200 cursor-pointer ${selectedColor === color
+                            ? 'border-black dark:border-white ring-1 ring-black dark:ring-white'
+                            : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-400'
+                          }`}
+                        title={color}
+                      >
+                        {variantImg ? (
+                           <img src={variantImg} alt={color} className="w-full h-full object-cover" />
+                        ) : (
+                           <div className="w-full h-full" style={{ backgroundColor: getColorHex(color) }} />
+                        )}
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
 
               {/* Size */}
-              <div>
-                <div className="flex justify-between items-center mb-3">
-                  <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">Select Size</p>
+              <div className="pb-8">
+                <div className="flex justify-between items-end mb-2">
+                  <p className="text-[16px] font-medium text-[#111111] dark:text-zinc-200">Select Size</p>
                   <button
                     onClick={() => setSizeGuideOpen(true)}
-                    className="text-sm font-medium text-zinc-400 underline underline-offset-2 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
+                    className="text-[15px] font-medium text-zinc-500 hover:text-black dark:hover:text-white transition-colors cursor-pointer flex items-center gap-1"
                   >
-                    Size Guide →
+                    Size Guide
                   </button>
                 </div>
-                <div className="flex flex-wrap gap-3">
+                <div className="grid grid-cols-3 gap-2">
                   {sizes.map((size: any) => (
                     <button
                       key={size}
                       onClick={() => setSelectedSize(size)}
-                      className={`w-14 h-[42px] rounded-[10px] border text-[15px] font-medium transition-all duration-200 cursor-pointer active:scale-[0.97] ${selectedSize === size
-                          ? 'bg-black dark:bg-white text-white dark:text-black border-black dark:border-white'
-                          : 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white border-[#d9d9d9] dark:border-zinc-600 hover:border-black dark:hover:border-white hover:bg-[#fafafa] dark:hover:bg-zinc-800'
+                      className={`h-[48px] rounded-md border text-[16px] transition-all duration-200 cursor-pointer active:scale-[0.98] ${selectedSize === size
+                          ? 'border-black dark:border-white text-black dark:text-white ring-1 ring-black dark:ring-white'
+                          : 'border-zinc-200 dark:border-zinc-700 text-[#111111] dark:text-white hover:border-black dark:hover:border-white'
                         }`}
                     >
                       {size}
@@ -566,35 +541,24 @@ const ProductDetailsPage = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3">
-                <button
-                  onClick={handleBuyNow}
-                  className="flex-1 h-14 rounded-xl text-sm font-bold tracking-wider transition-all duration-200 cursor-pointer bg-black dark:bg-white text-white dark:text-black hover:shadow-lg active:scale-[0.98]"
-                >
-                  BUY NOW
-                </button>
+              <div className="flex flex-col space-y-3 pt-2">
                 <button
                   onClick={handleAddToCart}
-                  className={`flex-1 h-14 rounded-xl text-sm font-bold tracking-wider transition-all duration-200 cursor-pointer border-2 active:scale-[0.98] ${isAdded
-                      ? 'bg-green-600 text-white border-green-600'
-                      : 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white border-zinc-300 dark:border-zinc-700 hover:border-black dark:hover:border-white hover:shadow-sm'
+                  className={`w-full h-[62px] rounded-[31px] text-[16px] font-medium transition-all duration-200 cursor-pointer active:scale-[0.98] ${isAdded
+                      ? 'bg-green-600 text-white'
+                      : 'bg-[#111111] dark:bg-white text-white dark:text-[#111111] hover:bg-black/80 dark:hover:bg-white/80'
                     }`}
                 >
-                  {isAdded ? (
-                    <span className="flex items-center justify-center gap-2"><Check size={16} strokeWidth={3} /> ADDED</span>
-                  ) : (
-                    <span className="flex items-center justify-center gap-2"><ShoppingBag size={16} /> ADD TO CART</span>
-                  )}
+                  {isAdded ? 'Added to Bag' : 'Add to Bag'}
                 </button>
                 <button
                   onClick={handleWishlistToggle}
-                  className={`w-14 h-14 shrink-0 rounded-xl border-2 flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-[0.95] ${isWishlisted
-                      ? 'bg-red-600 text-white border-red-600'
-                      : 'bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 hover:border-red-400 hover:text-red-500 hover:shadow-sm'
+                  className={`w-full h-[62px] rounded-[31px] border flex items-center justify-center gap-2 text-[16px] font-medium transition-all duration-200 cursor-pointer active:scale-[0.98] ${isWishlisted
+                      ? 'border-red-600 text-red-600 bg-red-50 dark:bg-red-950/20'
+                      : 'border-zinc-300 dark:border-zinc-700 text-[#111111] dark:text-white hover:border-black dark:hover:border-white'
                     }`}
-                  aria-label="Wishlist"
                 >
-                  <Heart size={20} fill={isWishlisted ? 'currentColor' : 'none'} strokeWidth={2} />
+                  Favourite <Heart size={18} fill={isWishlisted ? 'currentColor' : 'none'} strokeWidth={1.5} />
                 </button>
               </div>
 

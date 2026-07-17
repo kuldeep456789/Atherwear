@@ -11,6 +11,7 @@ import { Trash2, ShoppingBag, Heart, Percent, Truck, Check, Tag, X, ChevronRight
 import QuantitySelector from '../components/QuantitySelector';
 import { formatINR } from '../lib/currency';
 import { motion, AnimatePresence } from 'framer-motion';
+import MinimumOrderModal from '../components/checkout/MinimumOrderModal';
 
 const CartPage = () => {
   const navigate = useNavigate();
@@ -25,6 +26,7 @@ const CartPage = () => {
   const [couponCode, setCouponCode] = useState(cart.appliedCoupon || '');
   const [couponMsg, setCouponMsg] = useState<{ text: string; isError: boolean } | null>(null);
   const [removeConfirm, setRemoveConfirm] = useState<string | null>(null);
+  const [isMinOrderModalOpen, setIsMinOrderModalOpen] = useState(false);
 
   useEffect(() => {
     if (cart.appliedCoupon) {
@@ -93,6 +95,10 @@ const CartPage = () => {
   };
 
   const checkoutHandler = () => {
+    if (totalPrice < 50000) {
+      setIsMinOrderModalOpen(true);
+      return;
+    }
     navigate('/shipping');
   };
 
@@ -474,6 +480,12 @@ const CartPage = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <MinimumOrderModal 
+        isOpen={isMinOrderModalOpen} 
+        onClose={() => setIsMinOrderModalOpen(false)} 
+        cartTotal={totalPrice} 
+      />
     </div>
   );
 };

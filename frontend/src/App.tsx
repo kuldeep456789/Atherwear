@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import Navbar from './components/layout/Navbar';
+import AnnouncementBanner from './components/layout/AnnouncementBanner';
 import Footer from './components/layout/Footer';
 
 import HomePage from './pages/HomePage';
@@ -46,6 +47,7 @@ function MainLayout() {
   return (
     <div className="min-h-screen w-full flex flex-col bg-white dark:bg-zinc-950">
       <Navbar />
+      <AnnouncementBanner />
       <main className="flex-grow w-full">
         <Outlet />
       </main>

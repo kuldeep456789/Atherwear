@@ -34,12 +34,14 @@ const PlaceOrderPage = () => {
   const [localError, setLocalError] = useState('');
 
   useEffect(() => {
-    if (!cart.shippingAddress.address) {
+    if (cart.totalPrice < 50000) {
+      navigate('/cart');
+    } else if (!cart.shippingAddress.address) {
       navigate('/shipping');
     } else if (!cart.paymentMethod) {
       navigate('/payment');
     }
-  }, [cart.paymentMethod, cart.shippingAddress.address, navigate]);
+  }, [cart.totalPrice, cart.paymentMethod, cart.shippingAddress.address, navigate]);
 
   const placeOrderHandler = async () => {
     setLocalError('');

@@ -48,6 +48,10 @@ export class OrdersService {
       throw new BadRequestException('totalAmount is required');
     }
 
+    if (dto.totalAmount < 50000) {
+      throw new BadRequestException('Minimum order value is ₹50,000');
+    }
+
     const paymentMethod = 'Razorpay';
     const paymentStatus = 'unpaid';
 

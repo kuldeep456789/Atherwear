@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '../store/store';
@@ -54,7 +54,14 @@ const InputField = ({
 
 const ShippingPage = () => {
   const cart = useSelector((state: RootState) => state.cart);
-  const { shippingAddress } = cart;
+  const { shippingAddress, totalPrice } = cart;
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (totalPrice < 50000) {
+      navigate('/cart');
+    }
+  }, [totalPrice, navigate]);
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -68,7 +75,6 @@ const ShippingPage = () => {
   const [phone, setPhone] = useState(shippingAddress.phone || '');
 
   const dispatch = useDispatch();
-  const navigate = useNavigate();
 
   const submitHandler = () => {
     dispatch(saveShippingAddress({

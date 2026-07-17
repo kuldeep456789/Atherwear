@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import type { RootState } from '../../store/store';
@@ -6,6 +7,7 @@ import type { CartItem } from '../../store/slices/cartSlice';
 import { X, ShoppingBag, Trash2, ArrowRight, ShoppingCart } from 'lucide-react';
 import { formatINR } from '../../lib/currency';
 import QuantitySelector from '../QuantitySelector';
+import MinimumOrderModal from '../checkout/MinimumOrderModal';
 
 interface MiniCartProps {
   isOpen: boolean;
@@ -16,6 +18,16 @@ const MiniCart = ({ isOpen, onClose }: MiniCartProps) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { cartItems, totalPrice } = useSelector((state: RootState) => state.cart);
+  const [isMinOrderModalOpen, setIsMinOrderModalOpen] = useState(false);
+
+  const handleCheckout = () => {
+    if (totalPrice < 50000) {
+      setIsMinOrderModalOpen(true);
+      return;
+    }
+    onClose();
+    navigate('/shipping');
+  };
 
   const updateQty = (item: CartItem, delta: number) => {
     const newQty = item.qty + delta;
@@ -202,17 +214,22 @@ const MiniCart = ({ isOpen, onClose }: MiniCartProps) => {
               >
                 View Cart
               </Link>
-              <Link
-                to="/shipping"
-                onClick={onClose}
-                className="flex-1 py-5 text-xs font-black tracking-widest uppercase text-center bg-[hsl(var(--foreground))] text-[hsl(var(--background))] hover:bg-red-600 hover:text-white transition-colors flex items-center justify-center gap-2"
+              <button
+                onClick={handleCheckout}
+                className="flex-1 py-5 text-xs font-black tracking-widest uppercase text-center bg-[hsl(var(--foreground))] text-[hsl(var(--background))] hover:bg-red-600 hover:text-white transition-colors flex items-center justify-center gap-2 cursor-pointer border-none"
               >
                 Checkout <ArrowRight size={14} strokeWidth={2.5} />
-              </Link>
+              </button>
             </div>
           </div>
         )}
       </div>
+
+      <MinimumOrderModal 
+        isOpen={isMinOrderModalOpen} 
+        onClose={() => setIsMinOrderModalOpen(false)} 
+        cartTotal={totalPrice} 
+      />
     </>
   );
 };

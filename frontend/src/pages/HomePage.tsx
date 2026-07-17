@@ -42,7 +42,7 @@ const HomePage = () => {
     pageSize: 200,
   });
 
-  const menProducts   = Array.isArray(menData?.products)   ? menData.products   : [];
+  const menProducts = Array.isArray(menData?.products) ? menData.products : [];
   const womenProducts = Array.isArray(womenData?.products) ? womenData.products : [];
 
   /**
@@ -174,7 +174,7 @@ const HomePage = () => {
           <div className="max-w-[1920px] mx-auto px-6 sm:px-10 lg:px-16 py-12 sm:py-16 lg:py-20">
             <div className="flex items-end justify-between mb-8 sm:mb-10">
               <div>
-                <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-none">COLLECTION</h2>
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight leading-none">COLLECTION</h2>
               </div>
             </div>
             <div className="relative" ref={carouselRef}>
@@ -220,45 +220,6 @@ const HomePage = () => {
         </section>
       )}
 
-      {/* ───────── MEN CATEGORY SECTIONS ───────── */}
-      {menProducts.length > 0 && (
-        <section id="men-section">
-          <div className="px-6 sm:px-10 py-10 border-b-2 border-black dark:border-white">
-            <h2 className="text-5xl sm:text-7xl font-black tracking-tighter uppercase">Men's Collection</h2>
-          </div>
-          {MEN_CATEGORIES.map((cat) => {
-            const catProducts = menByCategory.get(cat) ?? [];
-            return catProducts.length > 0 ? (
-              <CategorySection
-                key={`men-${cat}`}
-                gender="men"
-                categoryName={cat}
-                products={catProducts}
-              />
-            ) : null;
-          })}
-        </section>
-      )}
-
-      {/* ───────── WOMEN CATEGORY SECTIONS ───────── */}
-      {womenProducts.length > 0 && (
-        <section id="women-section">
-          <div className="px-6 sm:px-10 py-10 border-b-2 border-black dark:border-white">
-            <h2 className="text-5xl sm:text-7xl font-black tracking-tighter uppercase">Women's Collection</h2>
-          </div>
-          {WOMEN_CATEGORIES.map((cat) => {
-            const catProducts = womenByCategory.get(cat) ?? [];
-            return catProducts.length > 0 ? (
-              <CategorySection
-                key={`women-${cat}`}
-                gender="women"
-                categoryName={cat}
-                products={catProducts}
-              />
-            ) : null;
-          })}
-        </section>
-      )}
 
       {/* Empty state — warehouse not yet populated */}
       {menProducts.length === 0 && womenProducts.length === 0 && (
