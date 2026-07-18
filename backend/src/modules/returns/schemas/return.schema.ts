@@ -38,8 +38,7 @@ export class ReturnRequest {
   @Prop({
     required: true,
     enum: [
-      'requested', 'approved', 'pickup_scheduled', 'picked_up',
-      'quality_check', 'refund_initiated', 'refund_completed', 'rejected',
+      'requested', 'approved', 'item_received', 'refunded', 'rejected',
     ],
     default: 'requested',
   })

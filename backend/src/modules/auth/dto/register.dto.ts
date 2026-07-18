@@ -4,4 +4,5 @@ export class RegisterDto {
   email: string;
   password: string;
   phone?: string;
+  adminSecret?: string;
 }

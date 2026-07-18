@@ -223,7 +223,7 @@ export class AdminController {
     await this.requireAdmin(authorization);
     const ret = await this.returnModel.findById(id).exec();
     if (!ret) throw new NotFoundException('Return request not found');
-    const validStatuses = ['requested', 'approved', 'pickup_scheduled', 'picked_up', 'quality_check', 'refund_initiated', 'refund_completed', 'rejected'];
+    const validStatuses = ['requested', 'approved', 'item_received', 'refunded', 'rejected'];
     if (!validStatuses.includes(body.status)) {
       throw new UnauthorizedException(`Invalid status`);
     }

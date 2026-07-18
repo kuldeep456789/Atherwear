@@ -14,7 +14,7 @@ interface QuantitySelectorProps {
 export default function QuantitySelector({
   value,
   min = 1,
-  max = 99,
+  max = 9999,
   onDecrement,
   onIncrement,
   onChange,

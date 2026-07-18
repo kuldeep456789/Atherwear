@@ -3,7 +3,7 @@ import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   LayoutDashboard, Package, Users, RotateCcw, MessageSquare, Banknote,
-  LogOut, Search as SearchIcon, Bell, Settings, Menu, X, Loader2
+  LogOut, Search as SearchIcon, Bell, Settings, Menu, X, Loader2, Store
 } from 'lucide-react';
 import type { RootState } from '../../store/store';
 import { logout } from '../../store/slices/authSlice';
@@ -159,13 +159,13 @@ export default function AdminLayout() {
               <Bell className="h-5 w-5" strokeWidth={1.5} />
               <span className="text-sm">Notifications</span>
             </button>
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center px-3 py-2.5 gap-3 font-medium text-[#cbdbf5] hover:text-red-400 hover:bg-red-400/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400/20 transition-all cursor-pointer"
+            <Link
+              to="/"
+              className="w-full flex items-center px-3 py-2.5 gap-3 font-medium text-[#cbdbf5] hover:text-green-400 hover:bg-green-400/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400/20 transition-all cursor-pointer"
             >
-              <LogOut className="h-5 w-5" strokeWidth={1.5} />
-              <span className="text-sm">Logout</span>
-            </button>
+              <Store className="h-5 w-5" strokeWidth={1.5} />
+              <span className="text-sm">Back to Store</span>
+            </Link>
           </div>
         </div>
       </aside>

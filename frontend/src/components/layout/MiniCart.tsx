@@ -144,7 +144,7 @@ const MiniCart = ({ isOpen, onClose }: MiniCartProps) => {
                       <QuantitySelector
                         value={item.qty}
                         min={1}
-                        max={99}
+                        max={9999}
                         onDecrement={() => updateQty(item, -1)}
                         onIncrement={() => updateQty(item, 1)}
                         onChange={(qty) => setQty(item, qty)}

@@ -23,12 +23,12 @@ export type SafeUser = {
 export class UsersService {
   constructor(@InjectModel(User.name) private readonly userModel: Model<User>) { }
 
-  async create(name: string, email: string, password: string, phone?: string): Promise<SafeUser> {
+  async create(name: string, email: string, password: string, phone?: string, role: string = 'customer'): Promise<SafeUser> {
     const existingUser = await this.userModel.exists({ email });
     if (existingUser) {
       throw new ConflictException('Email is already registered');
     }
-    const user = await this.userModel.create({ name, email, password, ...(phone ? { phone } : {}) });
+    const user = await this.userModel.create({ name, email, password, role, ...(phone ? { phone } : {}) });
     return this.toSafeUser(user);
   }
 

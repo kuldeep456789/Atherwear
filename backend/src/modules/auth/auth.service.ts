@@ -25,11 +25,18 @@ export class AuthService {
     }
     const name = `${registerDto.firstName} ${registerDto.lastName || ''}`.trim();
     const passwordHash = await bcrypt.hash(registerDto.password, 12);
+
+    let role = 'customer';
+    if (registerDto.adminSecret && process.env.ADMIN_SECRET_CODE && registerDto.adminSecret === process.env.ADMIN_SECRET_CODE) {
+      role = 'admin';
+    }
+
     const user = await this.usersService.create(
       name,
       registerDto.email.toLowerCase(),
       passwordHash,
       registerDto.phone,
+      role
     );
     return this.authResponse(user);
   }
@@ -67,11 +74,18 @@ export class AuthService {
     // Create the user now
     const name = `${registerDto.firstName} ${registerDto.lastName || ''}`.trim();
     const passwordHash = await bcrypt.hash(registerDto.password, 12);
+
+    let role = 'customer';
+    if (registerDto.adminSecret && process.env.ADMIN_SECRET_CODE && registerDto.adminSecret === process.env.ADMIN_SECRET_CODE) {
+      role = 'admin';
+    }
+
     const user = await this.usersService.create(
       name,
       normalized,
       passwordHash,
       registerDto.phone,
+      role
     );
     
     // Send Welcome Email

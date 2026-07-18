@@ -6,6 +6,8 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { formatINR } from '../lib/currency';
 import ProductCard from '../components/product/ProductCard';
+import ReturnRequestModal from '../components/returns/ReturnRequestModal';
+import { useGetMyReturnsQuery } from '../store/slices/returnApiSlice';
 
 const TIMELINE_STEPS = [
   { key: 'pending', label: 'Order Placed', icon: Package, desc: 'Order has been placed' },
@@ -94,6 +96,8 @@ const Skeleton = () => (
 const OrderTrackingPage = () => {
   const { id } = useParams();
   const { data: order, isLoading, error } = useGetOrderDetailsQuery(id);
+  const { data: myReturns } = useGetMyReturnsQuery(undefined, { skip: !id });
+  const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => { const t = setTimeout(() => setLoaded(true), 100); return () => clearTimeout(t); }, []);
@@ -146,6 +150,8 @@ const OrderTrackingPage = () => {
   const isPaid = order.paymentStatus === 'paid';
   const itemCount = order.items?.reduce((a: number, i: any) => a + i.quantity, 0) || 0;
   const totalItemsPrice = order.totalAmount || 0;
+  const hasReturn = myReturns?.some((r: any) => r.orderId === order._id);
+  const currentReturn = myReturns?.find((r: any) => r.orderId === order._id);
 
   return (
     <motion.div
@@ -421,10 +427,46 @@ const OrderTrackingPage = () => {
                 <HelpCircle size={17} strokeWidth={1.5} />
                 Need Help?
               </Link>
+              
+              {/* Return UI */}
+              {order.status === 'delivered' && !hasReturn && (
+                <button
+                  onClick={() => setIsReturnModalOpen(true)}
+                  className="w-full inline-flex items-center justify-center gap-2.5 h-[52px] rounded-xl bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-[14px] font-bold hover:bg-orange-200 dark:hover:bg-orange-900/50 transition-all duration-200 active:scale-[0.98]"
+                >
+                  Return Request
+                </button>
+              )}
+
+              {hasReturn && currentReturn && (
+                <div className="mt-4 p-4 rounded-xl border border-orange-200 bg-orange-50 dark:bg-orange-900/10 dark:border-orange-900/30">
+                  <h3 className="text-[14px] font-bold text-orange-800 dark:text-orange-400 mb-2">Return Status</h3>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-orange-700 dark:text-orange-500 capitalize font-medium">{currentReturn.status.replace(/_/g, ' ')}</span>
+                    <span className="text-orange-600 dark:text-orange-500/70">{new Date(currentReturn.createdAt).toLocaleDateString()}</span>
+                  </div>
+                  {currentReturn.adminRemarks && (
+                    <div className="mt-3 text-xs bg-white dark:bg-black/20 p-2.5 rounded-lg border border-orange-100 dark:border-orange-900/30 text-orange-800 dark:text-orange-400/90">
+                      <p className="font-semibold mb-1 opacity-70">Admin Note:</p>
+                      <p>{currentReturn.adminRemarks}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
             </motion.div>
 
           </div>
         </div>
+
+        {isReturnModalOpen && (
+          <ReturnRequestModal
+            orderId={order._id}
+            items={order.items || []}
+            onClose={() => setIsReturnModalOpen(false)}
+            onSuccess={() => setIsReturnModalOpen(false)}
+          />
+        )}
 
         {/* Recommended Products */}
         <RecommendedSection productId={id} />

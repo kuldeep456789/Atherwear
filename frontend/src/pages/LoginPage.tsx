@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Lock, Mail, Phone, Smartphone, ArrowLeft } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, Phone, Smartphone, ArrowLeft, Shield } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '../store/store';
 import { setCredentials } from '../store/slices/authSlice';
@@ -40,8 +40,8 @@ const LoginPage = () => {
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // Register fields
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [adminSecret, setAdminSecret] = useState('');
   const [registerEmail, setRegisterEmail] = useState('');
   const [registerPassword, setRegisterPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -180,7 +180,7 @@ const LoginPage = () => {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
-    if (!firstName.trim()) { setErrorMessage('First name is required.'); return; }
+    if (!fullName.trim()) { setErrorMessage('Full name is required.'); return; }
     if (!registerEmail.trim()) { setErrorMessage('Email is required.'); return; }
     if (registerPassword.length < 6) { setErrorMessage('Password must be at least 6 characters.'); return; }
     if (registerPassword !== confirmPassword) { setErrorMessage('Passwords do not match.'); return; }
@@ -188,8 +188,9 @@ const LoginPage = () => {
     setOtpLoading(true);
     try {
       await sendRegisterOtp({
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
+        firstName: fullName.trim(),
+        lastName: '',
+        adminSecret: adminSecret.trim() || undefined,
         email: registerEmail.trim(),
         password: registerPassword,
         ...(registerPhone ? { phone: `+91${registerPhone.replace(/\D/g, '')}` } : {}),
@@ -215,8 +216,9 @@ const LoginPage = () => {
     try {
       const payload = await verifyRegisterOtp({
         registerDto: {
-          firstName: firstName.trim(),
-          lastName: lastName.trim(),
+          firstName: fullName.trim(),
+          lastName: '',
+          adminSecret: adminSecret.trim() || undefined,
           email: registerEmail.trim(),
           password: registerPassword,
           ...(registerPhone ? { phone: `+91${registerPhone.replace(/\D/g, '')}` } : {}),
@@ -465,18 +467,10 @@ const LoginPage = () => {
                   </div>
                 ) : (
                   <form onSubmit={handleRegister} className="space-y-4" noValidate>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="mb-2 block text-[11px] font-semibold uppercase tracking-widest text-zinc-500">First name</label>
-                        <div className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-[hsl(var(--card))] px-4 py-3.5 transition focus-within:border-zinc-500">
-                          <input type="text" placeholder="Aarav" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-400" />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="mb-2 block text-[11px] font-semibold uppercase tracking-widest text-zinc-500">Last name</label>
-                        <div className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-[hsl(var(--card))] px-4 py-3.5 transition focus-within:border-zinc-500">
-                          <input type="text" placeholder="Sharma" value={lastName} onChange={(e) => setLastName(e.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-400" />
-                        </div>
+                    <div>
+                      <label className="mb-2 block text-[11px] font-semibold uppercase tracking-widest text-zinc-500">Full Name</label>
+                      <div className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-[hsl(var(--card))] px-4 py-3.5 transition focus-within:border-zinc-500">
+                        <input type="text" placeholder="Aarav Sharma" value={fullName} onChange={(e) => setFullName(e.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-400" />
                       </div>
                     </div>
 
@@ -516,6 +510,14 @@ const LoginPage = () => {
                         <button type="button" onClick={() => setShowConfirmPassword((p) => !p)} className="text-zinc-400 hover:text-zinc-700 dark:hover:text-white cursor-pointer">
                           {showConfirmPassword ? <EyeOff size={17} /> : <Eye size={17} />}
                         </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-[11px] font-semibold uppercase tracking-widest text-zinc-500">Admin Secret Code (Optional)</label>
+                      <div className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-[hsl(var(--card))] px-4 py-3.5 transition focus-within:border-zinc-500">
+                        <Shield size={17} className="shrink-0 text-zinc-400" />
+                        <input type="text" placeholder="Admin Code" value={adminSecret} onChange={(e) => setAdminSecret(e.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-400" />
                       </div>
                     </div>
 

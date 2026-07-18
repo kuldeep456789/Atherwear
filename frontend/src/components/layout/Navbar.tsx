@@ -161,13 +161,13 @@ const Navbar = () => {
   } else {
     const qLower = debouncedQuery.toLowerCase();
     const toSlug = (n: string) => n.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-    
+
     categoriesData.forEach((cat: any) => {
       if (cat.name?.toLowerCase().includes(qLower) || cat.group?.toLowerCase().includes(qLower)) {
-        suggestionList.push({ 
-          type: 'category', 
-          label: `${cat.group} > ${cat.name}`, 
-          to: `/collections/${cat.group.toLowerCase()}/${toSlug(cat.name)}` 
+        suggestionList.push({
+          type: 'category',
+          label: `${cat.group} > ${cat.name}`,
+          to: `/collections/${cat.group.toLowerCase()}/${toSlug(cat.name)}`
         });
       }
     });
@@ -244,14 +244,14 @@ const Navbar = () => {
                   to={item.to}
                   onMouseEnter={() => prefetchProducts({ gender, pageNum: 1, pageSize: 200 }, { ifOlderThan: 300 })}
                   className={`relative text-[17px] font-bold tracking-wider transition-colors duration-200 group ${isActive(item.to)
-                      ? 'text-black dark:text-white'
-                      : 'text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white'
+                    ? 'text-black dark:text-white'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white'
                     }`}
                 >
                   {item.label}
                   <span className={`absolute -bottom-[6px] left-0 h-[3px] rounded-full transition-all duration-300 ease-out ${isActive(item.to)
-                      ? 'w-full bg-black dark:bg-white'
-                      : 'w-0 bg-black dark:bg-white group-hover:w-full'
+                    ? 'w-full bg-black dark:bg-white'
+                    : 'w-0 bg-black dark:bg-white group-hover:w-full'
                     }`} />
                 </Link>
               );
@@ -691,6 +691,16 @@ const Navbar = () => {
                       {label}
                     </Link>
                   ))}
+                  {userInfo?.role === 'admin' && (
+                    <Link
+                      to="/admin"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-lg transition-colors"
+                    >
+                      <Shield className="h-5 w-5 text-zinc-400" strokeWidth={1.5} />
+                      Admin Panel
+                    </Link>
+                  )}
                   <button
                     onClick={() => { dispatch(logout()); setMobileMenuOpen(false); }}
                     className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors cursor-pointer"

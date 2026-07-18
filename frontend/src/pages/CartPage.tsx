@@ -236,7 +236,7 @@ const CartPage = () => {
                           <QuantitySelector
                             value={item.qty}
                             min={1}
-                            max={99}
+                            max={9999}
                             onDecrement={() => item.qty > 1 && addToCartHandler(item, item.qty - 1)}
                             onIncrement={() => addToCartHandler(item, item.qty + 1)}
                             onChange={(qty) => addToCartHandler(item, qty)}

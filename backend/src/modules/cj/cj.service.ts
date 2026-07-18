@@ -25,7 +25,7 @@ const categoryNextKey = (gender: string, cat: string) =>
 
 const SYNC_METRICS_KEY = 'cj:sync:metrics';
 
-const WAREHOUSE_TTL = 90 * 60;
+// TTL removed for zero-downtime persistent cache
 
 const PRODUCT_COUNT_CACHE_KEY = 'cj:product_count';
 const PRODUCT_COUNT_TTL = 60 * 60 * 24;
@@ -342,18 +342,18 @@ export class CjService {
 
       this.logger.log(`[Cron] ✅ Products Fetched — Men: ${menProducts.length}, Women: ${womenProducts.length}, Total: ${allProducts.length}`);
 
-      // Write to :next buffer
+      // Write to :next buffer without TTL to make it persistent
       await Promise.all([
-        this.redisService.setJson(WAREHOUSE_NEXT_ALL, allProducts, WAREHOUSE_TTL),
-        this.redisService.setJson(WAREHOUSE_NEXT_MEN, menProducts, WAREHOUSE_TTL),
-        this.redisService.setJson(WAREHOUSE_NEXT_WOMEN, womenProducts, WAREHOUSE_TTL),
+        this.redisService.setJson(WAREHOUSE_NEXT_ALL, allProducts),
+        this.redisService.setJson(WAREHOUSE_NEXT_MEN, menProducts),
+        this.redisService.setJson(WAREHOUSE_NEXT_WOMEN, womenProducts),
       ]);
 
-      // Write per-category keys to :next buffer
+      // Write per-category keys to :next buffer without TTL
       const categoryGroups = this.groupByCategory(allProducts);
       const catWriteOps: Promise<void>[] = [];
       for (const [catKey, catProducts] of Object.entries(categoryGroups)) {
-        catWriteOps.push(this.redisService.setJson(`products:next:${catKey}`, catProducts, WAREHOUSE_TTL));
+        catWriteOps.push(this.redisService.setJson(`products:next:${catKey}`, catProducts));
       }
       await Promise.all(catWriteOps);
 

@@ -62,7 +62,7 @@ const HomePage = () => {
   const heroVideos = [
     '/video/Create_a_premium_cinematic_fas.mp4',
     // The second video is not yet present in the folder, so we reuse the first or add a placeholder
-    // '/video/your_second_video.mp4' 
+    '/video/Luxury_cinematic_clothing_comm.mp4'
   ];
 
   const [currentHeroIdx, setCurrentHeroIdx] = useState(0);

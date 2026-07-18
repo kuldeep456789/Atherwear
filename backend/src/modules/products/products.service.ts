@@ -215,7 +215,7 @@ export class ProductsService {
   }
 
   private buildCacheKey(query: ProductQuery) {
-    const IGNORE_PARAMS = new Set(['minPrice', 'maxPrice', 'minRating', 'pageNum', 'pageSize', 'page', 'limit']);
+    const IGNORE_PARAMS = new Set(['minPrice', 'maxPrice', 'minRating']);
     const normalized = Object.entries(query)
       .filter(([key, value]) => Boolean(value) && !IGNORE_PARAMS.has(key))
       .map(([key, value]) => `${key}:${String(value).trim().toLowerCase()}`)
