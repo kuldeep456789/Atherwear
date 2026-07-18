@@ -333,7 +333,7 @@ const OrderTrackingPage = () => {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: loaded ? 1 : 0 }}
               transition={{ duration: 0.4, delay: 0.25 }}
-              className="rounded-2xl border border-zinc-200 dark:border-[#2A2A2A] bg-white dark:bg-[#18181B] overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-250 lg:sticky lg:top-[130px]"
+              className="rounded-2xl border border-zinc-200 dark:border-[#2A2A2A] bg-white dark:bg-[#18181B] overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-250"
             >
               <div className="px-6 py-5 border-b border-zinc-100 dark:border-zinc-800">
                 <h2 className="text-[16px] font-bold text-zinc-900 dark:text-white flex items-center gap-2">

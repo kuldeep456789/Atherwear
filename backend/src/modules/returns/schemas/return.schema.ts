@@ -5,7 +5,7 @@ export type ReturnDocument = HydratedDocument<ReturnRequest>;
 
 @Schema({ timestamps: true })
 export class ReturnRequest {
-  @Prop({ type: Types.ObjectId, required: true, index: true })
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true, index: true })
   userId: Types.ObjectId;
 
   @Prop({ required: true })

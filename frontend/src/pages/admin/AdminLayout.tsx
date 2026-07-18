@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import {
   LayoutDashboard, Package, Users, RotateCcw, MessageSquare, Banknote,
@@ -20,7 +20,6 @@ const navItems = [
 
 export default function AdminLayout() {
   const location = useLocation();
-  const navigate = useNavigate();
   const userInfo = useSelector((state: RootState) => state.auth.userInfo);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 

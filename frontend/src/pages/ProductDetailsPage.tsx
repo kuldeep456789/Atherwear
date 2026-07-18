@@ -542,26 +542,15 @@ const ProductDetailsPage = () => {
 
               {/* Action Buttons */}
               <div className="flex flex-col space-y-3 pt-2">
-                <div className="flex gap-3">
-                  <button
-                    onClick={handleAddToCart}
-                    className={`flex-1 h-[62px] rounded-[31px] text-[16px] font-medium transition-all duration-200 cursor-pointer active:scale-[0.98] ${isAdded
-                        ? 'bg-green-600 text-white'
-                        : 'bg-[#111111] dark:bg-white text-white dark:text-[#111111] hover:bg-black/80 dark:hover:bg-white/80'
-                      }`}
-                  >
-                    {isAdded ? 'Added to Bag' : 'Add to Bag'}
-                  </button>
-                  <button
-                    onClick={handleAddToCart}
-                    className={`flex-1 h-[62px] rounded-[31px] text-[16px] font-medium transition-all duration-200 cursor-pointer active:scale-[0.98] ${isAdded
-                        ? 'bg-yellow-400 text-black hover:bg-yellow-500'
-                        : 'bg-[#111111] dark:bg-white text-white dark:text-[#111111] hover:bg-yellow-400 hover:text-black dark:hover:bg-yellow-400 dark:hover:text-black'
-                      }`}
-                  >
-                    {isAdded ? 'Added to Cart' : 'Add to Cart'}
-                  </button>
-                </div>
+                <button
+                  onClick={handleAddToCart}
+                  className={`w-full h-[62px] rounded-[31px] text-[16px] font-medium transition-all duration-200 cursor-pointer active:scale-[0.98] ${isAdded
+                      ? 'bg-green-600 text-white'
+                      : 'bg-[#111111] dark:bg-white text-white dark:text-[#111111] hover:bg-black/80 dark:hover:bg-white/80'
+                    }`}
+                >
+                  {isAdded ? 'Added to Bag' : 'Add to Bag'}
+                </button>
                 <button
                   onClick={handleWishlistToggle}
                   className={`w-full h-[62px] rounded-[31px] border flex items-center justify-center gap-2 text-[16px] font-medium transition-all duration-200 cursor-pointer active:scale-[0.98] ${isWishlisted
@@ -573,19 +562,7 @@ const ProductDetailsPage = () => {
                 </button>
               </div>
 
-              {/* Description */}
-              <div className="pt-0">
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-800 dark:text-zinc-200 mb-3">Description</h3>
-                <div
-                  className="product-description text-sm leading-relaxed text-zinc-500 dark:text-zinc-400"
-                  dangerouslySetInnerHTML={{
-                    __html: DOMPurify.sanitize(product.description ?? '', {
-                      ADD_TAGS: ['img'],
-                      ADD_ATTR: ['src', 'alt', 'style'],
-                    }),
-                  }}
-                />
-              </div>
+
             </div>
           </div>
         </div>
@@ -782,7 +759,7 @@ const ProductDetailsPage = () => {
             {isAdded ? (
               <><Check className="w-3.5 h-3.5" strokeWidth={3} /> ADDED</>
             ) : (
-              <><ShoppingBag className="w-3.5 h-3.5" strokeWidth={2} /> ADD TO CART</>
+              <><ShoppingBag className="w-3.5 h-3.5" strokeWidth={2} /> ADD TO BAG</>
             )}
           </button>
         </div>

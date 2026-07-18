@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../store/store';
 import { useCreateReturnMutation, useGetMyReturnsQuery } from '../store/slices/returnApiSlice';
-import { Check, X, ChevronRight, ChevronDown, RotateCcw, Truck, ArrowLeft, Clock, ShieldCheck, Image as ImageIcon, Star, AlertCircle } from 'lucide-react';
+import { Check, X, ChevronRight, ChevronDown, RotateCcw, Truck, Clock, ShieldCheck, Image as ImageIcon, Star, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const RETURN_REASONS = [
@@ -34,7 +34,6 @@ const nonReturnable = ['Innerwear', 'Accessories', 'Gift Cards', 'Final Sale Ite
 const ReturnsPage = () => {
   const userInfo = useSelector((state: RootState) => state.auth.userInfo);
   const [activeTab, setActiveTab] = useState<'policy' | 'form' | 'history'>('policy');
-  const [formOpen, setFormOpen] = useState(false);
   const [faqOpen, setFaqOpen] = useState<string | null>(null);
   const [createReturn, { isLoading: isSubmitting }] = useCreateReturnMutation();
   const { data: myReturns = [], isLoading: returnsLoading, refetch } = useGetMyReturnsQuery(undefined, { skip: !userInfo, pollingInterval: 3000 });
