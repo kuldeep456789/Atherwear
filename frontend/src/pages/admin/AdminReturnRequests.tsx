@@ -2,11 +2,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { RotateCcw, RefreshCw } from 'lucide-react';
 import { adminApi, type AdminReturn } from '../../services/adminApi';
 
-const statusFlow = ['requested', 'approved', 'item_received', 'refunded', 'rejected'];
+const statusFlow = ['requested', 'approved', 'item_not_received', 'item_received', 'not_refunded', 'refunded', 'rejected'];
 const statusColors: Record<string, string> = {
   requested: 'bg-orange-100 text-orange-700',
   approved: 'bg-blue-100 text-blue-700',
+  item_not_received: 'bg-red-100 text-red-700',
   item_received: 'bg-indigo-100 text-indigo-700',
+  not_refunded: 'bg-red-100 text-red-700',
   refunded: 'bg-green-100 text-green-700',
   rejected: 'bg-red-100 text-red-700',
 };
@@ -266,18 +268,62 @@ export default function AdminReturnRequests() {
             </div>
 
             <div className="p-6 border-t border-gray-200 flex gap-4">
-              <button
-                onClick={() => handleStatusChange(reviewModalReturn._id, 'approved')}
-                className="flex-1 bg-[#3b2416] hover:bg-[#2c1a0f] text-white py-3 rounded-lg font-bold text-xs tracking-wider transition-colors"
-              >
-                APPROVE
-              </button>
-              <button
-                onClick={() => handleStatusChange(reviewModalReturn._id, 'rejected')}
-                className="flex-1 bg-white border border-[#c13b3b] text-[#c13b3b] hover:bg-red-50 py-3 rounded-lg font-bold text-xs tracking-wider transition-colors"
-              >
-                REJECT
-              </button>
+              {reviewModalReturn.status === 'requested' && (
+                <>
+                  <button
+                    onClick={() => handleStatusChange(reviewModalReturn._id, 'approved')}
+                    className="flex-1 bg-[#3b2416] hover:bg-[#2c1a0f] text-white py-3 rounded-lg font-bold text-xs tracking-wider transition-colors"
+                  >
+                    APPROVE
+                  </button>
+                  <button
+                    onClick={() => handleStatusChange(reviewModalReturn._id, 'rejected')}
+                    className="flex-1 bg-white border border-[#c13b3b] text-[#c13b3b] hover:bg-red-50 py-3 rounded-lg font-bold text-xs tracking-wider transition-colors"
+                  >
+                    REJECT
+                  </button>
+                </>
+              )}
+
+              {reviewModalReturn.status === 'approved' && (
+                <>
+                  <button
+                    onClick={() => handleStatusChange(reviewModalReturn._id, 'item_received')}
+                    className="flex-1 bg-[#3b2416] hover:bg-[#2c1a0f] text-white py-3 rounded-lg font-bold text-xs tracking-wider transition-colors"
+                  >
+                    ITEM RECEIVED
+                  </button>
+                  <button
+                    onClick={() => handleStatusChange(reviewModalReturn._id, 'item_not_received')}
+                    className="flex-1 bg-white border border-[#c13b3b] text-[#c13b3b] hover:bg-red-50 py-3 rounded-lg font-bold text-xs tracking-wider transition-colors"
+                  >
+                    ITEM NOT RECEIVED
+                  </button>
+                </>
+              )}
+
+              {reviewModalReturn.status === 'item_received' && (
+                <>
+                  <button
+                    onClick={() => handleStatusChange(reviewModalReturn._id, 'refunded')}
+                    className="flex-1 bg-[#3b2416] hover:bg-[#2c1a0f] text-white py-3 rounded-lg font-bold text-xs tracking-wider transition-colors"
+                  >
+                    REFUNDED
+                  </button>
+                  <button
+                    onClick={() => handleStatusChange(reviewModalReturn._id, 'not_refunded')}
+                    className="flex-1 bg-white border border-[#c13b3b] text-[#c13b3b] hover:bg-red-50 py-3 rounded-lg font-bold text-xs tracking-wider transition-colors"
+                  >
+                    NOT REFUNDED
+                  </button>
+                </>
+              )}
+
+              {!['requested', 'approved', 'item_received'].includes(reviewModalReturn.status) && (
+                <div className="w-full text-center text-sm font-semibold text-gray-400 py-2">
+                  Status: {reviewModalReturn.status.replace(/_/g, ' ').toUpperCase()}
+                </div>
+              )}
             </div>
           </div>
         </div>

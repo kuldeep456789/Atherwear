@@ -39,6 +39,7 @@ export class ReturnRequest {
     required: true,
     enum: [
       'requested', 'approved', 'item_received', 'refunded', 'rejected',
+      'item_not_received', 'not_refunded'
     ],
     default: 'requested',
   })

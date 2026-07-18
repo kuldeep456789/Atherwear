@@ -1,7 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
 import { useGetOrderDetailsQuery } from '../store/slices/orderApiSlice';
 import { useGetProductDetailsQuery, useGetRelatedProductsQuery } from '../store/slices/productApiSlice';
-import { ChevronRight, ShoppingBag, Package, CheckCircle, Clock, Truck, MapPin, CreditCard, AlertCircle, Download, HelpCircle, ArrowRight } from 'lucide-react';
+import { ChevronRight, ShoppingBag, Package, CheckCircle, Clock, Truck, MapPin, AlertCircle, HelpCircle, ArrowRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { formatINR } from '../lib/currency';
@@ -96,7 +96,7 @@ const Skeleton = () => (
 const OrderTrackingPage = () => {
   const { id } = useParams();
   const { data: order, isLoading, error } = useGetOrderDetailsQuery(id);
-  const { data: myReturns } = useGetMyReturnsQuery(undefined, { skip: !id });
+  const { data: myReturns } = useGetMyReturnsQuery(undefined, { skip: !id, pollingInterval: 3000 });
   const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
@@ -106,7 +106,6 @@ const OrderTrackingPage = () => {
 
   if (error) {
     const isForbidden = (error as any)?.status === 403 || (error as any)?.originalStatus === 403;
-    const isNotFound = (error as any)?.status === 400 || (error as any)?.originalStatus === 400;
 
     if (isForbidden) {
       return (
@@ -148,7 +147,6 @@ const OrderTrackingPage = () => {
   const status = statusConfig[order.status] || statusConfig.pending;
   const paymentLabel = 'Razorpay Secure';
   const isPaid = order.paymentStatus === 'paid';
-  const itemCount = order.items?.reduce((a: number, i: any) => a + i.quantity, 0) || 0;
   const totalItemsPrice = order.totalAmount || 0;
   const hasReturn = myReturns?.some((r: any) => r.orderId === order._id);
   const currentReturn = myReturns?.find((r: any) => r.orderId === order._id);

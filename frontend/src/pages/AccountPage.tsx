@@ -6,7 +6,8 @@ import { logout } from '../store/slices/authSlice';
 import { toggleWishlist } from '../store/slices/wishlistSlice';
 import { addToCart } from '../store/slices/cartSlice';
 import { useGetUserOrdersQuery } from '../store/slices/orderApiSlice';
-import { Package, User, MapPin, Heart, Settings, LogOut, ChevronRight, ShoppingBag, Clock, CheckCircle, XCircle, Trash2, Plus, Pencil, Bell, Shield, Moon, Sun, Mail, Phone, MapPinHouse, CreditCard, Gift, Truck, RotateCcw, Star } from 'lucide-react';
+import { useGetMyReturnsQuery } from '../store/slices/returnApiSlice';
+import { Package, User, MapPin, Heart, Settings, LogOut, ChevronRight, ShoppingBag, Clock, CheckCircle, XCircle, Trash2, Plus, Pencil, Bell, Shield, Moon, Sun, Mail, Phone, MapPinHouse, Truck, RotateCcw } from 'lucide-react';
 import { formatINR } from '../lib/currency';
 import { useTheme } from '../context/ThemeContext';
 import EditProfileModal from '../components/profile/EditProfileModal';
@@ -22,8 +23,12 @@ const tabs = [
 
 const statusConfig: Record<string, { label: string; color: string; bg: string; icon: typeof Clock }> = {
   pending:   { label: 'Payment Pending', color: 'text-yellow-700 dark:text-yellow-300', bg: 'bg-yellow-50 dark:bg-yellow-950/30 border-yellow-200 dark:border-yellow-800', icon: Clock },
+  processing:{ label: 'Processing',      color: 'text-blue-700 dark:text-blue-300',     bg: 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800',       icon: Package },
+  shipped:   { label: 'Shipped',         color: 'text-purple-700 dark:text-purple-300', bg: 'bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800', icon: Truck },
+  delivered: { label: 'Delivered',       color: 'text-green-700 dark:text-green-300',   bg: 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800',   icon: CheckCircle },
   confirmed: { label: 'Confirmed',       color: 'text-blue-700 dark:text-blue-300',     bg: 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800',       icon: CheckCircle },
   cancelled: { label: 'Cancelled',       color: 'text-red-700 dark:text-red-300',       bg: 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800',           icon: XCircle },
+  refunded:  { label: 'Refunded',        color: 'text-orange-700 dark:text-orange-300', bg: 'bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-800', icon: RotateCcw },
 };
 
 const PAGE_SIZE = 5;
@@ -42,6 +47,7 @@ const AccountPage = () => {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   const { data: allOrders = [], isLoading: ordersLoading } = useGetUserOrdersQuery(undefined);
+  const { data: myReturns = [] } = useGetMyReturnsQuery(undefined, { skip: !userInfo, pollingInterval: 3000 });
 
   useEffect(() => {
     if (prevTabRef.current !== activeTab) {
@@ -65,8 +71,8 @@ const AccountPage = () => {
     total: allOrders.length,
   };
 
-  const memberSince = userInfo.createdAt
-    ? new Date(userInfo.createdAt).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })
+  const memberSince = (userInfo as any).createdAt
+    ? new Date((userInfo as any).createdAt).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })
     : new Date().getFullYear().toString();
 
   return (
@@ -195,7 +201,12 @@ const AccountPage = () => {
                   ) : ordersData?.orders?.length > 0 ? (
                     <div className="space-y-4">
                       {ordersData.orders.map((order: any) => {
-                        const status = statusConfig[order.status] || statusConfig.pending;
+                        const orderReturn = myReturns.find((r: any) => r.orderId === order._id);
+                        let displayStatusStr = order.status;
+                        if (orderReturn && orderReturn.status === 'refunded') {
+                          displayStatusStr = 'refunded';
+                        }
+                        const status = statusConfig[displayStatusStr] || statusConfig.pending;
                         const StatusIcon = status.icon;
                         const firstItem = order.items?.[0];
                         const itemCount = order.items?.reduce((a: number, i: any) => a + i.quantity, 0) || 0;

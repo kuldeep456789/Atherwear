@@ -37,7 +37,7 @@ const ReturnsPage = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [faqOpen, setFaqOpen] = useState<string | null>(null);
   const [createReturn, { isLoading: isSubmitting }] = useCreateReturnMutation();
-  const { data: myReturns = [], isLoading: returnsLoading, refetch } = useGetMyReturnsQuery(undefined, { skip: !userInfo });
+  const { data: myReturns = [], isLoading: returnsLoading, refetch } = useGetMyReturnsQuery(undefined, { skip: !userInfo, pollingInterval: 3000 });
 
   // Form state
   const [orderId, setOrderId] = useState('');

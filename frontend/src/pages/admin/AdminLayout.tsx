@@ -1,12 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import {
   LayoutDashboard, Package, Users, RotateCcw, MessageSquare, Banknote,
-  LogOut, Search as SearchIcon, Bell, Settings, Menu, X, Loader2, Store
+  Search as SearchIcon, Bell, Settings, Menu, X, Loader2, Store
 } from 'lucide-react';
 import type { RootState } from '../../store/store';
-import { logout } from '../../store/slices/authSlice';
 import { adminApi, type AdminUser, type AdminOrder } from '../../services/adminApi';
 
 const navItems = [
@@ -22,7 +21,6 @@ const navItems = [
 export default function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const userInfo = useSelector((state: RootState) => state.auth.userInfo);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -100,10 +98,7 @@ export default function AdminLayout() {
     return location.pathname.startsWith(item.to);
   };
 
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate('/');
-  };
+
 
   return (
     <div className="flex min-h-screen bg-[#f8f9ff]" style={{ fontFamily: "'Inter', sans-serif" }}>
@@ -252,7 +247,7 @@ export default function AdminLayout() {
                                   onClick={() => setSearchOpen(false)}
                                 >
                                   <div className="text-sm font-medium text-gray-900">
-                                    {user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'No Name'}
+                                    {user.name || 'No Name'}
                                   </div>
                                   <div className="text-xs text-gray-500 mt-0.5 truncate">
                                     {user.email}
