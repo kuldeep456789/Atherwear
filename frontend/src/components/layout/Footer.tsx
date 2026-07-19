@@ -94,6 +94,17 @@ const Footer = () => {
           </div> */}
         </div>
       </div>
+      
+      {/* Copyright Bar */}
+      <div className="border-t border-zinc-800 px-6 py-4 sm:px-10 md:px-12 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+        <p className="text-[10px] sm:text-xs text-zinc-600 font-bold tracking-widest uppercase">
+          &copy; {new Date().getFullYear()} VASTRA B2B. All rights reserved.
+        </p>
+        <div className="flex items-center gap-4 text-[10px] sm:text-xs text-zinc-600 font-bold tracking-widest uppercase">
+          <Link to="/shipping-policy" className="hover:text-[#C9A227] transition-colors">Terms</Link>
+          <Link to="/shipping-policy" className="hover:text-[#C9A227] transition-colors">Privacy</Link>
+        </div>
+      </div>
     </footer >
   );
 };

@@ -56,7 +56,6 @@ const HomePage = () => {
     return mixed.slice(0, 10);
   }, [menProducts, womenProducts]);
 
-  const [carouselIdx, setCarouselIdx] = useState(0);
   const carouselRef = useRef<HTMLDivElement>(null);
 
   const heroVideos = [
@@ -143,19 +142,19 @@ const HomePage = () => {
           </div>
         ))}
         <div className="absolute inset-0 bg-black/35" />
-        <div className="relative z-10 flex h-full w-full max-w-[1400px] mx-auto px-12 lg:px-20 pb-20 lg:pb-24 items-end">
-          <div className="max-w-xl">
-            <h1 className="text-7xl lg:text-8xl font-black leading-[0.85] tracking-tighter text-white">
+        <div className="relative z-10 flex h-full w-full max-w-[1400px] mx-auto px-6 sm:px-12 lg:px-20 pb-20 lg:pb-24 items-end">
+          <div className="max-w-xl w-full">
+            <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black leading-[0.85] tracking-tighter text-white">
               VASTRA
             </h1>
-            <p className="mt-5 text-lg text-white/90 max-w-md leading-8 font-normal normal-case tracking-normal">
+            <p className="mt-4 sm:mt-5 text-base sm:text-lg text-white/90 max-w-md leading-relaxed sm:leading-8 font-normal normal-case tracking-normal">
               Elevating Everyday Fashion with Premium Quality, Modern Design, and Timeless Style.
             </p>
-            <div className="mt-8 flex flex-row gap-5 items-center">
-              <Link to="/collections/men" className="inline-flex items-center justify-center h-[64px] px-14 bg-white text-black text-lg font-bold tracking-widest transition-all duration-300 hover:bg-zinc-200 border-2 border-white active:scale-[0.98]">
+            <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3 sm:gap-5 items-center w-full sm:w-auto">
+              <Link to="/collections/men" className="inline-flex w-full sm:w-auto items-center justify-center h-[56px] sm:h-[64px] px-8 sm:px-14 bg-white text-black text-base sm:text-lg font-bold tracking-widest transition-all duration-300 hover:bg-zinc-200 border-2 border-white active:scale-[0.98]">
                 SHOP MEN
               </Link>
-              <Link to="/collections/women" className="inline-flex items-center justify-center h-[64px] px-14 text-white text-lg font-bold tracking-widest transition-all duration-300 hover:bg-white hover:text-black border-2 border-white active:scale-[0.98]">
+              <Link to="/collections/women" className="inline-flex w-full sm:w-auto items-center justify-center h-[56px] sm:h-[64px] px-8 sm:px-14 text-white text-base sm:text-lg font-bold tracking-widest transition-all duration-300 hover:bg-white hover:text-black border-2 border-white active:scale-[0.98]">
                 SHOP WOMEN
               </Link>
             </div>
@@ -209,38 +208,39 @@ const HomePage = () => {
                 <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight leading-none">COLLECTION</h2>
               </div>
             </div>
-            <div className="relative" ref={carouselRef}>
-              <div className="overflow-hidden">
-                <div
-                  className="flex transition-transform duration-300 ease-in-out"
-                  style={{ transform: `translateX(-${carouselIdx * (carouselRef.current?.offsetWidth ?? 0)}px)` }}
-                >
+            <div className="relative group">
+              <div 
+                ref={carouselRef}
+                className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-4 -mx-6 px-6 sm:-mx-10 sm:px-10 lg:-mx-16 lg:px-16"
+                style={{ scrollBehavior: 'smooth', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              >
                   {carouselProducts.map((product: any) => (
-                    <div key={product.pid || product._id} className="flex-shrink-0 w-1/2 md:w-1/3 lg:w-1/4">
-                      <div className="px-3">
-                        <ProductCard product={product} />
-                      </div>
+                    <div key={product.pid || product._id} className="flex-shrink-0 w-[280px] sm:w-[320px] lg:w-[calc(25%-12px)] snap-start">
+                      <ProductCard product={product} />
                     </div>
                   ))}
-                </div>
               </div>
-              {carouselProducts.length > 4 && (
-                <div className="flex justify-end mt-8 gap-3">
+              
+              {carouselProducts.length > 0 && (
+                <div className="flex justify-end mt-4 gap-3">
                   <button
-                    onClick={() => setCarouselIdx((p) => Math.max(0, p - 1))}
-                    disabled={carouselIdx === 0}
-                    className="w-12 h-12 rounded-full bg-white shadow-md hover:shadow-lg transition-all flex items-center justify-center disabled:opacity-25 disabled:cursor-not-allowed cursor-pointer"
+                    onClick={() => {
+                      if (carouselRef.current) {
+                        carouselRef.current.scrollBy({ left: -320, behavior: 'smooth' });
+                      }
+                    }}
+                    className="w-12 h-12 rounded-full bg-white dark:bg-zinc-800 text-black dark:text-white shadow-md hover:shadow-lg transition-all flex items-center justify-center cursor-pointer border border-zinc-200 dark:border-zinc-700"
                     aria-label="Previous products"
                   >
                     <ChevronLeft size={20} strokeWidth={2} />
                   </button>
                   <button
-                    onClick={() => setCarouselIdx((p) => {
-                      if (!carouselRef.current) return p;
-                      return Math.min(p + 1, Math.ceil(carouselProducts.length / 4) - 1);
-                    })}
-                    disabled={!carouselRef.current || carouselIdx >= Math.ceil(carouselProducts.length / 4) - 1}
-                    className="w-12 h-12 rounded-full bg-white shadow-md hover:shadow-lg transition-all flex items-center justify-center disabled:opacity-25 disabled:cursor-not-allowed cursor-pointer"
+                    onClick={() => {
+                      if (carouselRef.current) {
+                        carouselRef.current.scrollBy({ left: 320, behavior: 'smooth' });
+                      }
+                    }}
+                    className="w-12 h-12 rounded-full bg-white dark:bg-zinc-800 text-black dark:text-white shadow-md hover:shadow-lg transition-all flex items-center justify-center cursor-pointer border border-zinc-200 dark:border-zinc-700"
                     aria-label="Next products"
                   >
                     <ChevronRight size={20} strokeWidth={2} />

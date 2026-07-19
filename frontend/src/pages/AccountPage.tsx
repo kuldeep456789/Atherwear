@@ -126,7 +126,7 @@ const AccountPage = () => {
         <div className="grid gap-6 lg:gap-8 lg:grid-cols-[240px_1fr]">
 
           {/* ── Sidebar ── */}
-          <aside className="space-y-1 lg:sticky lg:top-[130px] lg:self-start">
+          <aside className="flex overflow-x-auto lg:flex-col lg:space-y-1 gap-2 lg:gap-0 scrollbar-hide pb-2 lg:pb-0 lg:sticky lg:top-[130px] lg:self-start -mx-4 px-4 sm:mx-0 sm:px-0">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -134,20 +134,23 @@ const AccountPage = () => {
                 <button
                   key={tab.id}
                   onClick={() => setTab(tab.id)}
-                  className={`relative flex w-full items-center gap-3.5 rounded-xl px-4 py-3.5 text-[15px] sm:text-base font-medium transition-all duration-200 group ${
+                  className={`relative shrink-0 flex items-center gap-2 sm:gap-3.5 rounded-xl px-4 py-3 sm:py-3.5 text-[14px] sm:text-[15px] font-medium transition-all duration-200 group ${
                     isActive
                       ? 'bg-white dark:bg-[#18181B] text-zinc-900 dark:text-white shadow-sm border border-zinc-200 dark:border-[#2A2A2A]'
                       : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-[#18181B]/60 border border-transparent'
                   }`}
                 >
-                  {/* Left accent bar */}
+                  {/* Left accent bar (Desktop) / Bottom accent (Mobile) */}
                   {isActive && (
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 rounded-r-full bg-zinc-900 dark:bg-white" />
+                    <>
+                      <span className="hidden lg:block absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 rounded-r-full bg-zinc-900 dark:bg-white" />
+                      <span className="lg:hidden absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-[3px] rounded-t-full bg-zinc-900 dark:bg-white" />
+                    </>
                   )}
-                  <Icon size={22} strokeWidth={isActive ? 2 : 1.5} className="shrink-0" />
-                  <span>{tab.label}</span>
+                  <Icon size={18} className="lg:w-[22px] lg:h-[22px]" strokeWidth={isActive ? 2 : 1.5} />
+                  <span className="whitespace-nowrap">{tab.label}</span>
                   {tab.id === 'wishlist' && wishlistItems.length > 0 && (
-                    <span className={`ml-auto rounded-full px-2.5 py-0.5 text-[11px] font-bold transition-all ${
+                    <span className={`ml-1 lg:ml-auto rounded-full px-2 py-0.5 text-[10px] sm:text-[11px] font-bold transition-all ${
                       isActive
                         ? 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-900'
                         : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300'
@@ -158,12 +161,12 @@ const AccountPage = () => {
                 </button>
               );
             })}
-            <div className="pt-4 mt-3 border-t border-zinc-200 dark:border-[#2A2A2A]">
+            <div className="shrink-0 lg:pt-4 lg:mt-3 lg:border-t border-zinc-200 dark:border-[#2A2A2A] flex items-center">
               <button
                 onClick={() => dispatch(logout())}
-                className="flex w-full items-center gap-3.5 rounded-xl px-4 py-3.5 text-[15px] sm:text-base font-medium text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all duration-200 border border-transparent hover:border-red-100 dark:hover:border-red-900/30"
+                className="flex items-center gap-2 sm:gap-3.5 rounded-xl px-4 py-3 sm:py-3.5 text-[14px] sm:text-[15px] font-medium text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all duration-200 border border-transparent hover:border-red-100 dark:hover:border-red-900/30 whitespace-nowrap"
               >
-                <LogOut size={22} strokeWidth={1.5} className="shrink-0" />
+                <LogOut size={18} className="lg:w-[22px] lg:h-[22px]" strokeWidth={1.5} />
                 <span>Sign out</span>
               </button>
             </div>

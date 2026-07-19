@@ -87,7 +87,7 @@ const VastraLogo = () => {
 
       {/* VASTRA Text */}
       <motion.span
-        className="text-[28px] font-black tracking-tighter"
+        className="hidden sm:block text-[28px] font-black tracking-tighter"
         style={{ fontFamily: "'Outfit', 'Space Grotesk', sans-serif" }}
         initial={{ opacity: 0, x: -8 }}
         animate={{ opacity: 1, x: 0 }}

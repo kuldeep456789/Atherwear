@@ -21,7 +21,7 @@ const AnnouncementBanner = () => {
       </style>
       <div className="w-full overflow-hidden">
         <div className="animate-marquee font-medium items-center justify-center">
-          <span className="mr-3">Enjoy 10% Off On The VASTRA App. Use: VASTRA10 & Vastra  order accept minimum 50,000 </span>
+          <span className="mr-3">Welcome to VASTRA B2B Get 10% OFF with code VASTRA10 Minimum Order Value: ₹50,000</span>
           {/* <Link to="/" className="underline hover:text-gray-600 transition-colors mx-2">Download Now</Link>
           <Link to="/" className="underline hover:text-gray-600 transition-colors">T&Cs</Link> */}
         </div>

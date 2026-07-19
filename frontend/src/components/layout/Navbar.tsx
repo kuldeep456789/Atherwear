@@ -220,14 +220,7 @@ const Navbar = () => {
     <>
       <header className={`fixed top-0 left-0 right-0 z-50 w-full bg-white dark:bg-[#111111] text-zinc-900 dark:text-zinc-100 transition-all duration-300 font-sans border-b border-zinc-200 dark:border-zinc-800 ${scrolled ? 'shadow-lg shadow-black/5 dark:shadow-white/5' : 'shadow-none'}`}>
         <div className="flex items-center h-[88px] max-w-[1920px] mx-auto px-6 sm:px-8 lg:px-12">
-          {/* Mobile menu toggle */}
-          <button
-            className="lg:hidden flex items-center justify-center w-11 h-11 mr-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors cursor-pointer"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Toggle menu"
-          >
-            {mobileMenuOpen ? <X className="h-6 w-6" strokeWidth={1.5} /> : <Menu className="h-6 w-6" strokeWidth={1.5} />}
-          </button>
+
 
           {/* Left - Logo */}
           <Link to="/" className="shrink-0">
@@ -456,7 +449,7 @@ const Navbar = () => {
             </Link>
 
             {/* Profile */}
-            <div className="relative hidden sm:block" ref={profileRef}>
+            <div className="relative" ref={profileRef}>
               <button
                 onClick={() => setProfileOpen(!profileOpen)}
                 className="relative flex items-center justify-center w-11 h-11 rounded-full transition-all duration-200 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 group"
@@ -598,7 +591,14 @@ const Navbar = () => {
               )}
             </button>
 
-
+            {/* Mobile menu toggle (Right side) */}
+            <button
+              className="lg:hidden flex items-center justify-center w-11 h-11 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors cursor-pointer ml-1"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? <X className="h-6 w-6" strokeWidth={1.5} /> : <Menu className="h-6 w-6" strokeWidth={1.5} />}
+            </button>
           </div>
         </div>
 

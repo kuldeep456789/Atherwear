@@ -321,7 +321,7 @@ const ProductDetailsPage = () => {
                   onMouseMove={handleImageZoom}
                   onMouseLeave={() => setZoomLens((p) => ({ ...p, active: false }))}
                   onClick={() => openLightbox(selectedImage)}
-                  className="relative w-full max-w-[700px] h-[620px] lg:h-[720px] bg-[#f8f8f8] rounded-[18px] overflow-hidden flex items-center justify-center cursor-crosshair"
+                  className="relative w-full max-w-[700px] h-[450px] sm:h-[620px] lg:h-[720px] bg-[#f8f8f8] rounded-[18px] overflow-hidden flex items-center justify-center cursor-crosshair"
                 >
                   <img
                     key={selectedImage}
