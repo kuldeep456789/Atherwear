@@ -1,22 +1,38 @@
-## checked how many data are in redis , with catogrie wise 
+# VASTRA
+
+VASTRA is a full-stack, production-grade fashion e-commerce platform built for Men and Women's clothing. Products are fetched live from CJ Dropshipping and served blazingly fast through a Redis caching layer — no static product database needed.
 
 
->>>cd backend
->npm run check-redis
+### 1. Backend Setup
 
+Navigate to the backend directory, install dependencies, and configure environment variables.
 
-# Backend
->> cd backend
->> npm run start:dev (if u run the cammand it run and install all the deepency u edited)
->>> npm run start (is used for run the backend file normally we start)
+```bash
+cd backend
+npm install
+cp .env.example .env
+npm run start:dev
+```
 
-## frontend
+### 2. Frontend Setup
 
->> cd frontend
->> npm run dev
+Navigate to the frontend directory, install dependencies, and configure environment variables.
 
+```bash
+cd frontend
+npm install
+cp .env.example .env
+npm run dev
+```
 
+### Environment Variables Overview
 
+Create `.env` files in both `frontend` and `backend` directories based on the `.env.example` files provided. Key variables include:
 
-#### run to get the product from Cj 
-npx ts-node src/scripts/sync-products.ts
+* `MONGODB_URI`
+* `CJ_API_BASE_URL`, `CJ_API_KEY`, `CJ_EMAIL`
+* `REDIS_URL`
+* `JWT_SECRET`
+* `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`
+* `RESEND_API_KEY`
+
