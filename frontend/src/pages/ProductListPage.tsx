@@ -113,7 +113,7 @@ const ProductListPage = () => {
       <div className="max-w-[1920px] mx-auto">
         {/* Loading */}
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6">
             {[...Array(10)].map((_, i) => (
               <div key={i} className="aspect-[4/5] bg-zinc-100 dark:bg-zinc-800 rounded-2xl animate-pulse" />
             ))}
@@ -133,7 +133,7 @@ const ProductListPage = () => {
         ) : (
           <>
             {/* BORDER-COLLAPSE GRID */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6">
               {paginatedProducts.map((product: any, index: number) => (
                 <ProductCard
                   key={product.pid || product._id || product.id || `${product.title || product.name || 'product'}-${index}`}

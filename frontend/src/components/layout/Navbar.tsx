@@ -434,12 +434,12 @@ const Navbar = () => {
             </button>
 
             {/* Theme Toggle */}
-            <div className="flex items-center justify-center w-11 h-11 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors cursor-pointer">
+            <div className="hidden md:flex items-center justify-center w-11 h-11 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors cursor-pointer">
               <ThemeToggle />
             </div>
 
             {/* Wishlist */}
-            <Link to="/wishlist" className="relative flex items-center justify-center w-11 h-11 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors group">
+            <Link to="/wishlist" className="hidden md:flex relative items-center justify-center w-11 h-11 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors group">
               <Heart className="h-6 w-6 text-zinc-600 dark:text-zinc-400 group-hover:scale-105 transition-transform duration-200" strokeWidth={1.5} />
               {wishlistCount > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 h-[20px] w-[20px] bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full shadow-sm">
@@ -585,8 +585,8 @@ const Navbar = () => {
             >
               <ShoppingBag className="h-6 w-6 text-zinc-600 dark:text-zinc-400 group-hover:scale-105 transition-transform duration-200" strokeWidth={1.5} />
               {cartCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 h-[20px] w-[20px] bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full shadow-sm">
-                  {cartCount}
+                <span className="absolute -top-0.5 -right-0.5 min-w-[20px] px-1 h-[20px] bg-[#f97316] text-white text-[10px] font-bold flex items-center justify-center rounded-full shadow-sm">
+                  {cartCount > 99 ? '99+' : cartCount}
                 </span>
               )}
             </button>

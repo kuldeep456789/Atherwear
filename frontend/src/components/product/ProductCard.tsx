@@ -74,9 +74,9 @@ const ProductCard = ({ product }: ProductCardProps) => {
   };
 
   return (
-    <div className="group relative flex flex-col w-full bg-white dark:bg-zinc-900 rounded-[14px] border border-[#ececec] dark:border-zinc-800 overflow-hidden cursor-pointer transition-shadow duration-400 ease-out hover:shadow-[0_12px_35px_rgba(0,0,0,0.12)] dark:hover:shadow-[0_12px_35px_rgba(0,0,0,0.35)]">
+    <div className="group relative flex flex-col w-full bg-white dark:bg-zinc-900 border-none cursor-pointer">
       <Link to={`/product/${productId}`} className="block w-full">
-        <div className="relative aspect-[4/5] overflow-hidden bg-zinc-50 dark:bg-zinc-800 rounded-t-[14px]">
+        <div className="relative aspect-[4/5] overflow-hidden bg-[#f6f6f6] dark:bg-zinc-800">
           {imageFailed ? (
             <div className="flex h-full w-full flex-col items-center justify-center bg-zinc-50 dark:bg-zinc-800 px-8 text-center">
               <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">VASTRA</span>
@@ -108,21 +108,22 @@ const ProductCard = ({ product }: ProductCardProps) => {
         </div>
       </Link>
 
-      <Link to={`/product/${productId}`} className="flex flex-col p-4 flex-1 border-t border-gray-100 dark:border-zinc-800">
-        <h3 className="text-base font-medium text-gray-900 dark:text-white line-clamp-2 leading-snug">
+      <Link to={`/product/${productId}`} className="flex flex-col pt-3 pb-1 flex-1">
+        <span className="text-[13px] font-medium text-[#9e352f] mb-1">Just In</span>
+        <h3 className="text-[15px] sm:text-base font-medium text-[#111111] dark:text-white line-clamp-1">
           {product.title || product.name}
         </h3>
         {product.description && (
-          <p className="mt-1 text-sm text-gray-500 dark:text-zinc-400 line-clamp-2 leading-relaxed">
+          <p className="text-[14px] text-gray-500 dark:text-zinc-400 line-clamp-1 mt-0.5">
             {product.description.replace(/<[^>]*>?/gm, '')}
           </p>
         )}
-        <div className="flex items-center gap-2 mt-1.5">
-          <span className="text-xl font-bold text-gray-900 dark:text-white">
+        <div className="flex items-center gap-1.5 sm:gap-2 mt-2">
+          <span className="text-[15px] sm:text-[16px] font-medium text-[#111111] dark:text-white">
             {formatINR(product.discountPrice && product.discountPrice < product.price ? product.discountPrice : product.price)}
           </span>
           {product.discountPrice && product.discountPrice < product.price && (
-            <span className="text-base text-gray-500 line-through">
+            <span className="text-[14px] sm:text-[15px] text-gray-500 line-through">
               {formatINR(product.price)}
             </span>
           )}
