@@ -1,12 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import {
   LayoutDashboard, Package, Users, RotateCcw, MessageSquare, Banknote,
-  Search as SearchIcon, Bell, Settings, Menu, X, Loader2, Store
+  Settings, Menu, X, Store
 } from 'lucide-react';
 import type { RootState } from '../../store/store';
-import { adminApi, type AdminUser, type AdminOrder } from '../../services/adminApi';
 
 const navItems = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -23,74 +22,10 @@ export default function AdminLayout() {
   const userInfo = useSelector((state: RootState) => state.auth.userInfo);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Search State
-  const searchInputRef = useRef<HTMLInputElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [searching, setSearching] = useState(false);
-  const [searchResults, setSearchResults] = useState<{ users: AdminUser[]; orders: AdminOrder[] }>({ users: [], orders: [] });
-
   // Close sidebar on route change on mobile
   useEffect(() => {
     setSidebarOpen(false);
-    setSearchOpen(false);
   }, [location.pathname]);
-
-  // Handle ⌘K shortcut
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        searchInputRef.current?.focus();
-      }
-      if (e.key === 'Escape') {
-        setSearchOpen(false);
-        searchInputRef.current?.blur();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
-  // Handle outside click for dropdown
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (
-        dropdownRef.current && 
-        !dropdownRef.current.contains(e.target as Node) &&
-        searchInputRef.current &&
-        !searchInputRef.current.contains(e.target as Node)
-      ) {
-        setSearchOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // Debounced Search API Call
-  useEffect(() => {
-    const handler = setTimeout(async () => {
-      if (!searchQuery.trim()) {
-        setSearchResults({ users: [], orders: [] });
-        setSearching(false);
-        return;
-      }
-      
-      try {
-        setSearching(true);
-        const res = await adminApi.search(searchQuery.trim());
-        setSearchResults(res);
-      } catch (err) {
-        console.error('Search error', err);
-      } finally {
-        setSearching(false);
-      }
-    }, 300); // 300ms debounce
-
-    return () => clearTimeout(handler);
-  }, [searchQuery]);
 
   const isActive = (item: typeof navItems[number]) => {
     if (item.end) return location.pathname === item.to;
