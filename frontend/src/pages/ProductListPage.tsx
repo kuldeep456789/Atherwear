@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Search } from 'lucide-react';
 import { useGetProductsQuery } from '../store/slices/productApiSlice';
 import { useGetCategoriesQuery } from '../store/slices/categoryApiSlice';
 import ProductCard from '../components/product/ProductCard';
@@ -123,12 +123,22 @@ const ProductListPage = () => {
             <span className="text-lg font-black uppercase tracking-widest text-red-600">ERROR LOADING PRODUCTS</span>
           </div>
         ) : sortedProducts.length === 0 ? (
-          <div className="text-center py-20 px-6 border-b-2 border-black dark:border-white">
-            <span className="text-6xl mb-6 block">✕</span>
-            <h3 className="text-3xl font-black uppercase tracking-widest text-[hsl(var(--foreground))] mb-3">No Products Found</h3>
-            <p className="text-base text-zinc-500 max-w-sm mx-auto mb-6 font-medium">
-              We couldn't find any products matching your current filters.
+          <div className="flex flex-col items-center justify-center py-24 sm:py-32 px-6 border-b border-zinc-200 dark:border-zinc-800">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 mb-6 sm:mb-8 rounded-full bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center border border-zinc-200 dark:border-zinc-800 shadow-sm">
+              <Search className="w-8 h-8 sm:w-10 sm:h-10 text-zinc-400 dark:text-zinc-500" strokeWidth={1.5} />
+            </div>
+            <h3 className="text-2xl sm:text-3xl font-medium tracking-tight text-[#111111] dark:text-white mb-3">
+              Nothing found
+            </h3>
+            <p className="text-[15px] text-zinc-500 max-w-md mx-auto text-center mb-8 leading-relaxed">
+              We couldn't find any products matching {keyword ? <><span className="font-semibold text-zinc-700 dark:text-zinc-300">"{keyword}"</span>.</> : 'your filters.'} Try adjusting your search criteria to find what you're looking for.
             </p>
+            <Link 
+              to="/collections/all" 
+              className="px-8 py-3.5 bg-[#111111] dark:bg-white text-white dark:text-[#111111] text-[15px] font-medium rounded-full hover:bg-black/80 dark:hover:bg-zinc-200 transition-all duration-200"
+            >
+              Explore All Products
+            </Link>
           </div>
         ) : (
           <>

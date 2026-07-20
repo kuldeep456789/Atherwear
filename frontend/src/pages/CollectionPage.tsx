@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ChevronRight, ChevronLeft } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Search } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useGetProductsQuery } from '../store/slices/productApiSlice';
 import ProductCard, { ProductCardSkeleton } from '../components/product/ProductCard';
@@ -218,9 +218,22 @@ const CollectionPage = () => {
             <h2 className="text-red-600 font-black text-xl mb-4">ERROR LOADING PRODUCTS</h2>
           </div>
         ) : filteredProducts.length === 0 ? (
-          <div className="text-center py-20 px-6">
-            <span className="text-5xl mb-6 block">✕</span>
-            <h3 className="text-xl font-bold text-[hsl(var(--foreground))] mb-3">No Products Found</h3>
+          <div className="flex flex-col items-center justify-center py-24 sm:py-32 px-6">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 mb-6 sm:mb-8 rounded-full bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center border border-zinc-200 dark:border-zinc-800 shadow-sm">
+              <Search className="w-8 h-8 sm:w-10 sm:h-10 text-zinc-400 dark:text-zinc-500" strokeWidth={1.5} />
+            </div>
+            <h3 className="text-2xl sm:text-3xl font-medium tracking-tight text-[#111111] dark:text-white mb-3">
+              Nothing found
+            </h3>
+            <p className="text-[15px] text-zinc-500 max-w-md mx-auto text-center mb-8 leading-relaxed">
+              We couldn't find any products in this collection. Try exploring other categories to find what you're looking for.
+            </p>
+            <Link 
+              to="/collections/all" 
+              className="px-8 py-3.5 bg-[#111111] dark:bg-white text-white dark:text-[#111111] text-[15px] font-medium rounded-full hover:bg-black/80 dark:hover:bg-zinc-200 transition-all duration-200"
+            >
+              Explore All Products
+            </Link>
           </div>
         ) : (
           <>

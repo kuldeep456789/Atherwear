@@ -57,64 +57,64 @@ const FaqPage = () => {
       </div>
 
       {/* Header */}
-      <div className="w-full border-b-2 border-black dark:border-white">
-        <div className="max-w-[1920px] mx-auto px-6 sm:px-10 py-8 sm:py-10">
-          <p className="text-xs sm:text-sm font-black tracking-[0.25em] text-zinc-500 mb-2">HAVE QUESTIONS?</p>
-          <h1 className="text-4xl lg:text-5xl font-extrabold tracking-tight text-[hsl(var(--foreground))] leading-none">
+      <div className="w-full border-b border-zinc-200 dark:border-zinc-800">
+        <div className="max-w-[1920px] mx-auto px-6 sm:px-10 py-10">
+          <p className="text-[11px] sm:text-xs font-bold tracking-[0.2em] text-zinc-500 mb-2">HAVE QUESTIONS?</p>
+          <h1 className="text-3xl lg:text-4xl font-extrabold tracking-tight text-[#111111] dark:text-white leading-none">
             FAQ
           </h1>
         </div>
       </div>
 
       {/* Search */}
-      <div className="w-full border-b-2 border-black dark:border-white">
-        <div className="max-w-3xl mx-auto px-6 sm:px-10 py-8">
-          <div className="flex border-2 border-black dark:border-white">
+      <div className="w-full border-b border-zinc-200 dark:border-zinc-800">
+        <div className="max-w-2xl mx-auto px-6 sm:px-10 py-12">
+          <div className="flex border border-[#111111] dark:border-white bg-white dark:bg-zinc-900">
             <input
               type="text"
               placeholder="SEARCH FAQ..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1 px-4 py-4 bg-transparent text-sm font-bold tracking-widest focus:outline-none placeholder:text-zinc-400"
+              className="flex-1 px-4 py-3 bg-transparent text-[11px] font-bold tracking-[0.15em] text-[#111111] dark:text-white focus:outline-none placeholder:text-zinc-400"
             />
-            <span className="flex items-center justify-center w-16 border-l-2 border-black dark:border-white">
-              <Search size={18} strokeWidth={2.5} />
+            <span className="flex items-center justify-center w-12 border-l border-[#111111] dark:border-white text-[#111111] dark:text-white">
+              <Search size={16} strokeWidth={2} />
             </span>
           </div>
         </div>
       </div>
 
       {/* FAQ items */}
-      <div className="max-w-3xl mx-auto px-6 sm:px-10 py-12 sm:py-16">
+      <div className="max-w-2xl mx-auto px-6 sm:px-10 py-12 sm:py-16">
         {filtered.length === 0 ? (
           <div className="text-center py-16">
-            <span className="text-6xl block mb-4">?</span>
-            <h3 className="text-2xl font-black uppercase tracking-widest mb-2">No Results Found</h3>
-            <p className="text-sm text-zinc-500">Try a different search term</p>
+            <span className="text-6xl block mb-4 text-zinc-300">?</span>
+            <h3 className="text-xl font-bold tracking-tight mb-2 text-[#111111] dark:text-white normal-case">No Results Found</h3>
+            <p className="text-[14px] text-zinc-500 normal-case">Try a different search term</p>
           </div>
         ) : (
           <div className="space-y-0">
             {filtered.map((item, index) => (
-              <div key={index} className="border-b-2 border-black dark:border-white">
+              <div key={index} className="border-b border-[#111111] dark:border-white">
                 <button
                   onClick={() => setOpenIndex(openIndex === index ? null : index)}
-                  className="w-full flex items-center justify-between py-5 sm:py-6 text-left cursor-pointer group"
+                  className="w-full flex items-center justify-between py-5 text-left cursor-pointer group"
                 >
-                  <span className="text-sm sm:text-base font-bold tracking-wider pr-4 group-hover:text-zinc-500 transition-colors normal-case">
+                  <span className="text-[13px] font-extrabold tracking-wide text-[#111111] dark:text-white pr-4 group-hover:text-zinc-500 transition-colors normal-case">
                     {item.q}
                   </span>
-                  {openIndex === index ? (
-                    <ChevronUp size={18} strokeWidth={2.5} className="shrink-0" />
-                  ) : (
-                    <ChevronDown size={18} strokeWidth={2.5} className="shrink-0" />
-                  )}
+                  <ChevronDown 
+                    size={16} 
+                    strokeWidth={2} 
+                    className={`shrink-0 text-[#111111] dark:text-white transition-transform duration-200 ${openIndex === index ? 'rotate-180' : ''}`} 
+                  />
                 </button>
                 <div
                   className={`overflow-hidden transition-all duration-300 ${
                     openIndex === index ? 'max-h-96 pb-6' : 'max-h-0'
                   }`}
                 >
-                  <p className="text-sm text-zinc-500 normal-case tracking-normal leading-relaxed pr-8">
+                  <p className="text-[14px] text-zinc-600 dark:text-zinc-400 normal-case tracking-normal leading-relaxed pr-8">
                     {item.a}
                   </p>
                 </div>

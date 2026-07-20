@@ -257,7 +257,18 @@ const ReturnsPage = () => {
           {/* ───── TAB: FORM ───── */}
           {activeTab === 'form' && (
             <motion.div key="form" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
-              {/* Eligibility Badge */}
+              {!userInfo ? (
+                <div className="text-center py-12 bg-[hsl(var(--card))] border border-zinc-200 dark:border-zinc-800 rounded-xl">
+                  <AlertCircle size={32} strokeWidth={1.5} className="mx-auto mb-3 text-zinc-400" />
+                  <p className="text-[16px] font-bold mb-2">Please Log In</p>
+                  <p className="text-[13px] text-zinc-500 mb-6">You must be logged in to submit a return request.</p>
+                  <Link to="/login" className="inline-flex items-center justify-center h-10 px-6 rounded-lg bg-[hsl(var(--foreground))] text-[hsl(var(--background))] text-sm font-bold tracking-wide hover:opacity-90 transition-opacity">
+                    Log In
+                  </Link>
+                </div>
+              ) : (
+                <>
+                  {/* Eligibility Badge */}
               <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900/30 rounded-xl p-4 mb-6 flex items-center gap-3">
                 <span className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center shrink-0">
                   <Check size={16} strokeWidth={3} className="text-green-600" />
@@ -380,6 +391,8 @@ const ReturnsPage = () => {
                   {isSubmitting ? 'Submitting...' : 'Submit Return Request'}
                 </button>
               </form>
+                </>
+              )}
             </motion.div>
           )}
 

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Truck, Clock, Package, IndianRupee, MapPin, ChevronRight } from 'lucide-react';
+import { Truck, Clock, Package, IndianRupee, MapPin, ChevronRight, CheckCircle2 } from 'lucide-react';
 
 const couriers = [
   { name: 'Delhivery', svg: 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15l-5-5 1.41-1.41L11 14.17l7.59-7.59L20 8l-9 9z' },
@@ -85,9 +85,7 @@ const ShippingPolicyPage = () => {
           <div className="grid grid-cols-5 gap-3">
             {couriers.map((courier) => (
               <div key={courier.name} className="bg-[hsl(var(--card))] border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 text-center hover:shadow-sm transition-shadow">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-8 h-8 mx-auto mb-2 text-zinc-500">
-                  <path d={courier.svg} />
-                </svg>
+                <CheckCircle2 strokeWidth={1.5} className="w-8 h-8 mx-auto mb-3 text-zinc-500" />
                 <span className="text-[11px] font-bold">{courier.name}</span>
               </div>
             ))}
