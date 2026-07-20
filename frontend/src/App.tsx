@@ -35,6 +35,8 @@ import AdminReturnRequests from './pages/admin/AdminReturnRequests';
 import AdminCustomerIssues from './pages/admin/AdminCustomerIssues';
 import AdminCommissionFinance from './pages/admin/AdminCommissionFinance';
 import AdminHeroBanner from './pages/admin/AdminHeroBanner';
+import { AskVastraWidget } from './features/ask-vastra/components/AskVastraWidget';
+
 const ScrollToTop = () => {
   const { pathname } = useLocation();
   useEffect(() => {
@@ -52,6 +54,7 @@ function MainLayout() {
         <Outlet />
       </main>
       <Footer />
+      <AskVastraWidget />
     </div>
   );
 }

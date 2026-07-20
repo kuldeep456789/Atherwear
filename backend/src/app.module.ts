@@ -19,6 +19,8 @@ import { WishlistModule } from './modules/wishlist/wishlist.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { ReturnsModule } from './modules/returns/returns.module';
 import { UsersModule } from './modules/users/users.module';
+import { AskVastraModule } from './modules/ask-vastra/ask-vastra.module';
+
 @Module({
   imports: [
     ScheduleModule.forRoot(),
@@ -37,6 +39,7 @@ import { UsersModule } from './modules/users/users.module';
     WishlistModule,
     OrdersModule,
     ReturnsModule,
+    AskVastraModule,
   ],
   controllers: [AppController],
   providers: [AppService],
