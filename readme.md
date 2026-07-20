@@ -36,3 +36,10 @@ Create `.env` files in both `frontend` and `backend` directories based on the `.
 * `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`
 * `RESEND_API_KEY`
 
+
+
+
+## now checked the redis store data, 
+
+>> cd backend
+>>> npm run check-redis

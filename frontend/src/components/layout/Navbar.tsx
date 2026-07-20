@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { ShoppingBag, Heart, UserRound, X, Search, Menu, Package, MapPin, Settings, LogOut, Clock, TrendingUp, Loader2, HelpCircle, Shield, Sliders } from 'lucide-react';
+import { ShoppingBag, Heart, UserRound, X, Search, Menu, Package, MapPin, Settings, LogOut, Clock, TrendingUp, Loader2, HelpCircle, Shield } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { RootState } from '../../store/store';
@@ -51,7 +51,16 @@ const Navbar = () => {
     userInfo?.email ||
     'ME';
 
-  const [searchQuery, setSearchQuery] = useState('');
+  const queryQ = new URLSearchParams(location.search).get('q') || '';
+  const [searchQuery, setSearchQuery] = useState(queryQ);
+
+  useEffect(() => {
+    if (location.pathname === '/search') {
+      setSearchQuery(new URLSearchParams(location.search).get('q') || '');
+    } else {
+      setSearchQuery('');
+    }
+  }, [location.pathname, location.search]);
   const [searchFocused, setSearchFocused] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
@@ -126,7 +135,7 @@ const Navbar = () => {
           if (item.type === 'recent' || item.type === 'trending') {
             setSearchQuery(item.label);
             doSearchRef.current?.(item.label);
-          } else if (item.type === 'product' && item.to) {
+          } else if ((item.type === 'product' || item.type === 'category') && item.to) {
             navigate(item.to);
             setSearchFocused(false);
             setSelectedSuggestionIdx(-1);
@@ -191,7 +200,6 @@ const Navbar = () => {
     localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(updated));
     navigate(`/search?q=${encodeURIComponent(trimmed)}`);
     setSearchFocused(false);
-    setSearchQuery('');
     setMobileSearchOpen(false);
     setSelectedSuggestionIdx(-1);
   }, [navigate, recentSearches]);
