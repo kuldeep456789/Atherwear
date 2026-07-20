@@ -117,11 +117,11 @@ export default function WishlistLoginPopup({ product, onClose }: WishlistLoginPo
             <h3 className="text-2xl font-black tracking-tight text-white drop-shadow-sm">
               VASTRA
             </h3>
-            <p className="mt-1 text-lg font-light text-white/90 drop-shadow-sm">
+            {/* <p className="mt-1 text-lg font-light text-white/90 drop-shadow-sm">
               Premium Fashion
-            </p>
+            </p> */}
             <p className="text-sm text-white/70 drop-shadow-sm leading-6 mt-2 max-w-xs normal-case tracking-normal">
-              Discover timeless styles crafted for comfort, confidence, and everyday elegance.
+              Elevating Everyday Fashion with Premium Quality, Modern Design, and Timeless Style.
             </p>
           </div>
         </div>
@@ -200,9 +200,8 @@ export default function WishlistLoginPopup({ product, onClose }: WishlistLoginPo
                         value={val}
                         onChange={(e) => handleOtpChange(i, e.target.value)}
                         onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                        className={`w-11 h-12 text-center text-lg font-bold rounded-xl border-2 bg-[hsl(var(--background))] outline-none transition-all duration-150 ${
-                          val ? 'border-[hsl(var(--foreground))]' : 'border-zinc-200 dark:border-zinc-700 focus:border-zinc-500'
-                        }`}
+                        className={`w-11 h-12 text-center text-lg font-bold rounded-xl border-2 bg-[hsl(var(--background))] outline-none transition-all duration-150 ${val ? 'border-[hsl(var(--foreground))]' : 'border-zinc-200 dark:border-zinc-700 focus:border-zinc-500'
+                          }`}
                       />
                     ))}
                   </div>

@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '../../store/store';
 import { ArrowRight, Package, Tag } from 'lucide-react';
 import { formatINR } from '../../lib/currency';
+import { applyCoupon, removeCoupon, COUPONS } from '../../store/slices/cartSlice';
 
 interface OrderSummarySidebarProps {
   buttonText?: string;
@@ -14,6 +15,33 @@ const OrderSummarySidebar = ({ buttonText, buttonAction, disableButton }: OrderS
   const cart = useSelector((state: RootState) => state.cart);
   const { cartItems, itemsPrice, shippingPrice, taxPrice, totalPrice } = cart;
   const [couponCode, setCouponCode] = useState('');
+  const [couponMsg, setCouponMsg] = useState<{ text: string; isError: boolean } | null>(null);
+  const dispatch = useDispatch();
+
+  const handleApplyCoupon = (code: string) => {
+    const cleanCode = code.toUpperCase().trim();
+    if (!cleanCode) return;
+
+    const couponDef = COUPONS[cleanCode];
+    if (!couponDef) {
+      setCouponMsg({ text: `Invalid coupon. Try: ${Object.keys(COUPONS).join(', ')}.`, isError: true });
+      return;
+    }
+    if (itemsPrice < couponDef.min) {
+      setCouponMsg({ text: `Min. cart value of ${formatINR(couponDef.min)} required.`, isError: true });
+      return;
+    }
+    dispatch(applyCoupon(cleanCode));
+    const savings = couponDef.discount(itemsPrice);
+    setCouponMsg({ text: `"${cleanCode}" applied! You save ${formatINR(savings)}.`, isError: false });
+  };
+
+  const handleRemoveCoupon = () => {
+    dispatch(removeCoupon());
+    setCouponCode('');
+    setCouponMsg({ text: 'Coupon removed.', isError: false });
+    setTimeout(() => setCouponMsg(null), 3000);
+  };
 
   return (
     <div className="sticky top-[130px] bg-white dark:bg-[#18181B] border border-zinc-200 dark:border-[#2A2A2A] rounded-2xl overflow-hidden shadow-lg dark:shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
@@ -56,16 +84,28 @@ const OrderSummarySidebar = ({ buttonText, buttonAction, disableButton }: OrderS
             <Tag size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" strokeWidth={1.5} />
             <input
               type="text"
-              value={couponCode}
+              value={cart.appliedCoupon || couponCode}
               onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+              disabled={!!cart.appliedCoupon}
               placeholder="Coupon code"
-              className="w-full h-10 pl-9 pr-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-zinc-900 dark:focus:border-white transition-colors"
+              className="w-full h-10 pl-9 pr-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-zinc-900 dark:focus:border-white transition-colors disabled:opacity-60"
             />
           </div>
-          <button className="h-10 px-4 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[11px] font-bold uppercase tracking-wider hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all duration-200 active:scale-[0.97] shrink-0">
-            Apply
-          </button>
+          {cart.appliedCoupon ? (
+            <button onClick={handleRemoveCoupon} className="h-10 px-4 rounded-xl border border-red-500 text-red-500 text-[11px] font-bold uppercase tracking-wider hover:bg-red-50 dark:hover:bg-red-950/20 transition-all duration-200 active:scale-[0.97] shrink-0">
+              Remove
+            </button>
+          ) : (
+            <button onClick={() => handleApplyCoupon(couponCode)} disabled={!couponCode} className="h-10 px-4 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[11px] font-bold uppercase tracking-wider hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all duration-200 active:scale-[0.97] shrink-0 disabled:opacity-50">
+              Apply
+            </button>
+          )}
         </div>
+        {couponMsg && (
+          <div className={`mt-2 text-[11px] font-semibold ${couponMsg.isError ? 'text-red-500' : 'text-green-600'}`}>
+            {couponMsg.text}
+          </div>
+        )}
       </div>
 
       {/* Price Breakdown */}
@@ -92,12 +132,6 @@ const OrderSummarySidebar = ({ buttonText, buttonAction, disableButton }: OrderS
         <span className="text-2xl font-bold text-zinc-900 dark:text-white">{formatINR(totalPrice)}</span>
       </div>
 
-      {/* Delivery estimate */}
-      <div className="px-6 pb-3">
-        <p className="text-[11px] text-zinc-400 dark:text-zinc-500 text-center">
-          Estimated delivery: 5&ndash;8 business days
-        </p>
-      </div>
 
       {/* CTA Button */}
       {buttonText && buttonAction && (
@@ -113,13 +147,7 @@ const OrderSummarySidebar = ({ buttonText, buttonAction, disableButton }: OrderS
         </div>
       )}
 
-      {/* Trust strip */}
-      <div className="px-6 pb-6">
-        <div className="flex items-center justify-center gap-1.5 text-[10px] text-zinc-400 dark:text-zinc-500">
-          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          <span className="font-medium">256-bit SSL encrypted</span>
-        </div>
-      </div>
+
     </div>
   );
 };

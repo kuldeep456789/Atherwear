@@ -108,12 +108,7 @@ export const ProductContextPanel: React.FC<Props> = ({ selections, setSelections
               <span className={`text-[10px] font-medium ${selections.color === c.name ? 'text-zinc-900 font-bold' : 'text-zinc-500'}`}>{c.name}</span>
             </div>
           ))}
-          <div className="flex flex-col items-center gap-1.5">
-            <div className="w-10 h-10 rounded-full border border-zinc-200 flex items-center justify-center bg-zinc-50 text-zinc-400">
-              <span className="text-lg leading-none -mt-1">...</span>
-            </div>
-            <span className="text-[10px] font-medium text-zinc-500">Other</span>
-          </div>
+
         </div>
       </div>
 

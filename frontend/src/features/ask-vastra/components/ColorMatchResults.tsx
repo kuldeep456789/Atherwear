@@ -38,34 +38,7 @@ export const ColorMatchResults: React.FC<Props> = ({ data, isLoading, selectedCo
 
   return (
     <div className="flex-1 overflow-y-auto pr-2 pb-8">
-      {/* Header Result */}
-      <div className="bg-indigo-50/50 rounded-2xl p-5 mb-6 border border-indigo-100 flex items-center justify-between">
-        <div>
-            <h3 className="font-bold text-lg text-indigo-900 tracking-tight">VASTRA AI Verdict</h3>
-            <div className="text-sm text-zinc-500 mb-2">Overall Compatibility</div>
-          </div>
-          <div className="flex items-center gap-3">
-            {renderStars(data.confidenceScore)}
-            <span className="font-bold text-zinc-800">{data.overallCompatibility}</span>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-5">
-          <div className="relative w-20 h-20 rounded-full border-4 border-indigo-200 flex items-center justify-center">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-indigo-700 leading-none">{data.confidenceScore}%</div>
-              <div className="text-[10px] text-indigo-500 font-medium mt-1">Score</div>
-            </div>
-            {/* SVG circle progress would go here */}
-          </div>
-          
-          <div className="w-32">
-            <div className="text-sm text-zinc-500">Confidence Level</div>
-            <div className="font-bold text-green-600">{data.confidenceLevel}</div>
-            <div className="text-[11px] text-zinc-500 mt-1 leading-tight">Highly recommended combination.</div>
-          </div>
-        </div>
-      </div>
+
 
       {/* Best Combinations */}
       <div className="mb-6">

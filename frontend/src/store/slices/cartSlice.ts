@@ -67,6 +67,11 @@ export const COUPONS: Record<string, { discount: (price: number) => number; min:
     min: 0,
     desc: '10% OFF on all items',
   },
+  VASTRA10: {
+    discount: (p) => Math.round(p * 0.1),
+    min: 0,
+    desc: '10% OFF on all items',
+  },
   FREE100: {
     discount: () => 100,
     min: 1000,
