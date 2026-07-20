@@ -3,7 +3,7 @@ import { ProductsService } from './products.service';
 
 @Controller('collections')
 export class CollectionsController {
-  constructor(private readonly productsService: ProductsService) {}
+  constructor(private readonly productsService: ProductsService) { }
 
   @Get('men')
   async getMenCollection(@Query() query: any) {

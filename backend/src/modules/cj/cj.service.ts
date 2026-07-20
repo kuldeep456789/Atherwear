@@ -877,7 +877,8 @@ export class CjService {
 
     const uniqueImages = Array.from(new Set(images));
     const name = product?.productNameEn ?? product?.productName ?? product?.nameEn ?? product?.name ?? '';
-    const price = Number(product?.sellPrice ?? product?.price ?? 0) || 0;
+    const rawPrice = Number(product?.sellPrice ?? product?.price ?? 0) || 0;
+    const price = Number((rawPrice * 96.45).toFixed(2));
     const sizes = Array.isArray(product?.sizes) && product.sizes.length ? product.sizes : DEFAULT_SIZES;
     const colors = Array.isArray(product?.colors) && product.colors.length ? product.colors : DEFAULT_COLORS;
     const variants = Array.isArray(product?.variants) && product.variants.length
@@ -943,7 +944,7 @@ export class CjService {
         stock: v.inventories?.[0]?.totalInventory ?? (v as any).stock ?? 999,
         variantImage: v.variantImage || '',
         image: v.variantImage || '',
-        price: v.variantSellPrice || product.price,
+        price: v.variantSellPrice ? Number((Number(v.variantSellPrice) * 96.45).toFixed(2)) : product.price,
         vid: v.vid || '',
         variantKey: v.variantKey || '',
       });

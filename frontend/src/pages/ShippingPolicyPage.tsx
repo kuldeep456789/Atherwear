@@ -21,7 +21,10 @@ const ShippingPolicyPage = () => {
         </div>
 
         {/* Header */}
-        <h1 className="text-[32px] sm:text-[38px] lg:text-[44px] font-bold leading-[1.1] mb-10">Shipping Policy</h1>
+        <div className="mb-10 text-center sm:text-left">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2">Shipping Policy</h1>
+          <p className="text-sm text-zinc-500 font-medium">Everything you need to know about our shipping and delivery.</p>
+        </div>
 
         {/* Shipping Information */}
         <section className="mb-12">
