@@ -152,6 +152,7 @@ export class CjService {
       shippingCity: shipping.city || 'City',
       shippingProvince: shipping.province || 'State',
       shippingCountryCode: shipping.countryCode || 'IN',
+      shippingCountry: shipping.country || 'India',
       shippingZip: shipping.zip || '000000',
       shippingPhone: shipping.phone || '0000000000',
       logisticName: order.logisticName || 'CJPacket',
