@@ -55,11 +55,15 @@ export class MailService {
       });
       if (error) {
         this.logger.error(`Resend API Error: ${error.message}`);
+        this.logger.warn(`[FALLBACK EMAIL LOG] To: ${to} | Subject: ${subject}`);
+        this.logger.debug(`Email Content:\n${html}`);
       } else {
         this.logger.log(`Email successfully sent to ${to} (ID: ${data?.id})`);
       }
     } catch (err) {
       this.logger.error('Exception while sending email via Resend', err);
+      this.logger.warn(`[FALLBACK EMAIL LOG] To: ${to} | Subject: ${subject}`);
+      this.logger.debug(`Email Content:\n${html}`);
     }
   }
 

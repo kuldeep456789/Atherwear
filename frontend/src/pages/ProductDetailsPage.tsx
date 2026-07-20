@@ -12,7 +12,6 @@ import WishlistLoginPopup from '../components/WishlistLoginPopup';
 import { getColorHex } from '../utils/colorMap';
 import { getProductId } from '../lib/product';
 import { formatINR } from '../lib/currency';
-import DOMPurify from 'dompurify';
 
 const normalizeSlug = (value: string) =>
   value
@@ -562,6 +561,13 @@ const ProductDetailsPage = () => {
                 </button>
               </div>
 
+              {/* Product Description */}
+              {product.description && (
+                <div 
+                  className="mt-12 text-[16px] text-[#111111] dark:text-zinc-200 leading-relaxed max-w-prose [&>p]:mb-4 [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:mb-4 [&>ul>li]:mb-1 [&>ul]:mt-4" 
+                  dangerouslySetInnerHTML={{ __html: product.description }} 
+                />
+              )}
 
             </div>
           </div>

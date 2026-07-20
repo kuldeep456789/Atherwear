@@ -10,6 +10,53 @@ interface ChangePasswordModalProps {
   onClose: () => void;
 }
 
+const PasswordField = ({
+  label,
+  value,
+  onChange,
+  show,
+  onToggleShow,
+  error,
+  placeholder,
+  icon: Icon,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  show: boolean;
+  onToggleShow: () => void;
+  error?: string;
+  placeholder: string;
+  icon: typeof Lock;
+}) => {
+  const inputId = label.replace(/\s+/g, '');
+  return (
+    <div>
+      <label htmlFor={inputId} className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5 cursor-pointer">{label}</label>
+      <div className="relative">
+        <Icon size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" strokeWidth={1.5} />
+        <input
+          id={inputId}
+          type={show ? 'text' : 'password'}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className={`w-full h-[48px] pl-10 pr-12 rounded-xl border ${error ? 'border-red-400 dark:border-red-500' : 'border-zinc-200 dark:border-[#2A2A2A]'} bg-zinc-50 dark:bg-[#0F0F10] text-zinc-900 dark:text-white text-[15px] outline-none focus:ring-2 focus:ring-zinc-900/20 dark:focus:ring-white/20 transition-all`}
+          placeholder={placeholder}
+        />
+      <button
+        type="button"
+        onClick={onToggleShow}
+        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+        tabIndex={-1}
+      >
+        {show ? <EyeOff size={18} strokeWidth={1.5} /> : <Eye size={18} strokeWidth={1.5} />}
+      </button>
+    </div>
+    {error && <p className="mt-1 text-[13px] text-red-500">{error}</p>}
+  </div>
+  );
+};
+
 const ChangePasswordModal = ({ isOpen, onClose }: ChangePasswordModalProps) => {
   const dispatch = useDispatch();
   const [changePassword, { isLoading }] = useChangePasswordMutation();
@@ -66,48 +113,6 @@ const ChangePasswordModal = ({ isOpen, onClose }: ChangePasswordModalProps) => {
 
   if (!isOpen) return null;
 
-  const PasswordField = ({
-    label,
-    value,
-    onChange,
-    show,
-    onToggleShow,
-    error,
-    placeholder,
-    icon: Icon,
-  }: {
-    label: string;
-    value: string;
-    onChange: (v: string) => void;
-    show: boolean;
-    onToggleShow: () => void;
-    error?: string;
-    placeholder: string;
-    icon: typeof Lock;
-  }) => (
-    <div>
-      <label className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">{label}</label>
-      <div className="relative">
-        <Icon size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" strokeWidth={1.5} />
-        <input
-          type={show ? 'text' : 'password'}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className={`w-full h-[48px] pl-10 pr-12 rounded-xl border ${error ? 'border-red-400 dark:border-red-500' : 'border-zinc-200 dark:border-[#2A2A2A]'} bg-zinc-50 dark:bg-[#0F0F10] text-zinc-900 dark:text-white text-[15px] outline-none focus:ring-2 focus:ring-zinc-900/20 dark:focus:ring-white/20 transition-all`}
-          placeholder={placeholder}
-        />
-        <button
-          type="button"
-          onClick={onToggleShow}
-          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
-          tabIndex={-1}
-        >
-          {show ? <EyeOff size={18} strokeWidth={1.5} /> : <Eye size={18} strokeWidth={1.5} />}
-        </button>
-      </div>
-      {error && <p className="mt-1 text-[13px] text-red-500">{error}</p>}
-    </div>
-  );
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">

@@ -112,6 +112,11 @@ const ProductCard = ({ product }: ProductCardProps) => {
         <h3 className="text-base font-medium text-gray-900 dark:text-white line-clamp-2 leading-snug">
           {product.title || product.name}
         </h3>
+        {product.description && (
+          <p className="mt-1 text-sm text-gray-500 dark:text-zinc-400 line-clamp-2 leading-relaxed">
+            {product.description.replace(/<[^>]*>?/gm, '')}
+          </p>
+        )}
         <div className="flex items-center gap-2 mt-1.5">
           <span className="text-xl font-bold text-gray-900 dark:text-white">
             {formatINR(product.discountPrice && product.discountPrice < product.price ? product.discountPrice : product.price)}
