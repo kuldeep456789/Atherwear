@@ -6,11 +6,40 @@ export class OrderItem {
   @Prop({ type: String, required: true })
   productId: string;
 
+  @Prop({ type: String })
+  vid?: string;
+
   @Prop({ required: true })
   quantity: number;
 }
 
 export const OrderItemSchema = SchemaFactory.createForClass(OrderItem);
+
+@Schema({ _id: false })
+export class ShippingDetails {
+  @Prop()
+  customerName?: string;
+
+  @Prop()
+  address?: string;
+
+  @Prop()
+  city?: string;
+
+  @Prop()
+  province?: string;
+
+  @Prop()
+  countryCode?: string;
+
+  @Prop()
+  zip?: string;
+
+  @Prop()
+  phone?: string;
+}
+
+export const ShippingDetailsSchema = SchemaFactory.createForClass(ShippingDetails);
 
 @Schema({ timestamps: true })
 export class Order {
@@ -43,6 +72,18 @@ export class Order {
 
   @Prop()
   razorpaySignature?: string;
+
+  @Prop()
+  cjOrderId?: string;
+
+  @Prop({ type: ShippingDetailsSchema })
+  shippingDetails?: ShippingDetails;
+
+  @Prop({ default: 'CJPacket' })
+  logisticName?: string;
+
+  @Prop({ default: 'CN' })
+  fromCountryCode?: string;
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);

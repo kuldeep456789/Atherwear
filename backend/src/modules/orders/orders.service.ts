@@ -83,7 +83,8 @@ export class OrdersService {
       }
 
       return user;
-    } catch {
+    } catch (error) {
+      console.error('[OrdersService] resolveUser error:', error);
       throw new UnauthorizedException('Invalid or expired token');
     }
   }

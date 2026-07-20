@@ -1,9 +1,14 @@
-import { Controller, Get, Post, Query } from '@nestjs/common';
+import { Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { CjService } from './cj.service';
 
 @Controller('cj')
 export class CjController {
   constructor(private readonly cjService: CjService) { }
+
+  @Post('sync-order/:orderId')
+  syncOrder(@Param('orderId') orderId: string) {
+    return this.cjService.syncOrderById(orderId);
+  }
 
   @Post('authentication')
   authenticate() {

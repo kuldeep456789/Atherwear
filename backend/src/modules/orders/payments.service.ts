@@ -5,6 +5,7 @@ import { createHmac } from 'crypto';
 import Razorpay from 'razorpay';
 import { Model, Types } from 'mongoose';
 import { UsersService } from '../users/users.service';
+import { CjService } from '../cj/cj.service';
 import { Order } from './schemas/order.schema';
 import { CreatePaymentOrderDto } from './dto/create-payment-order.dto';
 import { VerifyPaymentDto } from './dto/verify-payment.dto';
@@ -19,6 +20,7 @@ export class PaymentsService {
     @InjectModel(Order.name) private readonly orderModel: Model<Order>,
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
+    private readonly cjService: CjService,
   ) {
     const keyId = process.env.RAZORPAY_KEY_ID?.trim();
     const keySecret = process.env.RAZORPAY_KEY_SECRET?.trim();
@@ -113,6 +115,13 @@ export class PaymentsService {
     order.paymentStatus = 'paid';
     order.status = 'confirmed';
     await order.save();
+
+    // Asynchronously trigger CJ Dropshipping Order Fulfillment in the background
+    setImmediate(() => {
+      this.cjService.syncOrderToCj(order).catch((err) => {
+        this.logger.error(`Failed async CJ order sync for order ${order.id}: ${err?.message ?? err}`);
+      });
+    });
 
     return { order };
   }

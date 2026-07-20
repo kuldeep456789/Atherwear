@@ -6,9 +6,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import axios, { AxiosRequestConfig } from 'axios';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import { RedisService } from '../redis/redis.service';
+import { Order } from '../orders/schemas/order.schema';
 import { isHardBlocked, BLOCKED, getCategoryInfoById } from './category.mapper';
 import { CLOTHING_CATEGORIES } from './collections';
+import { CjCreateOrderDto, CjOrderProductItem } from './dto/cj-order.dto';
 
 const WAREHOUSE_KEY_MEN = 'products:men';
 const WAREHOUSE_KEY_WOMEN = 'products:women';
@@ -76,7 +80,10 @@ export class CjService {
   private requestQueue: Promise<void> = Promise.resolve();
   private apiCallsThisSync = 0;
 
-  constructor(private readonly redisService: RedisService) { }
+  constructor(
+    private readonly redisService: RedisService,
+    @InjectModel(Order.name) private readonly orderModel?: Model<Order>,
+  ) { }
 
   async getAccessToken() {
     const apiKey = process.env.CJ_API_KEY;
@@ -88,8 +95,120 @@ export class CjService {
     this.logger.log('[CJ] POST /v1/authentication/getAccessToken');
     return this.scheduleRequest('/v1/authentication/getAccessToken', {
       method: 'POST',
-      data: { email, password: apiKey },
+      data: { email, api_key: apiKey, password: apiKey },
     });
+  }
+
+  async createOrderV2(payload: CjCreateOrderDto) {
+    this.logger.log(`[CJ] POST /v1/shopping/order/createOrderV2 for order #${payload.orderNumber}`);
+    const headers = await this.authHeaders();
+    const body = {
+      platform: 'Api',
+      logisticName: 'CJPacket',
+      fromCountryCode: 'CN',
+      ...payload,
+    };
+    try {
+      return await this.scheduleRequest('/v1/shopping/order/createOrderV2', {
+        method: 'POST',
+        headers,
+        data: body,
+      });
+    } catch (err: any) {
+      this.logger.warn(`[CJ] createOrderV2 failed, attempting fallback to POST /v1/shopping/order/createOrder...`);
+      return await this.scheduleRequest('/v1/shopping/order/createOrder', {
+        method: 'POST',
+        headers,
+        data: body,
+      });
+    }
+  }
+
+  async syncOrderToCj(order: any): Promise<boolean> {
+    const orderNumber = order._id ? order._id.toString() : order.id || String(Date.now());
+    const shipping = order.shippingDetails || {};
+
+    const mappedProducts: CjOrderProductItem[] = [];
+    for (const item of (order.items || [])) {
+      let vid = item.vid;
+      if (!vid && item.productId) {
+        try {
+          const prod = await this.getProductById(item.productId);
+          vid = prod?.variants?.[0]?.vid || prod?.variants?.[0]?.variantId || prod?.vid;
+        } catch (err: any) {
+          this.logger.warn(`[CJ] Could not fetch product details to resolve vid for ${item.productId}`);
+        }
+      }
+      mappedProducts.push({
+        vid: vid || item.productId,
+        quantity: item.quantity || 1,
+      });
+    }
+
+    const payload: CjCreateOrderDto = {
+      orderNumber,
+      shippingCustomerName: shipping.customerName || 'Customer',
+      shippingAddress: shipping.address || 'Address line 1',
+      shippingCity: shipping.city || 'City',
+      shippingProvince: shipping.province || 'State',
+      shippingCountryCode: shipping.countryCode || 'IN',
+      shippingZip: shipping.zip || '000000',
+      shippingPhone: shipping.phone || '0000000000',
+      logisticName: order.logisticName || 'CJPacket',
+      fromCountryCode: order.fromCountryCode || 'CN',
+      platform: 'Api',
+      products: mappedProducts,
+    };
+
+    try {
+      this.logger.log(`[CJ] Syncing order ${orderNumber} to CJ Dropshipping... Payload: ${JSON.stringify(payload)}`);
+      const response = await this.createOrderV2(payload);
+
+      const cjOrderId =
+        response?.data?.cjOrderId ||
+        response?.data?.orderId ||
+        response?.data ||
+        response?.cjOrderId;
+
+      if (response?.result !== false && cjOrderId) {
+        order.cjOrderId = String(cjOrderId);
+        order.status = 'processing';
+        if (typeof order.save === 'function') {
+          await order.save();
+        }
+        this.logger.log(`[CJ] Order ${orderNumber} successfully created on CJ! CJ Order ID: ${cjOrderId}`);
+        return true;
+      } else {
+        this.logger.error(
+          `[CJ] Order ${orderNumber} sync failed with message: ${response?.message || 'Unknown error'}. Retaining status 'confirmed'.`,
+          JSON.stringify(payload),
+        );
+        return false;
+      }
+    } catch (err: any) {
+      this.logger.error(
+        `[CJ] Exception syncing order ${orderNumber} to CJ Dropshipping: ${err?.message ?? err}. Retaining status 'confirmed'.`,
+        JSON.stringify({ payload, errorResponse: err?.response ?? err?.data ?? null }),
+      );
+      return false;
+    }
+  }
+
+  async syncOrderById(orderId: string): Promise<{ success: boolean; message: string; cjOrderId?: string }> {
+    if (!this.orderModel) {
+      throw new InternalServerErrorException('OrderModel is not injected in CjService');
+    }
+    const order = await this.orderModel.findById(orderId).exec();
+    if (!order) {
+      throw new NotFoundException(`Order #${orderId} not found in database`);
+    }
+
+    const success = await this.syncOrderToCj(order);
+    if (success) {
+      return { success: true, message: `Order #${orderId} successfully synced to CJ Dropshipping!`, cjOrderId: order.cjOrderId };
+    } else {
+      return { success: false, message: `Failed to sync Order #${orderId} to CJ Dropshipping. Check server logs for details.` };
+    }
   }
 
   async getCategories() {
@@ -583,6 +702,12 @@ export class CjService {
     return next;
   }
 
+  private async clearCachedAccessToken() {
+    this.accessTokenCache = null;
+    await this.redisService.del(this.accessTokenCacheKey);
+    this.logger.log('[CJ] Cleared cached access token');
+  }
+
   private async request(path: string, init: AxiosRequestConfig, attempt = 0): Promise<any> {
     try {
       this.logger.log(`[CJ] AXIOS ${String(init.method || 'GET').toUpperCase()} ${this.baseUrl}${path}`);
@@ -594,11 +719,24 @@ export class CjService {
       });
       const data = response.data;
       if (data && data.result === false) {
+        if ((data.code === 401 || data.code === '401') && attempt < 2) {
+          this.logger.warn('[CJ] Access token unauthorized (401 code) — clearing token and retrying...');
+          await this.clearCachedAccessToken();
+          const headers = await this.authHeaders();
+          return this.request(path, { ...init, headers }, attempt + 1);
+        }
         throw new InternalServerErrorException(data.message || 'CJ Dropshipping API returned result: false');
       }
       return data;
     } catch (error: any) {
       const status = error?.response?.status;
+
+      if (status === 401 && attempt < 2) {
+        this.logger.warn('[CJ] Access token unauthorized (HTTP 401) — clearing token and retrying...');
+        await this.clearCachedAccessToken();
+        const headers = await this.authHeaders();
+        return this.request(path, { ...init, headers }, attempt + 1);
+      }
 
       if (status === 429 && attempt < 5) {
         const baseDelay = 2000 * Math.pow(2, attempt);
