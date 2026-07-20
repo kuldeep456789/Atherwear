@@ -23,6 +23,7 @@ interface ProductCardProps {
     sizes?: string[];
     tags?: string[];
     title?: string;
+    description?: string;
     numReviews?: number;
     averageRating?: number;
   };

@@ -12,14 +12,7 @@ interface CategorySectionProps {
   products: any[];
 }
 
-/**
- * CategorySection — renders a horizontally scrollable row of products.
- *
- * ARCHITECTURE: This component does NOT make its own API request.
- * The parent (e.g. HomePage or CollectionPage) fetches the full
- * gender warehouse once and passes each category's slice down as props.
- * This replaces the previous pattern of one request per visible section.
- */
+
 const CategorySection: React.FC<CategorySectionProps> = ({ gender, categoryName, products }) => {
   const ref = useRef<HTMLElement>(null);
   const [isVisible, setIsVisible] = useState(false);
