@@ -58,15 +58,15 @@ const Footer = () => {
           <h4 className="text-[10px] font-black tracking-[0.2em] mb-3 text-zinc-500">CONTACT</h4>
           <ul className="space-y-2.5">
             <li>
-              <a href="mailto:prajapatikuldeep3456@gmail.com" className="flex items-start gap-2.5 text-zinc-400 hover:text-[#C9A227] transition-colors duration-200 group">
+              <a href="mailto:[EMAIL_ADDRESS]" className="flex items-start gap-2.5 text-zinc-400 hover:text-[#C9A227] transition-colors duration-200 group">
                 <Mail size={14} strokeWidth={1.5} className="mt-0.5 shrink-0 text-zinc-600 group-hover:text-[#C9A227] transition-colors duration-200" />
-                <span className="text-xs sm:text-sm font-bold tracking-wider normal-case">prajapatikuldeep3456@gmail.com</span>
+                <span className="text-xs sm:text-sm font-bold tracking-wider normal-case">vastra3456@gmail.com</span>
               </a>
             </li>
             <li>
-              <a href="tel:+918235494985" className="flex items-start gap-2.5 text-zinc-400 hover:text-[#C9A227] transition-colors duration-200 group">
+              <a href="tel:+918255555577" className="flex items-start gap-2.5 text-zinc-400 hover:text-[#C9A227] transition-colors duration-200 group">
                 <Phone size={14} strokeWidth={1.5} className="mt-0.5 shrink-0 text-zinc-600 group-hover:text-[#C9A227] transition-colors duration-200" />
-                <span className="text-xs sm:text-sm font-bold tracking-wider">+91 8235494985</span>
+                <span className="text-xs sm:text-sm font-bold tracking-wider">+91 8255555577</span>
               </a>
             </li>
             <li>
@@ -94,7 +94,7 @@ const Footer = () => {
           </div> */}
         </div>
       </div>
-      
+
       {/* Copyright Bar */}
       <div className="border-t border-zinc-800 px-6 py-4 sm:px-10 md:px-12 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
         <p className="text-[10px] sm:text-xs text-zinc-600 font-bold tracking-widest uppercase">

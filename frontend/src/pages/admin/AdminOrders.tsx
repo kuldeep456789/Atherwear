@@ -175,7 +175,7 @@ export default function AdminOrders() {
                           <select
                             value={order.status}
                             onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                            className="text-sm border border-gray-200 rounded px-3 py-1.5 w-36 bg-white focus:outline-none focus:ring-1 focus:ring-[#0050cb] cursor-pointer"
+                            className="text-sm border border-gray-200 rounded px-3 py-1.5 w-36 bg-white text-gray-900 focus:outline-none focus:ring-1 focus:ring-[#0050cb] cursor-pointer"
                           >
                             {orderStatuses.map(s => (
                               <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>

@@ -145,14 +145,7 @@ export default function AdminLayout() {
         </nav>
 
         <div className="p-4 border-t border-white/10">
-          <button className="w-full py-2.5 mb-3 bg-[#0066ff] text-white font-medium text-sm rounded-lg hover:bg-[#0052cc] focus:outline-none focus:ring-2 focus:ring-[#0066ff]/50 transition-all cursor-pointer shadow-sm">
-            Support
-          </button>
           <div className="space-y-1">
-            <button className="w-full flex items-center px-3 py-2.5 gap-3 font-medium text-[#cbdbf5] hover:text-white hover:bg-white/5 rounded-lg focus:outline-none focus:ring-2 focus:ring-white/20 transition-all cursor-pointer">
-              <Bell className="h-5 w-5" strokeWidth={1.5} />
-              <span className="text-sm">Notifications</span>
-            </button>
             <Link
               to="/"
               className="w-full flex items-center px-3 py-2.5 gap-3 font-medium text-[#cbdbf5] hover:text-green-400 hover:bg-green-400/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400/20 transition-all cursor-pointer"
@@ -179,88 +172,7 @@ export default function AdminLayout() {
             <h2 className="text-lg sm:text-xl font-semibold text-gray-900 hidden sm:block">Overview</h2>
             
             <div className="relative group hidden md:block">
-              <div className="flex items-center">
-                <SearchIcon className="absolute left-3 h-4 w-4 text-gray-400" />
-                <input 
-                  ref={searchInputRef}
-                  type="text" 
-                  placeholder="Search..." 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onFocus={() => setSearchOpen(true)}
-                  className="pl-10 pr-12 py-1.5 bg-gray-50 border border-gray-200 rounded-full text-sm w-48 lg:w-64 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0066ff]/20 focus:border-[#0066ff]"
-                />
-                <span className="absolute right-3 text-[10px] font-bold opacity-60 border px-1 rounded bg-white pointer-events-none">⌘K</span>
-              </div>
-
-              {/* Search Dropdown */}
-              {searchOpen && searchQuery.trim() !== '' && (
-                <div 
-                  ref={dropdownRef}
-                  className="absolute top-full left-0 mt-2 w-[350px] bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden z-50 flex flex-col max-h-[400px]"
-                >
-                  {searching ? (
-                    <div className="p-4 flex items-center justify-center text-gray-500 gap-2 text-sm">
-                      <Loader2 className="h-4 w-4 animate-spin" /> Searching...
-                    </div>
-                  ) : searchResults.users.length === 0 && searchResults.orders.length === 0 ? (
-                    <div className="p-4 text-center text-sm text-gray-500">
-                      No results found for "{searchQuery}"
-                    </div>
-                  ) : (
-                    <div className="overflow-y-auto py-2">
-                      {searchResults.orders.length > 0 && (
-                        <div className="mb-2">
-                          <h4 className="px-4 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider bg-gray-50">Orders</h4>
-                          <ul>
-                            {searchResults.orders.map(order => (
-                              <li key={order._id}>
-                                <Link 
-                                  to="/admin/orders" 
-                                  className="block px-4 py-2 hover:bg-[#0066ff]/5 transition-colors"
-                                  onClick={() => setSearchOpen(false)}
-                                >
-                                  <div className="flex justify-between items-center">
-                                    <span className="text-sm font-medium text-gray-900">#{order._id?.slice(-6).toUpperCase()}</span>
-                                    <span className="text-xs text-gray-500 capitalize">{order.status}</span>
-                                  </div>
-                                  <div className="text-xs text-gray-500 mt-0.5 truncate">
-                                    {(order.userId as unknown as AdminUser)?.name || (order.userId as unknown as AdminUser)?.email || 'Unknown User'}
-                                  </div>
-                                </Link>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                      
-                      {searchResults.users.length > 0 && (
-                        <div>
-                          <h4 className="px-4 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider bg-gray-50">Customers</h4>
-                          <ul>
-                            {searchResults.users.map(user => (
-                              <li key={user._id}>
-                                <Link 
-                                  to="/admin/users" 
-                                  className="block px-4 py-2 hover:bg-[#0066ff]/5 transition-colors"
-                                  onClick={() => setSearchOpen(false)}
-                                >
-                                  <div className="text-sm font-medium text-gray-900">
-                                    {user.name || 'No Name'}
-                                  </div>
-                                  <div className="text-xs text-gray-500 mt-0.5 truncate">
-                                    {user.email}
-                                  </div>
-                                </Link>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
+              {/* Search removed as requested */}
             </div>
             
 
