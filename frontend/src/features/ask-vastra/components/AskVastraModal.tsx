@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import type { AskVastraRequest, AskVastraResponse } from '../types';
 import { getStylingRecommendations } from '../services/askVastraApi';
 import { ProductContextPanel } from './ProductContextPanel';
@@ -65,7 +65,6 @@ export const AskVastraModal: React.FC<Props> = ({ isOpen, onClose, initialContex
             <div className="flex items-center justify-between px-8 py-5 border-b border-zinc-100 shrink-0">
               <div>
                 <h2 className="flex items-center gap-2 text-2xl font-black text-indigo-700 tracking-tight">
-                  <Sparkles className="text-amber-400 fill-amber-400" size={24} />
                   ASK VASTRA
                 </h2>
                 <p className="text-sm font-medium text-zinc-500 mt-1">Your Personal Color Styling Assistant</p>
@@ -95,7 +94,6 @@ export const AskVastraModal: React.FC<Props> = ({ isOpen, onClose, initialContex
                   />
                 ) : (
                   <div className="flex-1 flex flex-col items-center justify-center text-zinc-500">
-                    <Sparkles className="mb-4 text-zinc-300" size={48} />
                     <p className="font-medium text-lg">Oops! Something went wrong.</p>
                     <p className="text-sm mt-2 text-zinc-400 max-w-md text-center">
                       We couldn't connect to the AI styling service. Please restart your backend server if you just added this feature.

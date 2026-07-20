@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../store/store';
-import { X, Sparkles, ArrowRight } from 'lucide-react';
+import { X, ArrowRight } from 'lucide-react';
 
 const LS_KEY = 'vastra_welcome_seen';
 
@@ -47,9 +47,7 @@ const WelcomePopup = () => {
 
         <div className="px-8 pt-10 pb-8 text-center">
           {/* Icon */}
-          <div className="mx-auto mb-6 w-16 h-16 rounded-2xl bg-zinc-900 dark:bg-white flex items-center justify-center shadow-lg">
-            <Sparkles size={28} className="text-white dark:text-zinc-900" />
-          </div>
+          <div className="w-14 h-14 bg-white/20 dark:bg-black/20 backdrop-blur-md rounded-2xl flex items-center justify-center mb-6 shadow-xl border border-white/30 dark:border-white/10"></div>
 
           {/* Headline */}
           <h2 className="text-3xl font-black tracking-tight text-zinc-900 dark:text-white leading-tight">

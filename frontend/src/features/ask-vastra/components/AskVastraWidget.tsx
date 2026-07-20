@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles } from 'lucide-react';
+
 import { motion, AnimatePresence } from 'framer-motion';
 import { AskVastraModal } from './AskVastraModal';
 
@@ -29,7 +29,7 @@ export const AskVastraWidget: React.FC = () => {
           onClick={() => setIsModalOpen(true)}
           className="w-14 h-14 bg-indigo-600 rounded-full shadow-lg shadow-indigo-600/30 flex items-center justify-center text-white hover:bg-indigo-700 hover:scale-105 active:scale-95 transition-all duration-200"
         >
-          <Sparkles size={24} className="fill-white" />
+          <span className="text-xl">✨</span>
         </button>
       </div>
 

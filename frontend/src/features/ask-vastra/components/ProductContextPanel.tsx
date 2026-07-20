@@ -1,6 +1,6 @@
 import React from 'react';
 import type { AskVastraRequest, AskVastraResponse } from '../types';
-import { Shirt, Info, Sparkles, Lightbulb } from 'lucide-react';
+import { Shirt, Info, Lightbulb } from 'lucide-react';
 
 interface Props {
   selections: AskVastraRequest;
@@ -16,6 +16,14 @@ export const ProductContextPanel: React.FC<Props> = ({ selections, setSelections
     { name: 'Brown', hex: '#78350F' },
   ];
 
+  const itemTypes = {
+    'Top Wear': ['Shirt', 'T-Shirt', 'Jacket', 'Sweater'],
+    'Bottom Wear': ['Pants', 'Jeans', 'Shorts', 'Skirt', 'Trousers'],
+  };
+  
+  const currentCategory = selections.category as 'Top Wear' | 'Bottom Wear';
+  const availableTypes = itemTypes[currentCategory] || itemTypes['Top Wear'];
+
   return (
     <div className="w-[320px] shrink-0 border-r border-zinc-200 pr-6 flex flex-col h-full overflow-y-auto">
       
@@ -24,7 +32,7 @@ export const ProductContextPanel: React.FC<Props> = ({ selections, setSelections
         <h3 className="text-xs font-bold text-zinc-900 mb-3">1. SELECT YOUR ITEM TYPE</h3>
         <div className="grid grid-cols-2 gap-2">
           <button 
-            onClick={() => setSelections(s => ({ ...s, category: 'Top Wear' }))}
+            onClick={() => setSelections(s => ({ ...s, category: 'Top Wear', type: itemTypes['Top Wear'][0] }))}
             className={`flex flex-col items-center justify-center py-4 rounded-xl border-2 transition-all ${
               selections.category === 'Top Wear' 
                 ? 'border-indigo-200 bg-indigo-50 text-indigo-700' 
@@ -35,7 +43,7 @@ export const ProductContextPanel: React.FC<Props> = ({ selections, setSelections
             <span className="text-xs font-bold">Top Wear</span>
           </button>
           <button 
-            onClick={() => setSelections(s => ({ ...s, category: 'Bottom Wear' }))}
+            onClick={() => setSelections(s => ({ ...s, category: 'Bottom Wear', type: itemTypes['Bottom Wear'][0] }))}
             className={`flex flex-col items-center justify-center py-4 rounded-xl border-2 transition-all ${
               selections.category === 'Bottom Wear' 
                 ? 'border-indigo-200 bg-indigo-50 text-indigo-700' 
@@ -59,10 +67,9 @@ export const ProductContextPanel: React.FC<Props> = ({ selections, setSelections
             onChange={(e) => setSelections(s => ({ ...s, type: e.target.value }))}
             className="w-full h-11 border border-zinc-200 rounded-lg px-4 text-sm font-medium focus:outline-none focus:border-indigo-500 appearance-none bg-white text-zinc-900"
           >
-            <option value="Shirt">Shirt</option>
-            <option value="T-Shirt">T-Shirt</option>
-            <option value="Jacket">Jacket</option>
-            <option value="Sweater">Sweater</option>
+            {availableTypes.map(type => (
+              <option key={type} value={type}>{type}</option>
+            ))}
           </select>
           <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
             <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -115,8 +122,8 @@ export const ProductContextPanel: React.FC<Props> = ({ selections, setSelections
         <div className="space-y-4">
           {/* AI Insight */}
           <div className="bg-indigo-50/70 border border-indigo-100 rounded-xl p-4">
-            <div className="flex items-center gap-2 text-indigo-700 font-bold text-sm mb-2">
-              <Sparkles size={16} /> VASTRA AI Insight
+            <div className="flex items-center gap-2 mb-2 font-bold text-amber-700 tracking-wide text-xs">
+              VASTRA AI Insight
             </div>
             <p className="text-xs text-zinc-700 leading-relaxed">
               {data.insight}

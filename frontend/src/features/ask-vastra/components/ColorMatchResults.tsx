@@ -1,6 +1,6 @@
 import React from 'react';
 import type { AskVastraResponse } from '../types';
-import { Star, CheckCircle2, AlertTriangle, Sparkles, TrendingUp } from 'lucide-react';
+import { Star, CheckCircle2, AlertTriangle, TrendingUp } from 'lucide-react';
 
 interface Props {
   data: AskVastraResponse;
@@ -41,11 +41,9 @@ export const ColorMatchResults: React.FC<Props> = ({ data, isLoading, selectedCo
       {/* Header Result */}
       <div className="bg-indigo-50/50 rounded-2xl p-5 mb-6 border border-indigo-100 flex items-center justify-between">
         <div>
-          <div className="flex items-center gap-2 mb-1 text-indigo-900 font-bold">
-            <Sparkles size={18} className="text-indigo-600" />
-            AI COLOR MATCH RESULTS
+            <h3 className="font-bold text-lg text-indigo-900 tracking-tight">VASTRA AI Verdict</h3>
+            <div className="text-sm text-zinc-500 mb-2">Overall Compatibility</div>
           </div>
-          <div className="text-sm text-zinc-500 mb-2">Overall Compatibility</div>
           <div className="flex items-center gap-3">
             {renderStars(data.confidenceScore)}
             <span className="font-bold text-zinc-800">{data.overallCompatibility}</span>
@@ -129,7 +127,7 @@ export const ColorMatchResults: React.FC<Props> = ({ data, isLoading, selectedCo
                 <span className="text-xs font-bold text-zinc-800">{match.color}</span>
               </div>
               <div className="flex items-center justify-center gap-1 mb-1.5">
-                <Star size={10} className="fill-indigo-600 text-indigo-600" />
+                <span className="font-medium">AI Match Confidence</span>
                 <Star size={10} className="fill-indigo-600 text-indigo-600" />
                 <Star size={10} className="fill-indigo-600 text-indigo-600" />
                 <Star size={10} className="fill-indigo-600 text-indigo-600" />
@@ -178,7 +176,6 @@ export const ColorMatchResults: React.FC<Props> = ({ data, isLoading, selectedCo
       
       {/* Footer tip */}
       <div className="mt-6 bg-indigo-50/50 rounded-lg p-3 text-center border border-indigo-100 flex items-center justify-center gap-2 text-xs font-medium text-indigo-800">
-        <Sparkles size={14} />
         Remember: Confidence is the best style. Wear what makes you feel great!
       </div>
     </div>
