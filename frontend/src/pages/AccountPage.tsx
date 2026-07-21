@@ -12,6 +12,8 @@ import { formatINR } from '../lib/currency';
 import { useTheme } from '../context/ThemeContext';
 import EditProfileModal from '../components/profile/EditProfileModal';
 import ChangePasswordModal from '../components/profile/ChangePasswordModal';
+import EditAddressModal, { type AddressData } from '../components/profile/EditAddressModal';
+import toast from 'react-hot-toast';
 
 const tabs = [
   { id: 'orders', label: 'Orders', icon: Package },
@@ -45,6 +47,15 @@ const AccountPage = () => {
   const prevTabRef = useRef(activeTab);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showAddress, setShowAddress] = useState(true);
+  const [showEditAddressModal, setShowEditAddressModal] = useState(false);
+  const [addressInfo, setAddressInfo] = useState<AddressData>({
+    name: 'Kuldeep Vyas',
+    line1: '19 Residency Road',
+    line2: 'Bengaluru, Karnataka 560025',
+    country: 'India',
+    phone: '+91 98765 43210'
+  });
 
   const { data: allOrders = [], isLoading: ordersLoading } = useGetUserOrdersQuery(undefined);
   const { data: myReturns = [] } = useGetMyReturnsQuery(undefined, { skip: !userInfo, pollingInterval: 3000 });
@@ -390,14 +401,11 @@ const AccountPage = () => {
                 <section className="space-y-6">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <h2 className="text-[26px] sm:text-[30px] font-bold text-zinc-900 dark:text-white tracking-tight">Addresses</h2>
-                    <button className="inline-flex items-center gap-2 h-[50px] px-6 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[15px] font-semibold hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all duration-200 active:scale-[0.98] shadow-sm">
-                      <Plus size={18} strokeWidth={2} />
-                      Add New Address
-                    </button>
                   </div>
 
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="rounded-2xl border border-zinc-200 dark:border-[#2A2A2A] bg-white dark:bg-[#18181B] p-6 hover:border-zinc-300 dark:hover:border-zinc-600 hover:shadow-lg dark:hover:shadow-[0_8px_30px_rgba(0,0,0,0.4)] transition-all duration-250">
+                    {showAddress && (
+                      <div className="rounded-2xl border border-zinc-200 dark:border-[#2A2A2A] bg-white dark:bg-[#18181B] p-6 hover:border-zinc-300 dark:hover:border-zinc-600 hover:shadow-lg dark:hover:shadow-[0_8px_30px_rgba(0,0,0,0.4)] transition-all duration-250">
                       <div className="flex items-start justify-between mb-3">
                         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-[12px] font-semibold text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
                           <MapPinHouse size={13} strokeWidth={2} />
@@ -408,32 +416,27 @@ const AccountPage = () => {
                           DEFAULT
                         </span>
                       </div>
-                      <p className="text-[15px] font-semibold text-zinc-900 dark:text-white">Kuldeep Vyas</p>
+                      <p className="text-[15px] font-semibold text-zinc-900 dark:text-white">{addressInfo.name}</p>
                       <p className="mt-1.5 text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                        19 Residency Road<br />
-                        Bengaluru, Karnataka 560025<br />
-                        India
+                        {addressInfo.line1}<br />
+                        {addressInfo.line2}<br />
+                        {addressInfo.country}
                       </p>
-                      <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">+91 98765 43210</p>
+                      <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">{addressInfo.phone}</p>
                       <div className="flex gap-2 mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
-                        <button className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg text-[13px] font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all duration-200">
+                        <button onClick={() => setShowEditAddressModal(true)} className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg text-[13px] font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all duration-200">
                           <Pencil size={14} strokeWidth={1.5} />
                           Edit
                         </button>
-                        <button className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg text-[13px] font-semibold text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all duration-200">
+                        <button onClick={() => { setShowAddress(false); toast.success('Address deleted successfully!'); }} className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg text-[13px] font-semibold text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all duration-200">
                           <Trash2 size={14} strokeWidth={1.5} />
                           Delete
                         </button>
                       </div>
                     </div>
+                    )}
 
-                    {/* Add new placeholder card */}
-                    <button className="rounded-2xl border-2 border-dashed border-zinc-300 dark:border-zinc-600 bg-white dark:bg-[#18181B] p-6 flex flex-col items-center justify-center min-h-[220px] hover:border-zinc-400 dark:hover:border-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-all duration-250 cursor-pointer group">
-                      <div className="w-12 h-12 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mb-3 group-hover:bg-zinc-200 dark:group-hover:bg-zinc-700 transition-colors">
-                        <Plus size={24} className="text-zinc-400 dark:text-zinc-500" strokeWidth={1.5} />
-                      </div>
-                      <p className="text-[15px] font-semibold text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-zinc-300 transition-colors">Add New Address</p>
-                    </button>
+
                   </div>
                 </section>
               )}
@@ -567,37 +570,6 @@ const AccountPage = () => {
                     </div>
                   </div>
 
-                  {/* Notifications */}
-                  <div className="rounded-2xl border border-zinc-200 dark:border-[#2A2A2A] bg-white dark:bg-[#18181B] overflow-hidden hover:shadow-md dark:hover:shadow-[0_4px_20px_rgba(0,0,0,0.3)] transition-all duration-250">
-                    <div className="px-6 sm:px-8 pt-6 sm:pt-8 pb-2">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
-                          <Bell size={20} className="text-zinc-600 dark:text-zinc-400" strokeWidth={1.5} />
-                        </div>
-                        <div>
-                          <h3 className="text-[18px] sm:text-[20px] font-bold text-zinc-900 dark:text-white">Notifications</h3>
-                          <p className="text-[15px] text-zinc-500 dark:text-zinc-400">Choose what updates you'd like to receive.</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="px-6 sm:px-8 pb-6 sm:pb-8 pt-4 space-y-4">
-                      {[
-                        { label: 'Order Updates', desc: 'Receive updates about your order status and delivery.' },
-                        { label: 'Promotions & Offers', desc: 'Get notified about sales, new arrivals, and exclusive offers.' },
-                        { label: 'Newsletter', desc: 'Monthly newsletter with style guides and curated picks.' },
-                      ].map((item) => (
-                        <label key={item.label} className="flex items-center justify-between py-2 cursor-pointer group">
-                          <div>
-                            <p className="text-[15px] font-semibold text-zinc-900 dark:text-white group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors">{item.label}</p>
-                            <p className="text-[13px] text-zinc-500 dark:text-zinc-400 mt-0.5">{item.desc}</p>
-                          </div>
-                          <div className="relative w-11 h-6 rounded-full bg-zinc-200 dark:bg-zinc-700 cursor-pointer transition-colors group-hover:bg-zinc-300 dark:group-hover:bg-zinc-600">
-                            <div className="absolute left-0.5 top-0.5 w-5 h-5 rounded-full bg-white dark:bg-zinc-300 shadow-sm transition-transform" />
-                          </div>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
 
                   {/* Appearance */}
                   <div className="rounded-2xl border border-zinc-200 dark:border-[#2A2A2A] bg-white dark:bg-[#18181B] overflow-hidden hover:shadow-md dark:hover:shadow-[0_4px_20px_rgba(0,0,0,0.3)] transition-all duration-250">
@@ -643,34 +615,6 @@ const AccountPage = () => {
                       </div>
                     </div>
                   </div>
-
-                  {/* Privacy */}
-                  <div className="rounded-2xl border border-zinc-200 dark:border-[#2A2A2A] bg-white dark:bg-[#18181B] overflow-hidden hover:shadow-md dark:hover:shadow-[0_4px_20px_rgba(0,0,0,0.3)] transition-all duration-250">
-                    <div className="px-6 sm:px-8 pt-6 sm:pt-8 pb-2">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
-                          <Shield size={20} className="text-zinc-600 dark:text-zinc-400" strokeWidth={1.5} />
-                        </div>
-                        <div>
-                          <h3 className="text-[18px] sm:text-[20px] font-bold text-zinc-900 dark:text-white">Privacy</h3>
-                          <p className="text-[15px] text-zinc-500 dark:text-zinc-400">Manage your data and account preferences.</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="px-6 sm:px-8 pb-6 sm:pb-8 pt-4 space-y-3">
-                      <button className="w-full flex items-center justify-between py-3 px-4 rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-all duration-200 group">
-                        <span className="text-[15px] font-medium text-zinc-700 dark:text-zinc-300 group-hover:text-red-500 dark:group-hover:text-red-400 transition-colors">Delete Account</span>
-                        <ChevronRight size={16} className="text-zinc-400 group-hover:text-red-500 transition-colors" />
-                      </button>
-                      <button
-                        onClick={() => dispatch(logout())}
-                        className="w-full flex items-center justify-between py-3 px-4 rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all duration-200 group"
-                      >
-                        <span className="text-[15px] font-medium text-red-500 dark:text-red-400">Sign Out</span>
-                        <LogOut size={16} className="text-red-400" strokeWidth={1.5} />
-                      </button>
-                    </div>
-                  </div>
                 </section>
               )}
             </div>
@@ -680,8 +624,27 @@ const AccountPage = () => {
 
 
       {/* Modals */}
-      <EditProfileModal isOpen={showEditModal} onClose={() => setShowEditModal(false)} user={userInfo} />
-      <ChangePasswordModal isOpen={showPasswordModal} onClose={() => setShowPasswordModal(false)} />
+      {userInfo && (
+        <EditProfileModal
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          user={userInfo}
+        />
+      )}
+      
+      {userInfo && (
+        <ChangePasswordModal
+          isOpen={showPasswordModal}
+          onClose={() => setShowPasswordModal(false)}
+        />
+      )}
+
+      <EditAddressModal
+        isOpen={showEditAddressModal}
+        onClose={() => setShowEditAddressModal(false)}
+        address={addressInfo}
+        onSave={(newAddr) => setAddressInfo(newAddr)}
+      />
     </div>
   );
 };

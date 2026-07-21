@@ -183,7 +183,6 @@ export default function AdminDashboard() {
         <div className="lg:col-span-2 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
           <div className="p-6 border-b border-gray-200 flex justify-between items-center">
             <h4 className="text-xl font-semibold text-gray-900">Recent Orders</h4>
-            <a href="/admin/orders" className="text-[#0050cb] font-mono text-xs font-medium hover:underline">View All</a>
           </div>
           {recentOrders.length === 0 ? (
             <div className="flex items-center justify-center h-40 text-gray-400 text-sm">No orders yet</div>
@@ -196,7 +195,6 @@ export default function AdminDashboard() {
                     <th className="px-6 py-4 font-medium">Customer</th>
                     <th className="px-6 py-4 font-medium">Amount</th>
                     <th className="px-6 py-4 font-medium">Status</th>
-                    <th className="px-6 py-4"></th>
                   </tr>
                 </thead>
                 <tbody className="text-sm">
@@ -226,11 +224,7 @@ export default function AdminDashboard() {
                             {order.paymentStatus === 'paid' ? 'Paid' : order.status}
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-right">
-                          <button className="text-gray-400 hover:text-gray-700">
-                            <MoreVertical className="h-5 w-5" />
-                          </button>
-                        </td>
+
                       </tr>
                     );
                   })}
