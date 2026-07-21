@@ -417,18 +417,7 @@ const CartPage = () => {
                       </div>
                     )}
 
-                    <div className="flex justify-between">
-                      <span className="text-zinc-500">Shipping</span>
-                      <span className="font-semibold">
-                        {shippingPrice === 0 ? (
-                          <span className="text-green-600 dark:text-green-400 font-bold">
-                            <span className="line-through text-zinc-400 text-[12px] font-normal mr-1">{formatINR(100)}</span> FREE
-                          </span>
-                        ) : (
-                          formatINR(shippingPrice)
-                        )}
-                      </span>
-                    </div>
+
 
                   </div>
 

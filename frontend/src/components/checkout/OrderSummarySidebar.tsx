@@ -114,12 +114,7 @@ const OrderSummarySidebar = ({ buttonText, buttonAction, disableButton }: OrderS
           <span className="text-zinc-500 dark:text-zinc-400">Subtotal</span>
           <span className="font-semibold text-zinc-800 dark:text-zinc-200">{formatINR(itemsPrice)}</span>
         </div>
-        <div className="flex justify-between items-center text-[13px]">
-          <span className="text-zinc-500 dark:text-zinc-400">Shipping</span>
-          <span className={`font-bold ${shippingPrice === 0 ? 'text-emerald-500' : 'text-zinc-800 dark:text-zinc-200'}`}>
-            {shippingPrice === 0 ? 'FREE' : formatINR(shippingPrice)}
-          </span>
-        </div>
+
       </div>
 
       {/* Total */}

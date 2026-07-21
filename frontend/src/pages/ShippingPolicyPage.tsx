@@ -122,19 +122,7 @@ const ShippingPolicyPage = () => {
           </div>
         </section>
 
-        {/* Contact CTA */}
-        <div className="bg-zinc-100 dark:bg-zinc-800 rounded-xl p-6 text-center">
-          <p className="text-[15px] font-semibold mb-1">Need help with your order?</p>
-          <p className="text-[13px] text-zinc-500 mb-4">Our support team is here to help you.</p>
-          <div className="flex justify-center gap-3">
-            <Link to="/contact" className="h-[44px] px-6 rounded-xl bg-[hsl(var(--foreground))] text-[hsl(var(--background))] text-[12px] font-bold tracking-wide flex items-center justify-center hover:opacity-90 transition-all">
-              CONTACT US
-            </Link>
-            <Link to="/returns" className="h-[44px] px-6 rounded-xl border-2 border-zinc-300 dark:border-zinc-600 text-[12px] font-bold tracking-wide flex items-center justify-center hover:border-[hsl(var(--foreground))] transition-all">
-              RETURN POLICY
-            </Link>
-          </div>
-        </div>
+
       </div>
     </div>
   );

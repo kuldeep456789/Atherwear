@@ -33,14 +33,14 @@ const nonReturnable = ['Innerwear', 'Accessories', 'Gift Cards', 'Final Sale Ite
 
 const ReturnsPage = () => {
   const userInfo = useSelector((state: RootState) => state.auth.userInfo);
-  const [activeTab, setActiveTab] = useState<'policy' | 'form' | 'history'>('policy');
+  const [activeTab, setActiveTab] = useState<'form' | 'history'>('form');
   const [faqOpen, setFaqOpen] = useState<string | null>(null);
   const [createReturn, { isLoading: isSubmitting }] = useCreateReturnMutation();
   const { data: myReturns = [], isLoading: returnsLoading, refetch } = useGetMyReturnsQuery(undefined, { skip: !userInfo, pollingInterval: 3000 });
 
   // Form state
   const [orderId, setOrderId] = useState('');
-  const [productId, setProductId] = useState('');
+  const [productId, setProductId] = useState('N/A');
   const [productName, setProductName] = useState('');
   const [productImage, setProductImage] = useState('');
   const [productSize, setProductSize] = useState('');
@@ -69,8 +69,8 @@ const ReturnsPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError('');
-    if (!orderId || !productId || !productName || !reason) {
-      setFormError('Order ID, Product ID, Product Name, and Reason are required.');
+    if (!orderId || !productName || !reason) {
+      setFormError('Order ID, Product Name, and Reason are required.');
       return;
     }
     if (!pickupStreet || !pickupCity || !pickupState || !pickupPincode || !pickupPhone) {
@@ -138,7 +138,6 @@ const ReturnsPage = () => {
         {/* Tab Navigation */}
         <div className="flex gap-1 mb-8 p-1 bg-zinc-100 dark:bg-zinc-800 rounded-xl w-fit">
           {[
-            { key: 'policy', label: 'Return Policy' },
             { key: 'form', label: 'Start a Return' },
             ...(userInfo ? [{ key: 'history', label: 'My Returns' }] : []),
           ].map((tab) => (
@@ -157,102 +156,7 @@ const ReturnsPage = () => {
         </div>
 
         <AnimatePresence mode="wait">
-          {/* ───── TAB: POLICY ───── */}
-          {activeTab === 'policy' && (
-            <motion.div key="policy" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
-              {/* Return Policy */}
-              <section className="mb-10">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
-                    <RotateCcw size={20} strokeWidth={1.5} />
-                  </div>
-                  <h2 className="text-[18px] font-bold">Return Policy</h2>
-                </div>
-                <div className="bg-[hsl(var(--card))] border border-zinc-200 dark:border-zinc-800 rounded-xl p-6">
-                  <p className="text-[15px] font-semibold mb-4">Easy 7-Day Returns</p>
-                  <p className="text-[13px] text-zinc-500 mb-4">Items must meet the following conditions:</p>
-                  <div className="space-y-2.5 mb-6">
-                    {['Unused', 'Unwashed', 'Original Tags Attached', 'Original Packaging', 'No Damage'].map((cond) => (
-                      <div key={cond} className="flex items-center gap-2.5">
-                        <span className="w-5 h-5 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center shrink-0">
-                          <Check size={12} strokeWidth={3} className="text-green-600" />
-                        </span>
-                        <span className="text-[13px] font-medium">{cond}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-[13px] font-semibold mb-3 text-red-600">Non-returnable Items</p>
-                  <div className="flex flex-wrap gap-2">
-                    {nonReturnable.map((item) => (
-                      <span key={item} className="text-[11px] font-semibold text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 rounded-lg">{item}</span>
-                    ))}
-                  </div>
-                </div>
-              </section>
 
-              {/* Start Return CTA */}
-              <div className="bg-zinc-100 dark:bg-zinc-800 rounded-xl p-6 text-center mb-10">
-                <p className="text-[15px] font-semibold mb-1">Ready to return an item?</p>
-                <p className="text-[13px] text-zinc-500 mb-4">Start your return request and we'll guide you through the process.</p>
-                <button onClick={() => setActiveTab('form')} className="h-[48px] px-8 rounded-xl bg-[hsl(var(--foreground))] text-[hsl(var(--background))] text-[13px] font-bold tracking-wide hover:opacity-90 transition-all cursor-pointer">
-                  START RETURN
-                </button>
-              </div>
-
-              {/* FAQ */}
-              <section>
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
-                    <AlertCircle size={20} strokeWidth={1.5} />
-                  </div>
-                  <h2 className="text-[18px] font-bold">Frequently Asked Questions</h2>
-                </div>
-                <div className="space-y-2">
-                  {faqs.map((faq) => (
-                    <div key={faq.q} className="border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden">
-                      <button
-                        onClick={() => setFaqOpen(faqOpen === faq.q ? null : faq.q)}
-                        className="w-full flex items-center justify-between p-4 text-left text-[14px] font-semibold hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors cursor-pointer"
-                      >
-                        {faq.q}
-                        <ChevronDown size={16} strokeWidth={2} className={`shrink-0 transition-transform duration-200 ${faqOpen === faq.q ? 'rotate-180' : ''}`} />
-                      </button>
-                      <AnimatePresence>
-                        {faqOpen === faq.q && (
-                          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
-                            <p className="px-4 pb-4 text-[13px] text-zinc-500 leading-relaxed">{faq.a}</p>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  ))}
-                </div>
-              </section>
-
-              {/* Refund Information */}
-              <section className="mt-10">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
-                    <ShieldCheck size={20} strokeWidth={1.5} />
-                  </div>
-                  <h2 className="text-[18px] font-bold">Refund Information</h2>
-                </div>
-                <div className="grid sm:grid-cols-3 gap-4">
-                  {[
-                    { method: 'Original Payment', time: '3–5 Business Days', desc: 'Credit/debit card, UPI, Net Banking' },
-                    { method: 'COD (Bank Transfer)', time: '5–7 Business Days', desc: 'Bank account details required' },
-                    { method: 'Wallet', time: 'Instant', desc: 'VASTRA Wallet credit' },
-                  ].map((item) => (
-                    <div key={item.method} className="bg-[hsl(var(--card))] border border-zinc-200 dark:border-zinc-800 rounded-xl p-5">
-                      <p className="text-[13px] text-zinc-500 mb-1">{item.method}</p>
-                      <p className="text-[16px] font-bold text-green-600">{item.time}</p>
-                      <p className="text-[11px] text-zinc-400 mt-1">{item.desc}</p>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            </motion.div>
-          )}
 
           {/* ───── TAB: FORM ───── */}
           {activeTab === 'form' && (
@@ -301,10 +205,7 @@ const ReturnsPage = () => {
                     <label className="text-[12px] font-semibold mb-1.5 block">Order ID *</label>
                     <input value={orderId} onChange={(e) => setOrderId(e.target.value)} placeholder="e.g. ORDER-12345" className="w-full h-[44px] px-3 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-transparent text-[13px] focus:outline-none focus:border-[hsl(var(--foreground))]" />
                   </div>
-                  <div>
-                    <label className="text-[12px] font-semibold mb-1.5 block">Product ID *</label>
-                    <input value={productId} onChange={(e) => setProductId(e.target.value)} placeholder="e.g. PROD-98765" className="w-full h-[44px] px-3 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-transparent text-[13px] focus:outline-none focus:border-[hsl(var(--foreground))]" />
-                  </div>
+
                   <div>
                     <label className="text-[12px] font-semibold mb-1.5 block">Product Name *</label>
                     <input value={productName} onChange={(e) => setProductName(e.target.value)} placeholder="Product name" className="w-full h-[44px] px-3 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-transparent text-[13px] focus:outline-none focus:border-[hsl(var(--foreground))]" />

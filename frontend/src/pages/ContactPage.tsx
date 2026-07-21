@@ -41,15 +41,7 @@ const ContactPage = () => {
         <span className="text-[hsl(var(--foreground))]">CONTACT</span>
       </div>
 
-      {/* Header */}
-      <div className="w-full border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
-        <div className="max-w-[1920px] mx-auto px-6 sm:px-10 py-10 sm:py-12">
-          <p className="text-xs sm:text-sm font-semibold tracking-[0.2em] text-zinc-500 mb-2">GET IN TOUCH</p>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold uppercase tracking-tight text-[hsl(var(--foreground))] leading-none">
-            CONTACT US
-          </h1>
-        </div>
-      </div>
+
 
       <div className="max-w-[1400px] mx-auto px-6 sm:px-10 py-12 sm:py-20 flex flex-col lg:flex-row lg:gap-16 items-start">
         {/* Info */}
