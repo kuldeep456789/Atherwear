@@ -66,6 +66,22 @@ const ReturnsPage = () => {
     }
   };
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        if (!images.includes(base64String)) {
+          setImages((prev) => [...prev, base64String]);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+    // reset input
+    e.target.value = '';
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError('');
@@ -126,8 +142,6 @@ const ReturnsPage = () => {
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 mb-6">
           <Link to="/" className="hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">HOME</Link>
-          <ChevronRight size={10} strokeWidth={2.5} />
-          <Link to="/shipping-policy" className="hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">SHIPPING</Link>
           <ChevronRight size={10} strokeWidth={2.5} />
           <span className="text-zinc-700 dark:text-zinc-300">RETURNS</span>
         </div>
@@ -210,18 +224,9 @@ const ReturnsPage = () => {
                     <label className="text-[12px] font-semibold mb-1.5 block">Product Name *</label>
                     <input value={productName} onChange={(e) => setProductName(e.target.value)} placeholder="Product name" className="w-full h-[44px] px-3 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-transparent text-[13px] focus:outline-none focus:border-[hsl(var(--foreground))]" />
                   </div>
-                  <div>
-                    <label className="text-[12px] font-semibold mb-1.5 block">Product Image URL</label>
-                    <input value={productImage} onChange={(e) => setProductImage(e.target.value)} placeholder="https://..." className="w-full h-[44px] px-3 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-transparent text-[13px] focus:outline-none focus:border-[hsl(var(--foreground))]" />
-                  </div>
-                  <div>
-                    <label className="text-[12px] font-semibold mb-1.5 block">Size</label>
-                    <input value={productSize} onChange={(e) => setProductSize(e.target.value)} placeholder="e.g. M, L, XL" className="w-full h-[44px] px-3 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-transparent text-[13px] focus:outline-none focus:border-[hsl(var(--foreground))]" />
-                  </div>
-                  <div>
-                    <label className="text-[12px] font-semibold mb-1.5 block">Color</label>
-                    <input value={productColor} onChange={(e) => setProductColor(e.target.value)} placeholder="e.g. Black" className="w-full h-[44px] px-3 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-transparent text-[13px] focus:outline-none focus:border-[hsl(var(--foreground))]" />
-                  </div>
+
+
+
                 </div>
 
                 {/* Reason */}
@@ -241,12 +246,14 @@ const ReturnsPage = () => {
 
                 {/* Image Upload */}
                 <div className="mb-5">
-                  <label className="text-[12px] font-semibold mb-1.5 block">Upload Images (URLs)</label>
+                  <label className="text-[12px] font-semibold mb-1.5 block">Upload Images</label>
                   <div className="flex gap-2 mb-2">
-                    <input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="Paste image URL" className="flex-1 h-[44px] px-3 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-transparent text-[13px] focus:outline-none focus:border-[hsl(var(--foreground))]" />
-                    <button type="button" onClick={handleAddImage} className="h-[44px] px-4 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-[12px] font-bold hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors cursor-pointer flex items-center gap-1.5">
-                      <ImageIcon size={14} strokeWidth={1.5} /> Add
-                    </button>
+                    <input 
+                      type="file" 
+                      accept="image/*"
+                      onChange={handleFileUpload} 
+                      className="flex-1 h-[44px] px-3 py-2.5 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-transparent text-[13px] focus:outline-none focus:border-[hsl(var(--foreground))] file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-zinc-100 dark:file:bg-zinc-800 file:text-zinc-700 dark:file:text-zinc-300 hover:file:bg-zinc-200 dark:hover:file:bg-zinc-700 cursor-pointer"
+                    />
                   </div>
                   {images.length > 0 && (
                     <div className="flex flex-wrap gap-2">
@@ -262,19 +269,7 @@ const ReturnsPage = () => {
                   )}
                 </div>
 
-                {/* Exchange Size */}
-                <div className="mb-5">
-                  <label className="text-[12px] font-semibold mb-1.5 block">Exchange Size (optional)</label>
-                  <div className="flex gap-2">
-                    {['S', 'M', 'L', 'XL', 'XXL'].map((s) => (
-                      <button key={s} type="button" onClick={() => setExchangeSize(exchangeSize === s ? '' : s)} className={`w-[52px] h-[44px] rounded-lg border text-[13px] font-semibold transition-all duration-200 cursor-pointer ${
-                        exchangeSize === s
-                          ? 'bg-[hsl(var(--foreground))] text-[hsl(var(--background))] border-[hsl(var(--foreground))]'
-                          : 'border-zinc-300 dark:border-zinc-600 hover:border-[hsl(var(--foreground))]'
-                      }`}>{s}</button>
-                    ))}
-                  </div>
-                </div>
+
 
                 {/* Pickup Address */}
                 <div className="mb-6">

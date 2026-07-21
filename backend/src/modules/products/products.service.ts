@@ -5,8 +5,9 @@ import { RedisService } from '../redis/redis.service';
 import { UsersService } from '../users/users.service';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { Review } from './schemas/review.schema';
+import { Order } from '../orders/schemas/order.schema';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 
 type ProductQuery = {
   categoryId?: string;
@@ -41,6 +42,7 @@ export class ProductsService {
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     @InjectModel(Review.name) private readonly reviewModel: Model<Review>,
+    @InjectModel(Order.name) private readonly orderModel: Model<Order>,
   ) { }
 
   async getProducts(query: ProductQuery = {}) {
@@ -126,6 +128,17 @@ export class ProductsService {
     if (!dto.rating || dto.rating < 1 || dto.rating > 5) throw new BadRequestException('rating must be between 1 and 5');
 
     const user = await this.resolveUser(token);
+
+    // Verify user has purchased and received the product
+    const hasOrdered = await this.orderModel.exists({
+      userId: new Types.ObjectId(user.id),
+      'items.productId': id,
+      status: 'delivered'
+    });
+
+    if (!hasOrdered) {
+      throw new BadRequestException('You can only review products you have purchased and received.');
+    }
 
     const review = await this.reviewModel.create({
       productId: id,

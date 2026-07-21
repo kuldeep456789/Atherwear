@@ -5,23 +5,44 @@ import { Model, Types } from 'mongoose';
 import { UsersService } from '../users/users.service';
 import { CreateReturnDto } from './dto/create-return.dto';
 import { ReturnRequest } from './schemas/return.schema';
+import { Order } from '../orders/schemas/order.schema';
 
 @Injectable()
 export class ReturnsService {
   constructor(
     @InjectModel(ReturnRequest.name) private readonly returnModel: Model<ReturnRequest>,
+    @InjectModel(Order.name) private readonly orderModel: Model<Order>,
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
   ) {}
 
   async create(token: string, dto: CreateReturnDto) {
     const user = await this.resolveUser(token);
-    if (!dto.orderId || !dto.productId || !dto.reason) {
-      throw new BadRequestException('orderId, productId, and reason are required');
+    if (!dto.orderId || !dto.reason) {
+      throw new BadRequestException('orderId and reason are required');
+    }
+
+    const cleanOrderId = dto.orderId.replace(/^(ORDER-|DF-)/i, '').replace(/[^a-zA-Z0-9]/g, '');
+
+    // Find the order
+    let order;
+    if (Types.ObjectId.isValid(cleanOrderId) && cleanOrderId.length === 24) {
+      order = await this.orderModel.findOne({ _id: cleanOrderId, userId: new Types.ObjectId(user.id) }).exec();
+    } else {
+      const orders = await this.orderModel.find({ userId: new Types.ObjectId(user.id) }).sort({ createdAt: -1 }).limit(100).exec();
+      order = orders.find(o => o._id.toString().toUpperCase().endsWith(cleanOrderId.toUpperCase()));
+    }
+
+    if (!order) {
+      throw new BadRequestException('Order not found or does not belong to you');
+    }
+
+    if (order.status !== 'delivered') {
+      throw new BadRequestException('You can only return orders that have been delivered');
     }
     const ret = await this.returnModel.create({
       userId: new Types.ObjectId(user.id),
-      orderId: dto.orderId,
+      orderId: order._id.toString(),
       productId: dto.productId,
       productName: dto.productName,
       productImage: dto.productImage,

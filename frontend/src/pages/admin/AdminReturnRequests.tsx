@@ -137,7 +137,6 @@ export default function AdminReturnRequests() {
                 <tr>
                   <th className="px-6 py-4 font-semibold text-[11px] tracking-widest text-gray-400 uppercase">Order</th>
                   <th className="px-6 py-4 font-semibold text-[11px] tracking-widest text-gray-400 uppercase">Customer</th>
-                  <th className="px-6 py-4 font-semibold text-[11px] tracking-widest text-gray-400 uppercase">Amount</th>
                   <th className="px-6 py-4 font-semibold text-[11px] tracking-widest text-gray-400 uppercase">Reason</th>
                   <th className="px-6 py-4 font-semibold text-[11px] tracking-widest text-gray-400 uppercase">Stage</th>
                   <th className="px-6 py-4 font-semibold text-[11px] tracking-widest text-gray-400 uppercase">Requested</th>
@@ -160,7 +159,7 @@ export default function AdminReturnRequests() {
                         <p className="font-medium text-gray-900 truncate max-w-[150px]">{customerName}</p>
                         <p className="text-xs text-gray-400 truncate max-w-[150px]">{customer?.email || 'N/A'}</p>
                       </td>
-                      <td className="px-6 py-4 text-gray-900 font-bold">${(ret.refundAmount || 0).toFixed(2)}</td>
+
                       <td className="px-6 py-4 text-gray-500 max-w-[200px] truncate">{ret.reason}</td>
                       <td className="px-6 py-4">
                         <span className="capitalize text-gray-900 font-bold text-xs">{ret.status.replace(/_/g, ' ')}</span>
@@ -240,10 +239,7 @@ export default function AdminReturnRequests() {
               </div>
 
               <div className="space-y-4 text-sm mb-6">
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Amount paid</span>
-                  <span className="font-bold text-gray-900">${(reviewModalReturn.refundAmount || 0).toFixed(2)}</span>
-                </div>
+
                 <div className="flex justify-between">
                   <span className="text-gray-500">Payment method</span>
                   <span className="text-gray-900">Stripe</span>

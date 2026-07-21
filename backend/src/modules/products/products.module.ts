@@ -11,6 +11,7 @@ import { CollectionsController } from './collections.controller';
 import { ProductsService } from './products.service';
 
 import { Review, ReviewSchema } from './schemas/review.schema';
+import { Order, OrderSchema } from '../orders/schemas/order.schema';
 
 @Module({
   imports: [
@@ -30,6 +31,10 @@ import { Review, ReviewSchema } from './schemas/review.schema';
         name: Review.name,
         schema: ReviewSchema,
       },
+      {
+        name: Order.name,
+        schema: OrderSchema,
+      }
     ]),
   ],
 
