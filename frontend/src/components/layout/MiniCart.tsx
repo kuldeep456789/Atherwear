@@ -174,27 +174,7 @@ const MiniCart = ({ isOpen, onClose }: MiniCartProps) => {
         {/* Footer */}
         {cartItems.length > 0 && (
           <div className="shrink-0 border-t-2 border-black dark:border-white">
-            {/* Free shipping banner */}
-            {itemsPrice < 5000 ? (
-              <div className="px-6 py-3 bg-zinc-50 dark:bg-zinc-900 border-b-2 border-black dark:border-white">
-                <div className="flex items-center justify-between text-[10px] font-black tracking-widest uppercase mb-1.5">
-                  <span className="text-zinc-500">Add {formatINR(5000 - itemsPrice)} more for free shipping</span>
-                  <span className="text-[hsl(var(--foreground))]">{Math.round((itemsPrice / 5000) * 100)}%</span>
-                </div>
-                <div className="h-1 bg-zinc-200 dark:bg-zinc-700 w-full">
-                  <div
-                    className="h-full bg-[hsl(var(--foreground))] transition-all duration-500"
-                    style={{ width: `${Math.min((itemsPrice / 5000) * 100, 100)}%` }}
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="px-6 py-3 bg-green-50 dark:bg-green-950/30 border-b-2 border-black dark:border-white">
-                <p className="text-[10px] font-black tracking-widest uppercase text-green-600 dark:text-green-400 text-center">
-                  🎉 You've unlocked FREE SHIPPING!
-                </p>
-              </div>
-            )}
+
 
             {/* Totals */}
             <div className="px-6 py-4 space-y-2">
