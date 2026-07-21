@@ -4,13 +4,32 @@ import { ChevronRight, Mail, MapPin, Phone, Send, Check, User, Tag, PenLine, Clo
 
 const ContactPage = () => {
   const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSent(true);
-    setForm({ name: '', email: '', subject: '', message: '' });
-    setTimeout(() => setSent(false), 4000);
+    setLoading(true);
+    setError('');
+    
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form)
+      });
+      
+      if (!res.ok) throw new Error('Failed to send message');
+      
+      setSent(true);
+      setForm({ name: '', email: '', subject: '', message: '' });
+      setTimeout(() => setSent(false), 4000);
+    } catch (err: any) {
+      setError(err.message || 'Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -141,12 +160,27 @@ const ContactPage = () => {
                   required
                 ></textarea>
               </div>
+              {error && (
+                <div className="text-red-500 text-sm bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 p-3 rounded-lg text-center normal-case">
+                  {error}
+                </div>
+              )}
               <button
                 type="submit"
-                className="w-full flex items-center justify-center gap-2 bg-[#111111] dark:bg-white text-white dark:text-[#111111] py-4 rounded-lg text-[14px] font-bold tracking-[0.1em] hover:bg-black/80 dark:hover:bg-white/80 transition-colors mt-2"
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-2 bg-[#111111] dark:bg-white text-white dark:text-[#111111] py-4 rounded-lg text-[14px] font-bold tracking-[0.1em] hover:bg-black/80 dark:hover:bg-white/80 transition-colors mt-2 disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                <Send size={16} strokeWidth={1.5} />
-                SEND MESSAGE
+                {loading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/20 dark:border-[#111111]/20 border-t-white dark:border-t-[#111111] rounded-full animate-spin" />
+                    SENDING...
+                  </>
+                ) : (
+                  <>
+                    <Send size={16} strokeWidth={1.5} />
+                    SEND MESSAGE
+                  </>
+                )}
               </button>
             </form>
           )}

@@ -562,12 +562,18 @@ const ProductDetailsPage = () => {
               </div>
 
               {/* Product Description */}
-              {product.description && (
-                <div 
-                  className="mt-12 text-[16px] text-[#111111] dark:text-zinc-200 leading-relaxed max-w-prose [&>p]:mb-4 [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:mb-4 [&>ul>li]:mb-1 [&>ul]:mt-4" 
-                  dangerouslySetInnerHTML={{ __html: product.description }} 
-                />
-              )}
+              <div className="mt-12 text-[16px] text-[#111111] dark:text-zinc-200 leading-relaxed max-w-prose">
+                {product.description && (
+                  <div 
+                    className="[&>p]:mb-4 [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:mb-4 [&>ul>li]:mb-1 [&>ul]:mt-4" 
+                    dangerouslySetInnerHTML={{ __html: product.description }} 
+                  />
+                )}
+                <ul className="list-disc pl-5 mt-4 space-y-1">
+                  <li>Colour Shown: {product.colors?.length > 0 ? product.colors.join('|') : 'Default'}</li>
+                  <li>Style: {product._id?.substring(0, 8).toUpperCase() || 'N/A'}</li>
+                </ul>
+              </div>
 
             </div>
           </div>
@@ -740,36 +746,6 @@ const ProductDetailsPage = () => {
         </div>
       </div>
 
-      {/* Sticky Mobile Add to Bag Bar */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[hsl(var(--card))] border-t border-zinc-200 dark:border-zinc-700 p-4 backdrop-blur-md shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
-        <div className="flex items-center gap-3">
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold text-zinc-500 tracking-wide truncate">{productName || 'Product'}</p>
-            <p className="text-base font-bold tracking-tight text-[hsl(var(--foreground))]">
-              {formatINR(product.discountPrice || product.price)}
-            </p>
-          </div>
-          <button
-            onClick={handleBuyNow}
-            className="flex-1 h-12 rounded-xl text-sm font-bold tracking-wider transition-all duration-200 cursor-pointer bg-[hsl(var(--foreground))] text-[hsl(var(--background))] hover:opacity-90 active:scale-[0.98] shadow-sm"
-          >
-            BUY NOW
-          </button>
-          <button
-            onClick={handleAddToCart}
-            className={`flex-1 h-12 rounded-xl text-sm font-bold tracking-wider transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer border-2 ${isAdded
-              ? 'bg-green-600 text-white border-green-600'
-              : 'bg-[hsl(var(--card))] text-[hsl(var(--foreground))] border-zinc-300 dark:border-zinc-600 hover:border-[hsl(var(--foreground))] hover:bg-[hsl(var(--foreground))] hover:text-[hsl(var(--background))] active:scale-[0.98]'
-              }`}
-          >
-            {isAdded ? (
-              <><Check className="w-3.5 h-3.5" strokeWidth={3} /> ADDED</>
-            ) : (
-              <><ShoppingBag className="w-3.5 h-3.5" strokeWidth={2} /> ADD TO BAG</>
-            )}
-          </button>
-        </div>
-      </div>
 
       {/* Size Guide Drawer */}
       <div className={`fixed inset-0 z-50 transition-opacity duration-300 ${sizeGuideOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>

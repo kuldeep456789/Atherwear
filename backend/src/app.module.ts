@@ -20,6 +20,7 @@ import { OrdersModule } from './modules/orders/orders.module';
 import { ReturnsModule } from './modules/returns/returns.module';
 import { UsersModule } from './modules/users/users.module';
 import { AskVastraModule } from './modules/ask-vastra/ask-vastra.module';
+import { ContactModule } from './modules/contact/contact.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { AskVastraModule } from './modules/ask-vastra/ask-vastra.module';
     OrdersModule,
     ReturnsModule,
     AskVastraModule,
+    ContactModule,
   ],
   controllers: [AppController],
   providers: [AppService],

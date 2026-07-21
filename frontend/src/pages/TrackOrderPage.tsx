@@ -1,9 +1,8 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { 
-  ShieldCheck, Truck, Headphones, Search, Mail, 
-  ClipboardList, Package, MapPin, CheckCircle2,
-  MessageSquare, PhoneCall, ChevronRight
+  ShieldCheck, Truck, Headphones, Search, 
+  Package, CheckCircle2
 } from 'lucide-react';
 
 const TrackOrderPage = () => {
@@ -18,24 +17,35 @@ const TrackOrderPage = () => {
       return;
     }
     setError('');
-    navigate(`/orders/${orderId.trim()}`);
+    // Remove # symbol if the user pasted it (e.g. #87E5CE9F), since # breaks the URL route
+    navigate(`/orders/${orderId.trim().replace(/^#/, '')}`);
   };
 
   return (
-    <div className="bg-[#0a0a0a] min-h-screen text-white font-sans selection:bg-[#d4af37] selection:text-black">
+    <div className="bg-[#FAFAFA] dark:bg-[#0a0a0a] min-h-screen text-[hsl(var(--foreground))] font-sans selection:bg-[#d4af37] selection:text-black relative overflow-hidden">
+      {/* Premium Decorative Background Glows */}
+      <div className="absolute top-0 inset-x-0 h-[600px] pointer-events-none overflow-hidden z-0">
+        <div className="absolute -top-40 -right-20 w-96 h-96 bg-[#d4af37]/20 dark:bg-[#d4af37]/10 rounded-full blur-[120px] opacity-70" />
+        <div className="absolute top-20 -left-20 w-72 h-72 bg-zinc-300/40 dark:bg-zinc-800/30 rounded-full blur-[100px] opacity-60" />
+      </div>
+
       {/* Container */}
-      <div className="max-w-[1400px] mx-auto px-6 sm:px-10 py-12 lg:py-20 space-y-8 lg:space-y-12">
+      <div className="relative z-10 max-w-[1400px] mx-auto px-6 sm:px-10 py-12 lg:py-24 space-y-8 lg:space-y-12">
         
         {/* Top Section */}
         <div className="flex flex-col lg:flex-row gap-12 lg:gap-20 items-start">
           
           {/* Left Hero */}
           <div className="w-full lg:w-1/2 pt-4">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6 tracking-tight uppercase">
-              Track Your Order
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 mb-6">
+              <Package size={14} className="text-[#d4af37]" />
+              <span className="text-[11px] font-bold tracking-widest uppercase text-zinc-600 dark:text-zinc-400">Order Tracking</span>
+            </div>
+            <h1 className="text-5xl sm:text-6xl lg:text-[72px] font-black leading-[1.1] mb-6 tracking-tight uppercase bg-clip-text text-transparent bg-gradient-to-r from-zinc-900 via-zinc-800 to-zinc-500 dark:from-white dark:via-zinc-200 dark:to-zinc-500">
+              Track Your<br />Order
             </h1>
-            <p className="text-zinc-400 text-base sm:text-lg max-w-md mb-12">
-              Track your VASTRA order in real time and know exactly when it will arrive.
+            <p className="text-zinc-500 dark:text-zinc-400 text-lg sm:text-xl max-w-md mb-14 leading-relaxed font-medium">
+              Track your VASTRA order in real time and know exactly when it will arrive at your doorstep.
             </p>
 
             {/* Features */}
@@ -60,8 +70,7 @@ const TrackOrderPage = () => {
 
           {/* Right Form Card */}
           <div className="w-full lg:w-1/2">
-            <div className="bg-[#111111] border border-zinc-800 rounded-2xl p-8 sm:p-10 shadow-2xl relative overflow-hidden">
-              {/* Decorative element */}
+            <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border border-zinc-200/80 dark:border-zinc-800/80 rounded-[32px] p-8 sm:p-12 shadow-[0_8px_40px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.4)] relative overflow-hidden group">
               <div className="absolute top-0 right-0 w-64 h-64 bg-[#d4af37] opacity-[0.03] rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
               
               <div className="flex items-center gap-4 mb-8 relative z-10">
@@ -69,7 +78,7 @@ const TrackOrderPage = () => {
                   <Package className="text-[#d4af37] w-6 h-6" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold tracking-wide uppercase">WHERE IS MY ORDER?</h2>
+                  <h2 className="text-lg font-bold tracking-wide uppercase text-[#111111] dark:text-white">WHERE IS MY ORDER?</h2>
                   <p className="text-sm text-zinc-400 mt-1">Enter your order ID to track your package in real time.</p>
                 </div>
               </div>
@@ -85,7 +94,7 @@ const TrackOrderPage = () => {
                       placeholder="Enter Order ID (e.g. AE-123456)"
                       value={orderId}
                       onChange={(e) => setOrderId(e.target.value)}
-                      className="w-full pl-12 pr-4 py-4 bg-[#0a0a0a] border border-zinc-800 rounded-xl text-sm font-medium focus:outline-none focus:border-[#d4af37]/50 transition-colors placeholder:text-zinc-600"
+                      className="w-full pl-12 pr-4 py-4 bg-transparent border border-zinc-300 dark:border-zinc-800 rounded-xl text-sm font-medium focus:outline-none focus:border-[#d4af37]/50 transition-colors placeholder:text-zinc-500 text-[#111111] dark:text-white"
                       required
                     />
                   </div>
@@ -105,29 +114,6 @@ const TrackOrderPage = () => {
             </div>
           </div>
         </div>
-
-
-
-        {/* Delivery Partners */}
-        <div className="bg-[#111111] border border-zinc-800 rounded-2xl p-6 sm:p-10">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-zinc-800 flex items-center justify-center shrink-0">
-              <Package size={20} strokeWidth={1.5} className="text-white" />
-            </div>
-            <h2 className="text-[18px] font-bold text-white tracking-wide">Delivery Partners</h2>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4">
-            {['Delhivery', 'Blue Dart', 'DTDC', 'Xpressbees', 'Ekart'].map((courier) => (
-              <div key={courier} className="bg-[#1a1a1a] border border-zinc-800 rounded-xl p-4 text-center hover:bg-zinc-800/50 transition-colors">
-                <CheckCircle2 strokeWidth={1.5} className="w-8 h-8 mx-auto mb-3 text-zinc-500" />
-                <span className="text-[11px] font-bold text-white tracking-wider">{courier}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-
-
       </div>
     </div>
   );
