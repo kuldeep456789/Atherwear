@@ -3,99 +3,90 @@ import { Mail, MapPin, Phone } from 'lucide-react';
 
 const Footer = () => {
   return (
-    <footer className="bg-black text-white font-sans uppercase w-full">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-zinc-800">
-        {/* Brand */}
-        <div className="px-6 py-12 sm:px-12 sm:py-16 md:px-16 md:py-20 flex flex-col justify-center">
-          <h3 className="text-3xl sm:text-4xl font-black tracking-tighter mb-4 leading-none">VASTRA</h3>
-          <p className="text-sm sm:text-base text-zinc-500 font-medium normal-case tracking-normal leading-relaxed max-w-xs">
-            Elevating Everyday Fashion with Premium Quality, Modern Design, and Timeless Style.
+    <footer className="bg-zinc-950 text-white font-sans w-full border-t border-zinc-800">
+      {/* Main Footer Links */}
+      <div className="max-w-7xl mx-auto px-6 py-14 lg:py-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8">
+        
+        {/* Brand Column */}
+        <div className="space-y-4">
+          <Link to="/" className="inline-block">
+            <span className="text-2xl sm:text-3xl font-black tracking-tighter text-white uppercase">VASTRA</span>
+          </Link>
+          <p className="text-sm text-zinc-400 leading-relaxed max-w-sm">
+            Elevating everyday fashion with premium quality, modern design, and timeless Indian craftsmanship.
           </p>
         </div>
 
-        {/* Shop links */}
-        <div className="px-6 py-12 sm:px-12 sm:py-16 md:px-16 md:py-20 flex flex-col justify-center">
-          <h4 className="text-[15px] sm:text-[18px] font-black tracking-[0.25em] mb-8 text-zinc-500">SHOP</h4>
-          <ul className="space-y-4">
-            {[
-              { to: '/collections/men', label: 'Men' },
-              { to: '/collections/women', label: 'Women' },
-            ].map(({ to, label }) => (
-              <li key={to}>
-                <Link
-                  to={to}
-                  className="text-base font-bold tracking-wider text-zinc-400 hover:text-[#C9A227] transition-colors duration-200 relative inline-block after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-[#C9A227] after:transition-all after:duration-300 hover:after:w-full"
-                >
-                  {label}
-                </Link>
-              </li>
-            ))}
+        {/* Shop Navigation */}
+        <div className="space-y-4">
+          <h4 className="text-xs font-bold tracking-[0.2em] text-zinc-400 uppercase">Shop Collection</h4>
+          <ul className="space-y-2.5 text-xs font-medium">
+            <li>
+              <Link to="/collections/men" className="text-zinc-400 hover:text-white transition-colors duration-200 block py-0.5">
+                Men's Collection
+              </Link>
+            </li>
+            <li>
+              <Link to="/collections/women" className="text-zinc-400 hover:text-white transition-colors duration-200 block py-0.5">
+                Women's Collection
+              </Link>
+            </li>
           </ul>
         </div>
 
-        {/* Help links */}
-        <div className="px-6 py-12 sm:px-12 sm:py-16 md:px-16 md:py-20 flex flex-col justify-center">
-          <h4 className="text-[15px] sm:text-[18px] font-black tracking-[0.25em] mb-8 text-zinc-500">HELP</h4>
-          <ul className="space-y-4">
-            {[
-              { to: '/faq', label: 'FAQ' },
-              { to: '/track-order', label: 'Track Order' },
-              { to: '/contact', label: 'Contact Us' },
-              { to: '/returns', label: 'Returns' },
-            ].map(({ to, label }) => (
-              <li key={to}>
-                <Link
-                  to={to}
-                  className="text-base font-bold tracking-wider text-zinc-400 hover:text-[#C9A227] transition-colors duration-200 relative inline-block after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-[#C9A227] after:transition-all after:duration-300 hover:after:w-full"
-                >
-                  {label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-        {/* Contact + Social */}
-        <div className="px-6 py-12 sm:px-12 sm:py-16 md:px-16 md:py-20 flex flex-col justify-center">
-          <h4 className="text-[18px] sm:text-[20px] font-black tracking-[0.25em] mb-8 text-zinc-500">CONTACT</h4>
-          <ul className="space-y-3">
+        {/* Support & Help */}
+        <div className="space-y-4">
+          <h4 className="text-xs font-bold tracking-[0.2em] text-zinc-400 uppercase">Help & Support</h4>
+          <ul className="space-y-2.5 text-xs font-medium">
             <li>
-              <a href="mailto:vastra3456@gmail.com" className="flex items-center gap-4 text-zinc-400 hover:text-[#C9A227] transition-colors duration-200 group">
-                <Mail size={20} strokeWidth={1.5} className="shrink-0 text-zinc-600 group-hover:text-[#C9A227] transition-colors duration-200" />
-                <span className="text-[16px] sm:text-[18px] font-bold tracking-wider normal-case">vastra3456@gmail.com</span>
-              </a>
+              <Link to="/track-order" className="text-zinc-400 hover:text-white transition-colors duration-200 block py-0.5">
+                Track Order
+              </Link>
             </li>
             <li>
-              <a href="tel:+918255555577" className="flex items-center gap-4 text-zinc-400 hover:text-[#C9A227] transition-colors duration-200 group">
-                <Phone size={20} strokeWidth={1.5} className="shrink-0 text-zinc-600 group-hover:text-[#C9A227] transition-colors duration-200" />
-                <span className="text-[16px] sm:text-[18px] font-bold tracking-wider">+91 8255555577</span>
-              </a>
+              <Link to="/returns" className="text-zinc-400 hover:text-white transition-colors duration-200 block py-0.5">
+                Returns & Exchange
+              </Link>
             </li>
-            <li className="flex items-center gap-4 text-zinc-400">
-              <MapPin size={20} strokeWidth={1.5} className="shrink-0 text-zinc-600" />
-              <span className="text-[16px] sm:text-[18px] font-bold tracking-wider normal-case">Bangalore, India</span>
+            <li>
+              <Link to="/contact" className="text-zinc-400 hover:text-white transition-colors duration-200 block py-0.5">
+                Customer Support
+              </Link>
+            </li>
+            <li>
+              <Link to="/faq" className="text-zinc-400 hover:text-white transition-colors duration-200 block py-0.5">
+                Frequently Asked Questions
+              </Link>
             </li>
           </ul>
-          {/* Social
-          <div className="mt-5">
-            <h5 className="text-[10px] font-black tracking-[0.2em] text-zinc-500 mb-2">FOLLOW US</h5>
-            <div className="flex items-center gap-3">
-              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="text-zinc-500 hover:text-[#C9A227] transition-all duration-250 hover:scale-110">
-                <svg viewBox="0 0 24 24" fill="currentColor" className="w-[18px] h-[18px]">
-                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-                </svg>
-              </a>
-              <a href="https://x.com" target="_blank" rel="noopener noreferrer" aria-label="X (Twitter)" className="text-zinc-500 hover:text-[#C9A227] transition-all duration-250 hover:scale-110">
-                <svg viewBox="0 0 24 24" fill="currentColor" className="w-[18px] h-[18px]">
-                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                </svg>
-              </a>
-            </div>
-          </div> */}
         </div>
+
+        {/* Contact Info */}
+        <div className="space-y-4">
+          <h4 className="text-xs font-bold tracking-[0.2em] text-zinc-400 uppercase">Contact Us</h4>
+          <ul className="space-y-3 text-xs">
+            <li>
+              <a href="mailto:vastra3456@gmail.com" className="flex items-center gap-2.5 text-zinc-400 hover:text-white transition-colors">
+                <Mail size={15} className="shrink-0 text-zinc-500" />
+                <span>vastra3456@gmail.com</span>
+              </a>
+            </li>
+            <li>
+              <a href="tel:+918255555577" className="flex items-center gap-2.5 text-zinc-400 hover:text-white transition-colors">
+                <Phone size={15} className="shrink-0 text-zinc-500" />
+                <span>+91 8255555577</span>
+              </a>
+            </li>
+            <li className="flex items-center gap-2.5 text-zinc-400">
+              <MapPin size={15} className="shrink-0 text-zinc-500" />
+              <span>Bangalore, Karnataka, India</span>
+            </li>
+          </ul>
+        </div>
+
       </div>
-
-
-    </footer >
+    </footer>
   );
 };
+
 export default Footer;
