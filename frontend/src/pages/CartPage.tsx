@@ -430,10 +430,6 @@ const CartPage = () => {
                       </span>
                     </div>
 
-                    <div className="flex justify-between">
-                      <span className="text-zinc-500">Tax (GST 18%)</span>
-                      <span className="font-semibold">{formatINR(taxPrice)}</span>
-                    </div>
                   </div>
 
                   <div className="flex justify-between items-center mt-5 pt-4 border-t border-zinc-200 dark:border-zinc-800">

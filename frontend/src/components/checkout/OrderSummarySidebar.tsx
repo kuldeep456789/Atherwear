@@ -120,10 +120,6 @@ const OrderSummarySidebar = ({ buttonText, buttonAction, disableButton }: OrderS
             {shippingPrice === 0 ? 'FREE' : formatINR(shippingPrice)}
           </span>
         </div>
-        <div className="flex justify-between items-center text-[13px]">
-          <span className="text-zinc-500 dark:text-zinc-400">Tax</span>
-          <span className="font-semibold text-zinc-800 dark:text-zinc-200">{formatINR(taxPrice)}</span>
-        </div>
       </div>
 
       {/* Total */}

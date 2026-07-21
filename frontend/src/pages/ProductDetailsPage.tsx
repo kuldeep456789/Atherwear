@@ -169,6 +169,7 @@ const ProductDetailsPage = () => {
         price: product.discountPrice || product.price,
         image: product?.images?.[0] || '',
         qty: 1,
+        increment: true,
         variant: { color: selectedColor, size: selectedSize },
       })
     );
@@ -190,6 +191,7 @@ const ProductDetailsPage = () => {
         price: product.discountPrice || product.price,
         image: product?.images?.[0] || '',
         qty: 1,
+        increment: true,
         variant: { color: selectedColor, size: selectedSize },
       })
     );

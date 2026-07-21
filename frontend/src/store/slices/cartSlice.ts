@@ -11,6 +11,7 @@ export interface CartItem {
     color: string;
     size: string;
   };
+  increment?: boolean;
 }
 
 interface CartState {
@@ -27,7 +28,10 @@ interface CartState {
 
 const initialState: CartState = {
   cartItems: localStorage.getItem('cartItems') 
-    ? JSON.parse(localStorage.getItem('cartItems') as string) 
+    ? JSON.parse(localStorage.getItem('cartItems') as string).map((item: any) => {
+        const { increment, ...rest } = item;
+        return rest;
+      })
     : [],
   shippingAddress: localStorage.getItem('shippingAddress') 
     ? JSON.parse(localStorage.getItem('shippingAddress') as string) 
@@ -92,7 +96,8 @@ export const COUPONS: Record<string, { discount: (price: number) => number; min:
 // Helper function to update prices
 const updateCart = (state: CartState) => {
   state.itemsPrice = state.cartItems.reduce((acc, item) => {
-    const price = Number(item.price);
+    // Round the price to match the UI display so qty * price = exact expected total
+    const price = Math.round(Number(item.price));
     return isNaN(price) ? acc : acc + price * item.qty;
   }, 0);
 
@@ -109,12 +114,12 @@ const updateCart = (state: CartState) => {
 
   state.shippingPrice = calcShipping(state.itemsPrice, state.couponDiscount);
 
-  // GST 18% on amount after discount but before shipping
+  // No tax calculation (set to 0 as per user request)
   const taxableAmount = Math.max(0, state.itemsPrice - state.couponDiscount);
-  state.taxPrice = Number((0.18 * taxableAmount).toFixed(2));
+  state.taxPrice = 0;
 
-  // Grand total
-  state.totalPrice = Number((taxableAmount + state.shippingPrice + state.taxPrice).toFixed(2));
+  // Grand total (without tax)
+  state.totalPrice = Number((taxableAmount + state.shippingPrice).toFixed(2));
 
   localStorage.setItem('cartItems', JSON.stringify(state.cartItems));
   localStorage.setItem('appliedCoupon', state.appliedCoupon);
@@ -126,17 +131,19 @@ const cartSlice = createSlice({
   initialState,
   reducers: {
     addToCart: (state, action: PayloadAction<CartItem>) => {
-      const item = action.payload;
+      const { increment, ...itemData } = action.payload;
       const existItem = state.cartItems.find(
-        (x) => x._id === item._id && x.variant.size === item.variant.size && x.variant.color === item.variant.color
+        (x) => x._id === itemData._id && x.variant.size === itemData.variant.size && x.variant.color === itemData.variant.color
       );
 
       if (existItem) {
         state.cartItems = state.cartItems.map((x) =>
-          x._id === existItem._id && x.variant.size === existItem.variant.size && x.variant.color === existItem.variant.color ? item : x
+          x._id === existItem._id && x.variant.size === existItem.variant.size && x.variant.color === existItem.variant.color 
+            ? (increment ? { ...itemData, qty: x.qty + itemData.qty } : { ...itemData, qty: itemData.qty }) 
+            : x
         );
       } else {
-        state.cartItems = [...state.cartItems, item];
+        state.cartItems = [...state.cartItems, itemData as CartItem];
       }
       updateCart(state);
     },

@@ -25,6 +25,7 @@ const WishlistPage = () => {
         price: item.discountPrice || item.price,
         image: item.image,
         qty: 1,
+        increment: true,
         variant: { color: 'Black', size: 'M' },
       };
 
