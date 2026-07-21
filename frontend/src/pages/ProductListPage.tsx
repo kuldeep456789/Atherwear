@@ -101,13 +101,15 @@ const ProductListPage = () => {
       </div>
 
       {/* Page header */}
-      <div className="w-full border-b-2 border-black dark:border-white">
-        <div className="max-w-[1920px] mx-auto px-6 sm:px-10 py-10 sm:py-14">
-          <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black uppercase tracking-tight text-[hsl(var(--foreground))] leading-none">
-            {pageTitle}
-          </h1>
+      {(!isLoading && sortedProducts.length === 0) ? null : (
+        <div className="w-full border-b-2 border-black dark:border-white">
+          <div className={`max-w-[1920px] mx-auto px-6 sm:px-10 ${keyword ? 'py-4 sm:py-6' : 'py-10 sm:py-14'}`}>
+            <h1 className={`${keyword ? 'text-3xl sm:text-4xl' : 'text-5xl sm:text-7xl lg:text-8xl'} font-black uppercase tracking-tight text-[hsl(var(--foreground))] leading-none`}>
+              {pageTitle}
+            </h1>
+          </div>
         </div>
-      </div>
+      )}
 
 
       <div className="max-w-[1920px] mx-auto">
@@ -123,22 +125,38 @@ const ProductListPage = () => {
             <span className="text-lg font-black uppercase tracking-widest text-red-600">ERROR LOADING PRODUCTS</span>
           </div>
         ) : sortedProducts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 sm:py-32 px-6 border-b border-zinc-200 dark:border-zinc-800">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 mb-6 sm:mb-8 rounded-full bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center border border-zinc-200 dark:border-zinc-800 shadow-sm">
-              <Search className="w-8 h-8 sm:w-10 sm:h-10 text-zinc-400 dark:text-zinc-500" strokeWidth={1.5} />
+          <div className="relative w-full py-32 sm:py-48 px-6 flex flex-col items-center justify-center overflow-hidden">
+            {/* Premium Decorative Background */}
+            <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+              <div className="w-[500px] h-[500px] bg-zinc-200/50 dark:bg-zinc-800/20 rounded-full blur-[120px] opacity-60" />
             </div>
-            <h3 className="text-2xl sm:text-3xl font-medium tracking-tight text-[#111111] dark:text-white mb-3">
-              Nothing found
-            </h3>
-            <p className="text-[15px] text-zinc-500 max-w-md mx-auto text-center mb-8 leading-relaxed">
-              We couldn't find any products matching {keyword ? <><span className="font-semibold text-zinc-700 dark:text-zinc-300">"{keyword}"</span>.</> : 'your filters.'} Try adjusting your search criteria to find what you're looking for.
-            </p>
-            <Link 
-              to="/collections/all" 
-              className="px-8 py-3.5 bg-[#111111] dark:bg-white text-white dark:text-[#111111] text-[15px] font-medium rounded-full hover:bg-black/80 dark:hover:bg-zinc-200 transition-all duration-200"
-            >
-              Explore All Products
-            </Link>
+            
+            <div className="relative z-10 flex flex-col items-center text-center max-w-2xl mx-auto backdrop-blur-sm bg-white/30 dark:bg-zinc-950/30 p-10 sm:p-16 rounded-[40px] border border-zinc-200/50 dark:border-zinc-800/50 shadow-[0_8px_40px_rgba(0,0,0,0.04)] dark:shadow-2xl">
+              <div className="relative flex items-center justify-center w-24 h-24 sm:w-28 sm:h-28 mb-8">
+                <div className="absolute inset-0 bg-zinc-100 dark:bg-zinc-900 rounded-full animate-pulse opacity-50" />
+                <div className="relative flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 bg-white dark:bg-zinc-900 rounded-full border border-zinc-200/80 dark:border-zinc-800 shadow-sm">
+                  <Search className="w-8 h-8 sm:w-10 sm:h-10 text-zinc-400 dark:text-zinc-500" strokeWidth={1.5} />
+                </div>
+              </div>
+              
+              <h3 className="text-3xl sm:text-4xl lg:text-[42px] font-black tracking-tight uppercase text-[#111111] dark:text-white mb-4 bg-clip-text text-transparent bg-gradient-to-r from-zinc-900 to-zinc-500 dark:from-white dark:to-zinc-400">
+                NO RESULTS FOUND
+              </h3>
+              
+              <p className="text-[15px] sm:text-[16px] text-zinc-500 dark:text-zinc-400 max-w-md mx-auto leading-relaxed font-medium mb-10">
+                We couldn't find any products matching {keyword ? <><span className="font-bold text-[#111111] dark:text-white">"{keyword}"</span>.</> : 'your filters.'} Please try a different search term or explore our full collection.
+              </p>
+              
+              <Link 
+                to="/collections/all" 
+                className="group relative inline-flex items-center justify-center gap-2 px-10 h-14 bg-[#111111] dark:bg-white text-white dark:text-[#111111] text-[14px] font-bold tracking-widest uppercase rounded-full hover:-translate-y-1 hover:shadow-[0_10px_40px_rgba(0,0,0,0.2)] dark:hover:shadow-[0_10px_40px_rgba(255,255,255,0.2)] transition-all duration-300"
+              >
+                <span>EXPLORE ALL</span>
+                <div className="w-5 h-5 rounded-full bg-white/20 dark:bg-black/10 flex items-center justify-center group-hover:translate-x-1 transition-transform">
+                  <Search size={12} strokeWidth={3} />
+                </div>
+              </Link>
+            </div>
           </div>
         ) : (
           <>

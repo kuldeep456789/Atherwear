@@ -21,10 +21,19 @@ export class CollectionsController {
     @Param('categorySlug') categorySlug: string,
     @Query() query: any,
   ) {
+    if (gender.toLowerCase() === 'men' && categorySlug.toLowerCase() === 'jeans') {
+      throw new (require('@nestjs/common').NotFoundException)('The /jeans API endpoint is removed. Please use /men-jeans instead.');
+    }
+
+    let resolvedCategorySlug = categorySlug;
+    if (gender.toLowerCase() === 'men' && categorySlug.toLowerCase() === 'men-jeans') {
+      resolvedCategorySlug = 'jeans';
+    }
+
     return this.productsService.getProducts({
       ...query,
       gender,
-      subcategoryName: categorySlug.replace(/-/g, ' '),
+      subcategoryName: resolvedCategorySlug.replace(/-/g, ' '),
     });
   }
 }

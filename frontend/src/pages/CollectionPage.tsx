@@ -81,7 +81,13 @@ const CollectionPage = () => {
 
   // Determine active category based on slug
   const activeCategory = normalizedSubcategory
-    ? derivedTabs.find(tab => toSlug(tab.name) === toSlug(fromSlug(normalizedSubcategory)))
+    ? derivedTabs.find(tab => {
+        let tabSlug = toSlug(tab.name);
+        if (normalizedGender === 'men' && tabSlug === 'jeans') {
+          tabSlug = 'men-jeans';
+        }
+        return tabSlug === toSlug(fromSlug(normalizedSubcategory));
+      })
     : undefined;
 
   // Filter products by active category
@@ -171,7 +177,10 @@ const CollectionPage = () => {
               className="flex items-center gap-2 sm:gap-3 overflow-x-auto hide-scrollbar touch-pan-x py-3 px-8 lg:px-0"
             >
               {derivedTabs.map((tab) => {
-                const tabSlug = toSlug(tab.name);
+                let tabSlug = toSlug(tab.name);
+                if (gender?.toLowerCase() === 'men' && tabSlug === 'jeans') {
+                  tabSlug = 'men-jeans';
+                }
                 const isActive = activeCategory?.name === tab.name;
                 const linkTo = gender ? `/collections/${gender}/${tabSlug}` : `/collections/${tabSlug}`;
 

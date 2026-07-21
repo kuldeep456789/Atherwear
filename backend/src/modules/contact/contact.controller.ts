@@ -1,4 +1,4 @@
-import { Controller, Post, Body, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Body, BadRequestException, Get } from '@nestjs/common';
 import { ContactService } from './contact.service';
 
 @Controller('contact')
@@ -13,5 +13,10 @@ export class ContactController {
       throw new BadRequestException('All fields are required');
     }
     return this.contactService.createContactMessage(body);
+  }
+
+  @Get()
+  async getMessages() {
+    return this.contactService.findAll();
   }
 }

@@ -6,17 +6,17 @@ const Footer = () => {
     <footer className="bg-black text-white font-sans uppercase w-full">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-zinc-800">
         {/* Brand */}
-        <div className="px-6 py-7 sm:px-10 sm:py-9 md:px-12 md:py-11">
-          <h3 className="text-xl sm:text-2xl font-black tracking-tighter mb-2 leading-none">VASTRA</h3>
-          <p className="text-xs sm:text-sm text-zinc-500 font-medium normal-case tracking-normal leading-relaxed max-w-xs">
+        <div className="px-6 py-12 sm:px-12 sm:py-16 md:px-16 md:py-20 flex flex-col justify-center">
+          <h3 className="text-3xl sm:text-4xl font-black tracking-tighter mb-4 leading-none">VASTRA</h3>
+          <p className="text-sm sm:text-base text-zinc-500 font-medium normal-case tracking-normal leading-relaxed max-w-xs">
             Elevating Everyday Fashion with Premium Quality, Modern Design, and Timeless Style.
           </p>
         </div>
 
         {/* Shop links */}
-        <div className="px-6 py-7 sm:px-10 sm:py-9 md:px-12 md:py-11">
-          <h4 className="text-[10px] font-black tracking-[0.2em] mb-3 text-zinc-500">SHOP</h4>
-          <ul className="space-y-2.5">
+        <div className="px-6 py-12 sm:px-12 sm:py-16 md:px-16 md:py-20 flex flex-col justify-center">
+          <h4 className="text-[15px] sm:text-[18px] font-black tracking-[0.25em] mb-8 text-zinc-500">SHOP</h4>
+          <ul className="space-y-4">
             {[
               { to: '/collections/men', label: 'Men' },
               { to: '/collections/women', label: 'Women' },
@@ -24,7 +24,7 @@ const Footer = () => {
               <li key={to}>
                 <Link
                   to={to}
-                  className="text-sm font-bold tracking-wider text-zinc-400 hover:text-[#C9A227] transition-colors duration-200 relative inline-block after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-[#C9A227] after:transition-all after:duration-300 hover:after:w-full"
+                  className="text-base font-bold tracking-wider text-zinc-400 hover:text-[#C9A227] transition-colors duration-200 relative inline-block after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-[#C9A227] after:transition-all after:duration-300 hover:after:w-full"
                 >
                   {label}
                 </Link>
@@ -34,9 +34,9 @@ const Footer = () => {
         </div>
 
         {/* Help links */}
-        <div className="px-6 py-7 sm:px-10 sm:py-9 md:px-12 md:py-11">
-          <h4 className="text-[10px] font-black tracking-[0.2em] mb-3 text-zinc-500">HELP</h4>
-          <ul className="space-y-2.5">
+        <div className="px-6 py-12 sm:px-12 sm:py-16 md:px-16 md:py-20 flex flex-col justify-center">
+          <h4 className="text-[15px] sm:text-[18px] font-black tracking-[0.25em] mb-8 text-zinc-500">HELP</h4>
+          <ul className="space-y-4">
             {[
               { to: '/faq', label: 'FAQ' },
               { to: '/shipping-policy', label: 'Shipping Policy' },
@@ -45,7 +45,7 @@ const Footer = () => {
               <li key={to}>
                 <Link
                   to={to}
-                  className="text-sm font-bold tracking-wider text-zinc-400 hover:text-[#C9A227] transition-colors duration-200 relative inline-block after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-[#C9A227] after:transition-all after:duration-300 hover:after:w-full"
+                  className="text-base font-bold tracking-wider text-zinc-400 hover:text-[#C9A227] transition-colors duration-200 relative inline-block after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-[#C9A227] after:transition-all after:duration-300 hover:after:w-full"
                 >
                   {label}
                 </Link>
@@ -54,26 +54,24 @@ const Footer = () => {
           </ul>
         </div>
         {/* Contact + Social */}
-        <div className="px-6 py-7 sm:px-10 sm:py-9 md:px-12 md:py-11">
-          <h4 className="text-[10px] font-black tracking-[0.2em] mb-3 text-zinc-500">CONTACT</h4>
-          <ul className="space-y-2.5">
+        <div className="px-6 py-12 sm:px-12 sm:py-16 md:px-16 md:py-20 flex flex-col justify-center">
+          <h4 className="text-[18px] sm:text-[20px] font-black tracking-[0.25em] mb-8 text-zinc-500">CONTACT</h4>
+          <ul className="space-y-3">
             <li>
-              <a href="mailto:[EMAIL_ADDRESS]" className="flex items-start gap-2.5 text-zinc-400 hover:text-[#C9A227] transition-colors duration-200 group">
-                <Mail size={14} strokeWidth={1.5} className="mt-0.5 shrink-0 text-zinc-600 group-hover:text-[#C9A227] transition-colors duration-200" />
-                <span className="text-xs sm:text-sm font-bold tracking-wider normal-case">vastra3456@gmail.com</span>
+              <a href="mailto:vastra3456@gmail.com" className="flex items-center gap-4 text-zinc-400 hover:text-[#C9A227] transition-colors duration-200 group">
+                <Mail size={20} strokeWidth={1.5} className="shrink-0 text-zinc-600 group-hover:text-[#C9A227] transition-colors duration-200" />
+                <span className="text-[16px] sm:text-[18px] font-bold tracking-wider normal-case">vastra3456@gmail.com</span>
               </a>
             </li>
             <li>
-              <a href="tel:+918255555577" className="flex items-start gap-2.5 text-zinc-400 hover:text-[#C9A227] transition-colors duration-200 group">
-                <Phone size={14} strokeWidth={1.5} className="mt-0.5 shrink-0 text-zinc-600 group-hover:text-[#C9A227] transition-colors duration-200" />
-                <span className="text-xs sm:text-sm font-bold tracking-wider">+91 8255555577</span>
+              <a href="tel:+918255555577" className="flex items-center gap-4 text-zinc-400 hover:text-[#C9A227] transition-colors duration-200 group">
+                <Phone size={20} strokeWidth={1.5} className="shrink-0 text-zinc-600 group-hover:text-[#C9A227] transition-colors duration-200" />
+                <span className="text-[16px] sm:text-[18px] font-bold tracking-wider">+91 8255555577</span>
               </a>
             </li>
-            <li>
-              <a href="https://maps.google.com/?q=Bangalore+India" target="_blank" rel="noopener noreferrer" className="flex items-start gap-2.5 text-zinc-400 hover:text-[#C9A227] transition-colors duration-200 group">
-                <MapPin size={14} strokeWidth={1.5} className="mt-0.5 shrink-0 text-zinc-600 group-hover:text-[#C9A227] transition-colors duration-200" />
-                <span className="text-xs sm:text-sm font-bold tracking-wider normal-case">Bangalore, India</span>
-              </a>
+            <li className="flex items-center gap-4 text-zinc-400">
+              <MapPin size={20} strokeWidth={1.5} className="shrink-0 text-zinc-600" />
+              <span className="text-[16px] sm:text-[18px] font-bold tracking-wider normal-case">Bangalore, India</span>
             </li>
           </ul>
           {/* Social
@@ -95,16 +93,7 @@ const Footer = () => {
         </div>
       </div>
 
-      {/* Copyright Bar */}
-      {/* <div className="border-t border-zinc-800 px-6 py-4 sm:px-10 md:px-12 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
-        <p className="text-[10px] sm:text-xs text-zinc-600 font-bold tracking-widest uppercase">
-          &copy; {new Date().getFullYear()} VASTRA B2B. All rights reserved.
-        </p>
-        <div className="flex items-center gap-4 text-[10px] sm:text-xs text-zinc-600 font-bold tracking-widest uppercase">
-          <Link to="/shipping-policy" className="hover:text-[#C9A227] transition-colors">Terms</Link>
-          <Link to="/shipping-policy" className="hover:text-[#C9A227] transition-colors">Privacy</Link>
-        </div>
-      </div> */}
+
     </footer >
   );
 };

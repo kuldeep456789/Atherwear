@@ -38,8 +38,19 @@ export class ProductsController {
   @Get()
   async getProducts(
     @Query() query: ProductQueryDto,
+    @Body() body?: any,
   ) {
-    return await this.productsService.getProducts(query);
+    const finalQuery = { ...query, ...(body || {}) };
+    return await this.productsService.getProducts(finalQuery);
+  }
+
+  @Post('search')
+  async searchProductsPost(
+    @Query() query: ProductQueryDto,
+    @Body() body?: any,
+  ) {
+    const finalQuery = { ...query, ...(body || {}) };
+    return await this.productsService.getProducts(finalQuery);
   }
 
   @Get('category/:categoryId')

@@ -18,4 +18,12 @@ export class ContactService {
       throw new InternalServerErrorException('Failed to save contact message');
     }
   }
+
+  async findAll() {
+    try {
+      return await this.contactModel.find().sort({ createdAt: -1 }).exec();
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to fetch contact messages');
+    }
+  }
 }

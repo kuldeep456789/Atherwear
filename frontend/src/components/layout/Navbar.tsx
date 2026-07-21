@@ -173,10 +173,14 @@ const Navbar = () => {
 
     categoriesData.forEach((cat: any) => {
       if (cat.name?.toLowerCase().includes(qLower) || cat.group?.toLowerCase().includes(qLower)) {
+        let slug = toSlug(cat.name);
+        if (cat.group?.toLowerCase() === 'men' && slug === 'jeans') {
+          slug = 'men-jeans';
+        }
         suggestionList.push({
           type: 'category',
           label: `${cat.group} > ${cat.name}`,
-          to: `/collections/${cat.group.toLowerCase()}/${toSlug(cat.name)}`
+          to: `/collections/${cat.group.toLowerCase()}/${slug}`
         });
       }
     });
@@ -185,8 +189,8 @@ const Navbar = () => {
       type: 'product',
       label: p.title || p.productName || p.name || '',
       to: `/product/${getProductId(p)}`,
-      image: p.images?.[0],
-      price: formatINR(p.discountPrice || p.price),
+      image: p.images?.[0] || p.productImage,
+      price: formatINR(p.sellPrice ? Number(p.sellPrice) : (p.discountPrice || p.price)),
       category: p.collectionType || p.categoryName || '',
     }));
   }

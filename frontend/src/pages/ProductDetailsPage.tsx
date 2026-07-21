@@ -231,9 +231,12 @@ const ProductDetailsPage = () => {
   const lightboxPrev = () => setLightboxIdx((p) => (p - 1 + displayImages.length) % displayImages.length);
   const lightboxNext = () => setLightboxIdx((p) => (p + 1) % displayImages.length);
 
-  const handleReviewSubmit = async (e: React.FormEvent) => {
+  const handleReviewSubmit = async (e: React.FormEvent | React.MouseEvent) => {
     e.preventDefault();
-    if (!reviewText.trim()) return;
+    if (!reviewText.trim()) {
+      setErrorMsg('Please enter a review.');
+      return;
+    }
     if (!userInfo) {
       setErrorMsg('Please sign in to submit a review.');
       return;
@@ -675,7 +678,7 @@ const ProductDetailsPage = () => {
                     placeholder="What did you like or dislike?"
                     className="w-full bg-white dark:bg-[#0a0a0a] border border-zinc-200 dark:border-zinc-800 rounded-2xl px-5 py-4 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#0050cb]/20 focus:border-[#0050cb] transition-all placeholder:text-zinc-400 mb-5 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)]"
                   />
-                  <button type="submit" disabled={isReviewLoading}
+                  <button type="button" disabled={isReviewLoading} onClick={handleReviewSubmit}
                     className="w-full bg-[#0050cb] hover:bg-[#003d99] text-white rounded-2xl py-4 text-sm font-bold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
                   >
                     {isReviewLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <SendHorizontal className="w-5 h-5" />}

@@ -52,7 +52,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
   const productId = getProductId(product) || product.name || 'product';
   const isWishlisted = wishlistItems.some((item: any) => item._id === productId);
 
-  const primaryImage = product?.images?.[0] || PLACEHOLDER_IMAGE;
+  const primaryImage = product?.images?.[0] || (product as any)?.productImage || PLACEHOLDER_IMAGE;
 
   const handleWishlistClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -63,8 +63,8 @@ const ProductCard = ({ product }: ProductCardProps) => {
     dispatch(
       toggleWishlist({
         _id: productId,
-        name: product.name,
-        price: product.price,
+        name: product.name || (product as any)?.productName || product.title,
+        price: product.price || (product as any)?.sellPrice,
         discountPrice: product.discountPrice,
         image: primaryImage,
       })
@@ -74,6 +74,9 @@ const ProductCard = ({ product }: ProductCardProps) => {
     }
   };
 
+  const currentPrice = (product as any)?.sellPrice ? Number((product as any).sellPrice) : (product.discountPrice && product.discountPrice < product.price ? product.discountPrice : product.price);
+  const originalPrice = (product as any)?.sellPrice ? undefined : (product.discountPrice && product.discountPrice < product.price ? product.price : undefined);
+
   return (
     <div className="group relative flex flex-col w-full bg-white dark:bg-zinc-900 border-none cursor-pointer">
       <Link to={`/product/${productId}`} className="block w-full">
@@ -82,13 +85,13 @@ const ProductCard = ({ product }: ProductCardProps) => {
             <div className="flex h-full w-full flex-col items-center justify-center bg-zinc-50 dark:bg-zinc-800 px-8 text-center">
               <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">VASTRA</span>
               <span className="mt-2 line-clamp-3 text-lg font-bold leading-tight text-zinc-700 dark:text-zinc-300">
-                {product.title || product.name}
+                {product.title || (product as any)?.productName || product.name}
               </span>
             </div>
           ) : (
             <img
               src={primaryImage}
-              alt={product.name}
+              alt={product.name || (product as any)?.productName}
               loading="lazy"
               onError={() => { if (primaryImage !== PLACEHOLDER_IMAGE) setImageFailed(true); }}
               className="h-full w-full object-cover object-center"
@@ -112,7 +115,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
       <Link to={`/product/${productId}`} className="flex flex-col pt-3 pb-1 flex-1">
         <span className="text-[13px] font-medium text-[#9e352f] mb-1">Just In</span>
         <h3 className="text-[15px] sm:text-base font-medium text-[#111111] dark:text-white line-clamp-1">
-          {product.title || product.name}
+          {product.title || (product as any)?.productName || product.name}
         </h3>
         {product.description && (
           <p className="text-[14px] text-gray-500 dark:text-zinc-400 line-clamp-1 mt-0.5">
@@ -121,11 +124,11 @@ const ProductCard = ({ product }: ProductCardProps) => {
         )}
         <div className="flex items-center gap-1.5 sm:gap-2 mt-2">
           <span className="text-[15px] sm:text-[16px] font-medium text-[#111111] dark:text-white">
-            {formatINR(product.discountPrice && product.discountPrice < product.price ? product.discountPrice : product.price)}
+            {formatINR(currentPrice)}
           </span>
-          {product.discountPrice && product.discountPrice < product.price && (
+          {originalPrice && (
             <span className="text-[14px] sm:text-[15px] text-gray-500 line-through">
-              {formatINR(product.price)}
+              {formatINR(originalPrice)}
             </span>
           )}
         </div>
