@@ -47,11 +47,8 @@ const CollectionPage = () => {
     setTimeout(checkScroll, 300);
   };
 
-  /**
-   * Fetch all products for the gender from the warehouse.
-   * This is fast because RTK Query caches it, and the backend serves it from Redis.
-   * We request a large page size so we can derive all categories client-side.
-   */
+
+
   const { data: allProductsData, isLoading, error } = useGetProductsQuery({
     ...(isAllGender ? {} : { gender: normalizedGender }),
     pageNum: 1,
@@ -66,7 +63,7 @@ const CollectionPage = () => {
    */
   const derivedTabs = useMemo(() => {
     const catMap = new Map<string, number>();
-    
+
     for (const p of productsPool) {
       const cat = String(p._category ?? p.subcategoryName ?? 'Other').trim();
       if (!cat) continue;
@@ -82,20 +79,20 @@ const CollectionPage = () => {
   // Determine active category based on slug
   const activeCategory = normalizedSubcategory
     ? derivedTabs.find(tab => {
-        let tabSlug = toSlug(tab.name);
-        if (normalizedGender === 'men' && tabSlug === 'jeans') {
-          tabSlug = 'men-jeans';
-        }
-        return tabSlug === toSlug(fromSlug(normalizedSubcategory));
-      })
+      let tabSlug = toSlug(tab.name);
+      if (normalizedGender === 'men' && tabSlug === 'jeans') {
+        tabSlug = 'men-jeans';
+      }
+      return tabSlug === toSlug(fromSlug(normalizedSubcategory));
+    })
     : undefined;
 
   // Filter products by active category
   const filteredProducts = activeCategory
     ? productsPool.filter((p: any) => {
-        const cat = String(p._category ?? p.subcategoryName ?? '').trim();
-        return toSlug(cat) === toSlug(activeCategory.name);
-      })
+      const cat = String(p._category ?? p.subcategoryName ?? '').trim();
+      return toSlug(cat) === toSlug(activeCategory.name);
+    })
     : productsPool;
 
   // Client-side pagination
@@ -169,7 +166,7 @@ const CollectionPage = () => {
                 <ChevronRight size={16} strokeWidth={2.5} />
               </button>
             )}
-            
+
             {/* Category Tabs */}
             <div
               ref={scrollRef}
@@ -188,11 +185,10 @@ const CollectionPage = () => {
                   <Link
                     key={tab.name}
                     to={linkTo}
-                    className={`group relative shrink-0 py-2 px-2 text-[13px] sm:text-[15px] font-bold tracking-wider transition-all duration-200 cursor-pointer ${
-                      isActive
-                        ? 'text-[hsl(var(--foreground))]'
-                        : 'text-zinc-400 dark:text-zinc-500 hover:text-[hsl(var(--foreground))]'
-                    }`}
+                    className={`group relative shrink-0 py-2 px-2 text-[13px] sm:text-[15px] font-bold tracking-wider transition-all duration-200 cursor-pointer ${isActive
+                      ? 'text-[hsl(var(--foreground))]'
+                      : 'text-zinc-400 dark:text-zinc-500 hover:text-[hsl(var(--foreground))]'
+                      }`}
                   >
                     {tab.name.toUpperCase()}
                     <span className={`ml-1 text-[10px] font-semibold ${isActive ? 'text-zinc-500 dark:text-zinc-400' : 'text-zinc-400 dark:text-zinc-600'}`}>
@@ -237,8 +233,8 @@ const CollectionPage = () => {
             <p className="text-[15px] text-zinc-500 max-w-md mx-auto text-center mb-8 leading-relaxed">
               We couldn't find any products in this collection. Try exploring other categories to find what you're looking for.
             </p>
-            <Link 
-              to="/collections/all" 
+            <Link
+              to="/collections/all"
               className="px-8 py-3.5 bg-[#111111] dark:bg-white text-white dark:text-[#111111] text-[15px] font-medium rounded-full hover:bg-black/80 dark:hover:bg-zinc-200 transition-all duration-200"
             >
               Explore All Products

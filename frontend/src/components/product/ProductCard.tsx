@@ -74,8 +74,9 @@ const ProductCard = ({ product }: ProductCardProps) => {
     }
   };
 
-  const currentPrice = (product as any)?.sellPrice ? Number((product as any).sellPrice) : (product.discountPrice && product.discountPrice < product.price ? product.discountPrice : product.price);
-  const originalPrice = (product as any)?.sellPrice ? undefined : (product.discountPrice && product.discountPrice < product.price ? product.price : undefined);
+  const currentPrice = product.discountPrice && product.discountPrice < product.price ? product.discountPrice : product.price;
+  const originalPrice = product.discountPrice && product.discountPrice < product.price ? product.price : undefined;
+  // Force HMR update to apply price logic
 
   return (
     <div className="group relative flex flex-col w-full bg-white dark:bg-zinc-900 border-none cursor-pointer">
@@ -114,11 +115,11 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
       <Link to={`/product/${productId}`} className="flex flex-col pt-3 pb-1 flex-1">
         <span className="text-[13px] font-medium text-[#9e352f] mb-1">Just In</span>
-        <h3 className="text-[15px] sm:text-base font-medium text-[#111111] dark:text-white line-clamp-1">
+        <h3 className="text-[15px] sm:text-base font-medium text-[#111111] dark:text-white line-clamp-2">
           {product.title || (product as any)?.productName || product.name}
         </h3>
         {product.description && (
-          <p className="text-[14px] text-gray-500 dark:text-zinc-400 line-clamp-1 mt-0.5">
+          <p className="text-[14px] text-gray-500 dark:text-zinc-400 line-clamp-2 mt-0.5">
             {product.description.replace(/<[^>]*>?/gm, '')}
           </p>
         )}
