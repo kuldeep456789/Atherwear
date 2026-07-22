@@ -49,12 +49,7 @@ const initialState: CartState = {
     : '',
 };
 
-// Shipping tiers (INR converted to USD in display):
-// $0      → Free (empty cart)
-// < $6.01  → $1.81 (standard)
-// < $12.04 → $1.19
-// < $60.24 → $0.59
-// >= $60.24 → Free
+/** Calculates shipping cost based on discounted subtotal. */
 const calcShipping = (itemsPrice: number, couponDiscount: number): number => {
   if (itemsPrice === 0) return 0;
   const discountedTotal = itemsPrice - couponDiscount;
@@ -64,7 +59,7 @@ const calcShipping = (itemsPrice: number, couponDiscount: number): number => {
   return 150;
 };
 
-// Known coupons — single source of truth
+/** Available discount coupons and discount rules. */
 export const COUPONS: Record<string, { discount: (price: number) => number; min: number; desc: string }> = {
   AETHER10: {
     discount: (p) => Math.round(p * 0.1),

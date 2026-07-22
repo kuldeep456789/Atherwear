@@ -24,6 +24,7 @@ export type SafeUser = {
 export class UsersService {
   constructor(@InjectModel(User.name) private readonly userModel: Model<User>) { }
 
+  /** Registers a new user account with hashed password. */
   async create(name: string, email: string, password: string, phone?: string, role: string = 'customer'): Promise<SafeUser> {
     const existingUser = await this.userModel.exists({ email });
     if (existingUser) {
@@ -33,29 +34,35 @@ export class UsersService {
     return this.toSafeUser(user);
   }
 
+  /** Retrieves user document including sensitive password hash for authentication. */
   async findByEmailWithPassword(email: string): Promise<UserDocument | null> {
     return this.userModel.findOne({ email }).select('+password').exec();
   }
 
+  /** Finds a user by mobile phone number. */
   async findByPhone(phone: string): Promise<UserDocument | null> {
     return this.userModel.findOne({ phone }).exec();
   }
 
+  /** Finds a user by ID and returns safe user DTO. */
   async findById(id: string): Promise<SafeUser | null> {
     const user = await this.userModel.findById(id).exec();
     return user ? this.toSafeUser(user) : null;
   }
 
+  /** Finds a user by email address and returns safe user DTO. */
   async findByEmail(email: string): Promise<SafeUser | null> {
     const user = await this.userModel.findOne({ email }).exec();
     return user ? this.toSafeUser(user) : null;
   }
 
+  /** Updates user password hash directly. */
   async updatePassword(id: string, password: string): Promise<void> {
     const hash = await bcrypt.hash(password, 12);
     await this.userModel.findByIdAndUpdate(id, { password: hash }).exec();
   }
 
+  /** Sanitizes user document into safe DTO stripped of sensitive fields. */
   toSafeUser(user: UserDocument): SafeUser {
     const trimmedName = (user.name || '').trim();
     const [firstName, ...rest] = trimmedName.split(/\s+/);

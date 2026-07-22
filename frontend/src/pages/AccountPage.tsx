@@ -7,7 +7,7 @@ import { toggleWishlist } from '../store/slices/wishlistSlice';
 import { addToCart, saveShippingAddress } from '../store/slices/cartSlice';
 import { useGetUserOrdersQuery } from '../store/slices/orderApiSlice';
 import { useGetMyReturnsQuery } from '../store/slices/returnApiSlice';
-import { Package, User, MapPin, Heart, Settings, LogOut, ChevronRight, ShoppingBag, Clock, CheckCircle, XCircle, Trash2, Plus, Pencil, Bell, Shield, Moon, Sun, Mail, Phone, MapPinHouse, Truck, RotateCcw, Camera } from 'lucide-react';
+import { Package, User, MapPin, Heart, Settings, LogOut, ChevronRight, ShoppingBag, Clock, CheckCircle, XCircle, Trash2, Plus, Pencil, Bell, Shield, Moon, Sun, Mail, Phone, Truck, RotateCcw, Camera } from 'lucide-react';
 import { formatINR } from '../lib/currency';
 import { useTheme } from '../context/ThemeContext';
 import EditProfileModal from '../components/profile/EditProfileModal';
@@ -207,10 +207,6 @@ const AccountPage = () => {
     orders: allOrders.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
     total: allOrders.length,
   };
-
-  const memberSince = (userInfo as any).createdAt
-    ? new Date((userInfo as any).createdAt).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })
-    : new Date().getFullYear().toString();
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-[#0F0F10]">
