@@ -25,12 +25,10 @@ export class OrdersService {
   }
 
   async getOrder(token: string | undefined, id: string) {
-    let user;
-    if (token) {
-      try {
-        user = await this.resolveUser(token);
-      } catch {}
+    if (!token) {
+      throw new UnauthorizedException('Bearer token is required');
     }
+    const user = await this.resolveUser(token);
 
     const cleanId = (id || '').trim().replace(/^#/, '');
     let order;
@@ -48,6 +46,13 @@ export class OrdersService {
 
     if (!order) {
       throw new BadRequestException('Order not found');
+    }
+
+    const orderUserId = order.userId ? order.userId.toString() : '';
+    const userId = user.id || (user as any)._id?.toString() || '';
+
+    if (user.role !== 'admin' && orderUserId !== userId) {
+      throw new UnauthorizedException('You do not have permission to access this order');
     }
 
     return { order };

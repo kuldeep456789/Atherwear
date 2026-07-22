@@ -98,9 +98,6 @@ export default function AdminProducts() {
             <table className="w-full text-left border-collapse">
               <thead className="bg-gray-50 border-b border-gray-200 text-xs font-mono text-gray-500 uppercase tracking-wider">
                 <tr>
-                  <th className="px-6 py-4 font-medium w-10">
-                    <input type="checkbox" className="rounded border-gray-300" />
-                  </th>
                   <th className="px-6 py-4 font-medium">Product</th>
                   <th className="px-6 py-4 font-medium">Category</th>
                   <th className="px-6 py-4 font-medium">Price</th>
@@ -117,9 +114,6 @@ export default function AdminProducts() {
                   
                   return (
                     <tr key={p._id} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
-                      <td className="px-6 py-4">
-                        <input type="checkbox" className="rounded border-gray-300" />
-                      </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className={`w-10 h-10 rounded border border-gray-200 flex items-center justify-center overflow-hidden bg-gray-100 text-gray-400`}>

@@ -76,13 +76,19 @@ export class ReturnsService {
   }
 
   async getAll(token: string) {
-    await this.resolveUser(token);
+    const user = await this.resolveUser(token);
+    if (user.role !== 'admin') {
+      throw new UnauthorizedException('Admin access required');
+    }
     const returns = await this.returnModel.find().sort({ createdAt: -1 }).exec();
     return { returns };
   }
 
   async updateStatus(token: string, id: string, body: { status: string; adminRemarks?: string }) {
-    await this.resolveUser(token);
+    const user = await this.resolveUser(token);
+    if (user.role !== 'admin') {
+      throw new UnauthorizedException('Admin access required');
+    }
     const ret = await this.returnModel.findByIdAndUpdate(
       id,
       { $set: { status: body.status, ...(body.adminRemarks ? { adminRemarks: body.adminRemarks } : {}) } },

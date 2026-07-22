@@ -138,7 +138,6 @@ export default function AdminOrders() {
             <table className="w-full text-left border-collapse">
               <thead className="bg-gray-50 border-b border-gray-200 text-sm font-mono text-gray-500 uppercase tracking-wider">
                 <tr>
-                  <th className="px-6 py-4 font-medium w-10"><input type="checkbox" className="rounded border-gray-300" /></th>
                   <th className="px-6 py-4 font-medium">Order ID</th>
                   <th className="px-6 py-4 font-medium">Customer</th>
                   <th className="px-6 py-4 font-medium">Amount</th>
@@ -158,7 +157,6 @@ export default function AdminOrders() {
 
                   return (
                     <tr key={order._id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors">
-                      <td className="px-6 py-4"><input type="checkbox" className="rounded border-gray-300" /></td>
                       <td className="px-6 py-4 font-mono text-sm font-medium text-gray-700">#{order._id.slice(-8).toUpperCase()}</td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">

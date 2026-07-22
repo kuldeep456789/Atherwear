@@ -1,9 +1,15 @@
-import { Controller, Post, Body, BadRequestException, Get, Patch, Param } from '@nestjs/common';
+import { Controller, Post, Body, BadRequestException, Get, Patch, Param, Headers, UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { ContactService } from './contact.service';
+import { UsersService } from '../users/users.service';
 
 @Controller('contact')
 export class ContactController {
-  constructor(private readonly contactService: ContactService) {}
+  constructor(
+    private readonly contactService: ContactService,
+    private readonly jwtService: JwtService,
+    private readonly usersService: UsersService,
+  ) {}
 
   @Post()
   async createMessage(
@@ -21,9 +27,25 @@ export class ContactController {
   }
 
   @Get('user/:email')
-  async getUserMessages(@Param('email') email: string) {
+  async getUserMessages(
+    @Headers('authorization') authorization: string | undefined,
+    @Param('email') email: string,
+  ) {
     if (!email) {
       throw new BadRequestException('Email is required');
+    }
+    const token = authorization?.replace(/^Bearer\s+/i, '');
+    if (!token) throw new UnauthorizedException('Bearer token is required');
+    try {
+      const payload = await this.jwtService.verifyAsync<{ sub: string }>(token);
+      const user = await this.usersService.findById(payload.sub);
+      if (!user) throw new UnauthorizedException('User not found');
+      if (user.role !== 'admin' && user.email.toLowerCase().trim() !== email.toLowerCase().trim()) {
+        throw new UnauthorizedException('Access denied');
+      }
+    } catch (e: any) {
+      if (e instanceof UnauthorizedException) throw e;
+      throw new UnauthorizedException('Invalid token');
     }
     return this.contactService.findByEmail(email);
   }

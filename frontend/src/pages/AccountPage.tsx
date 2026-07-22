@@ -166,7 +166,10 @@ const AccountPage = () => {
       setLoadingMessages(true);
       const email = userInfo.email.trim().toLowerCase();
 
-      fetch(`/api/contact/user/${encodeURIComponent(email)}`)
+      const token = userInfo?.accessToken;
+      fetch(`/api/contact/user/${encodeURIComponent(email)}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
         .then((res) => res.json())
         .then((data) => {
           if (Array.isArray(data)) {
