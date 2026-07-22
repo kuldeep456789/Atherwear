@@ -4,7 +4,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../app.module';
 import { Model } from 'mongoose';
 import { Product } from '../modules/products/schemas/product.schema';
-import { getCategoryInfoById } from '../modules/cj/category.mapper';
+import { getCategoryInfoById } from '../modules/cj/collections';
 
 async function bootstrap() {
   const app = await NestFactory.createApplicationContext(AppModule);

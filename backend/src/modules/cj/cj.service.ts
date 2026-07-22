@@ -1,16 +1,9 @@
-import {
-  BadRequestException,
-  Injectable,
-  InternalServerErrorException,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException, } from '@nestjs/common';
 import axios, { AxiosRequestConfig } from 'axios';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { RedisService } from '../redis/redis.service';
 import { Order } from '../orders/schemas/order.schema';
-import { isHardBlocked, BLOCKED, getCategoryInfoById } from './category.mapper';
 import { CLOTHING_CATEGORIES } from './collections';
 import { CjCreateOrderDto, CjOrderProductItem } from './dto/cj-order.dto';
 
@@ -36,36 +29,6 @@ const PRODUCT_COUNT_TTL = 60 * 60 * 24;
 
 const DEFAULT_SIZES = ['S', 'M', 'L', 'XL'];
 const DEFAULT_COLORS = ['Black'];
-
-const EXCLUDED_CATEGORY_IDS = new Set([
-  '2607130752441623600', '2607130905271619800', '2075876029409300482',
-  '2046802660565475329', '2502151121241601900', '2043934021520044033',
-  '2043944570651648002', '2043945824983830529', '2043943887814762497',
-  '2043294797236301825', '2606121220391623700', '2075130484984541185',
-  '2607151126551616100', '2607130811071611500', '2607080934161603700',
-  '2607150846361621600',
-]);
-
-const EXCLUDED_PRODUCT_PIDS = new Set([
-  '2607130752441623600', '2607130905271619800', '2075876029409300482',
-  '2046802660565475329', '2502151121241601900', '2043934021520044033',
-  '2043944570651648002', '2043945824983830529', '2043943887814762497',
-  '2043294797236301825', '2606121220391623700', '2075130484984541185',
-  '2607151126551616100', '2607130811071611500', '2607080934161603700',
-  '2607150846361621600',
-]);
-
-export interface SyncMetrics {
-  lastSyncTime: string | null;
-  lastSyncDurationMs: number | null;
-  productCount: number;
-  menCount: number;
-  womenCount: number;
-  status: 'success' | 'failed' | 'running' | 'never';
-  error: string | null;
-  apiCallsUsed: number;
-  nextSyncIn: string;
-}
 
 
 @Injectable()
@@ -300,6 +263,9 @@ export class CjService {
     return normalized;
   }
 
+
+  // page size controll from here
+
   async getAllProducts(categoryId?: string) {
     const categories = categoryId ? [categoryId] : (await this.getCategories())?.categories?.map((c: any) => c.id).filter(Boolean) ?? [];
     const allProducts: any[] = [];
@@ -308,7 +274,7 @@ export class CjService {
       let pageNum = 1;
       while (true) {
         try {
-          const pageSize = 20;
+          const pageSize = 50;
           const url = `/v1/product/list${this.buildSearch({ categoryId: catId, pageNum: String(pageNum), pageSize: String(pageSize) })}`;
           this.logger.log(`[CJ] GET ${url}`);
           const response = await this.scheduleRequest(url, { method: 'GET', headers: await this.authHeaders() });
@@ -316,21 +282,21 @@ export class CjService {
           const normalized = this.normalizeProductResponse(response);
           allProducts.push(...(normalized.products || []));
           if (products.length < pageSize) break;
-          if (pageNum * pageSize >= 2000) break;
+          if (pageNum * pageSize >= 3000) break;
           pageNum++;
         } catch (e: any) {
           this.logger.warn(`[CJ] Failed to fetch category ${catId} page ${pageNum}: ${e.message}`);
           break;
         }
       }
-      if (allProducts.length >= 25000) break;
+      if (allProducts.length >= 50000) break;
     }
 
     await this.saveProductCount(allProducts.length);
     return allProducts;
   }
 
-  async searchProducts(keyword: string, pageNum = 1, pageSize = 100, hint?: any) {
+  async searchProducts(keyword: string, pageNum = 1, pageSize = 200, hint?: any) {
     const query: Record<string, string> = {
       pageNum: String(pageNum),
       pageSize: String(pageSize),
@@ -339,10 +305,12 @@ export class CjService {
     };
     return this.getProducts(query);
   }
+
+  //warehouse
   async getWarehouseProducts(
     gender: 'men' | 'women' | 'all' | '' = 'all',
     pageNum = 1,
-    pageSize = 80,
+    pageSize = 160,
     categoryId?: string,
     subcategoryName?: string,
   ): Promise<{ products: any[]; total: number; warehouseHit: true } | null> {
@@ -388,6 +356,9 @@ export class CjService {
     this.logger.log(`[CJ] Warehouse READ gender=${gender} page=${pageNum} size=${pageSize} → ${products.length}/${total}`);
     return { products, total, warehouseHit: true };
   }
+
+
+  //timer and locked if failed the data load, try in three atemp , one is , 0 sec  , 30 sec and 2 minute 
   async runCatalogSync(): Promise<{ success: boolean; count: number }> {
     const lockKey = 'cj:sync:lock';
     const locked = await this.redisService.setnx(lockKey, '1', 3600);
@@ -400,11 +371,9 @@ export class CjService {
       const syncStart = Date.now();
       this.apiCallsThisSync = 0;
 
-      await this.saveSyncMetrics({ status: 'running', error: null, lastSyncTime: null, productCount: 0, menCount: 0, womenCount: 0, lastSyncDurationMs: null, apiCallsUsed: 0, nextSyncIn: '60 minutes' });
-
       this.logger.log('[Cron] ✅ Sync Started');
 
-      const RETRY_DELAYS = [0, 30_000, 120_000];
+      const RETRY_DELAYS = [0, 30_000, 120_000]; // timer 0 sec , 30 sec , and 2 min 
       let lastError = '';
       let allProducts: any[] | null = null;
 
@@ -426,37 +395,18 @@ export class CjService {
       // ── All retries failed — keep existing cache ────────────────────────────
       if (!allProducts) {
         this.logger.error('[Cron] ❌ All sync attempts failed. Existing warehouse cache preserved.');
-        await this.saveSyncMetrics({
-          status: 'failed',
-          error: lastError,
-          lastSyncTime: new Date().toISOString(),
-          productCount: 0,
-          menCount: 0,
-          womenCount: 0,
-          lastSyncDurationMs: Date.now() - syncStart,
-          apiCallsUsed: this.apiCallsThisSync,
-          nextSyncIn: '60 minutes',
-        });
         return { success: false, count: 0 };
       }
 
-      if (allProducts.length < 50) {
+      if (allProducts.length < 500) {
         this.logger.warn(`[Cron] ⚠️ Fetch returned only ${allProducts.length} products — too few to be valid. Keeping existing cache.`);
-        await this.saveSyncMetrics({
-          status: 'failed',
-          error: `Only ${allProducts.length} products returned — refusing to overwrite warehouse`,
-          lastSyncTime: new Date().toISOString(),
-          productCount: 0,
-          menCount: 0,
-          womenCount: 0,
-          lastSyncDurationMs: Date.now() - syncStart,
-          apiCallsUsed: this.apiCallsThisSync,
-          nextSyncIn: '60 minutes',
-        });
         return { success: false, count: allProducts.length };
       }
 
-      // ── Double-buffer: write to :next buffer with balanced category distribution ──
+
+      /// here is one task running on the background, , then start second part is called buffering ,
+      // not burden on first task , and load properly and render/reflect on frontend
+
       const rawMen = allProducts.filter(p => String(p._gender ?? '').toLowerCase() === 'men');
       const rawWomen = allProducts.filter(p => String(p._gender ?? '').toLowerCase() === 'women');
 
@@ -496,23 +446,12 @@ export class CjService {
       await Promise.all(catSwapOps);
 
       const durationMs = Date.now() - syncStart;
-      this.logger.log(`[Cron] ✅ Redis Updated`);
-      this.logger.log(`[Cron] ✅ Execution Time: ${(durationMs / 1000).toFixed(1)}s`);
-      this.logger.log(`[Cron] ✅ API Calls Used: ~${this.apiCallsThisSync}`);
-      this.logger.log(`[Cron] ✅ Sync Completed Successfully`);
+      this.logger.log(`[Cron]  Redis Updated`);
+      this.logger.log(`[Cron]  Execution Time: ${(durationMs / 1000).toFixed(1)}s`);
+      this.logger.log(`[Cron]  API Calls Used: ~${this.apiCallsThisSync}`);
+      this.logger.log(`[Cron]  Sync Completed Successfully`);
 
       await this.saveProductCount(allProducts.length);
-      await this.saveSyncMetrics({
-        status: 'success',
-        error: null,
-        lastSyncTime: new Date().toISOString(),
-        productCount: allProducts.length,
-        menCount: menProducts.length,
-        womenCount: womenProducts.length,
-        lastSyncDurationMs: durationMs,
-        apiCallsUsed: this.apiCallsThisSync,
-        nextSyncIn: '60 minutes',
-      });
 
       return { success: true, count: allProducts.length };
     } finally {
@@ -524,23 +463,6 @@ export class CjService {
   async crawlAllByKeywords() {
     const result = await this.runCatalogSync();
     return { length: result.count };
-  }
-
-  // ─── Public: sync metrics ─────────────────────────────────────────────────
-
-  async getSyncMetrics(): Promise<SyncMetrics> {
-    const metrics = await this.redisService.getJson<SyncMetrics>(SYNC_METRICS_KEY);
-    return metrics ?? {
-      status: 'never',
-      error: null,
-      lastSyncTime: null,
-      productCount: 0,
-      menCount: 0,
-      womenCount: 0,
-      lastSyncDurationMs: null,
-      apiCallsUsed: 0,
-      nextSyncIn: '60 minutes',
-    };
   }
 
   async getProductCount(): Promise<number> {
@@ -589,7 +511,7 @@ export class CjService {
       }
 
       let pageNum = 1;
-      const pageSize = 50; // Use 50 products per page for optimal throughput
+      const pageSize = 200;
       let pagesSynced = 0;
       let newProductsCount = 0;
       let updatedProductsCount = 0;
@@ -643,10 +565,6 @@ export class CjService {
           const pid = String(product?.pid || product?.id || '');
           if (!pid) continue;
 
-          if (isHardBlocked(product)) {
-            continue; // Filter non-apparel items
-          }
-
           if (productMap.has(pid)) {
             // Update changed fields (price, stock, images, variants, title, etc.)
             const existing = productMap.get(pid);
@@ -688,7 +606,7 @@ export class CjService {
 
         pageNum++;
         // Small delay between page requests to minimize CJ API rate limits
-        await this.delay(200);
+        await this.delay(150);
       }
 
       const mergedCatProducts = Array.from(productMap.values());
@@ -699,22 +617,22 @@ export class CjService {
 
       const catDurationSec = ((Date.now() - catStart) / 1000).toFixed(1);
 
-      // Print Detailed Category Sync Report
-      this.logger.log(
-        `\n---------------------------------------------------------------------\n` +
-        `📂 CATEGORY SYNC REPORT: ${categoryName} (${gender.toUpperCase()})\n` +
-        `---------------------------------------------------------------------\n` +
-        `  Category Name:      ${categoryName}\n` +
-        `  Products Before:    ${productsBefore}\n` +
-        `  Products After:     ${productsAfter}\n` +
-        `  Pages Synced:       ${pagesSynced}\n` +
-        `  New Products:       ${newProductsCount}\n` +
-        `  Updated Products:   ${updatedProductsCount}\n` +
-        `  Duplicates Removed: ${duplicatesRemovedCount}\n` +
-        `  Duration:           ${catDurationSec}s\n` +
-        `  Total API Calls:    ${catApiCalls}\n` +
-        `---------------------------------------------------------------------`
-      );
+      // // Print Detailed Category Sync Report
+      // this.logger.log(
+      //   `\n---------------------------------------------------------------------\n` +
+      //   ` CATEGORY SYNC REPORT: ${categoryName} (${gender.toUpperCase()})\n` +
+      //   `---------------------------------------------------------------------\n` +
+      //   `  Category Name:      ${categoryName}\n` +
+      //   `  Products Before:    ${productsBefore}\n` +
+      //   `  Products After:     ${productsAfter}\n` +
+      //   `  Pages Synced:       ${pagesSynced}\n` +
+      //   `  New Products:       ${newProductsCount}\n` +
+      //   `  Updated Products:   ${updatedProductsCount}\n` +
+      //   `  Duplicates Removed: ${duplicatesRemovedCount}\n` +
+      //   `  Duration:           ${catDurationSec}s\n` +
+      //   `  Total API Calls:    ${catApiCalls}\n` +
+      //   `---------------------------------------------------------------------`
+      // );
 
       // Append to global pool for top-level gender keys
       for (const p of mergedCatProducts) {
@@ -729,10 +647,7 @@ export class CjService {
       await this.delay(300);
     }
 
-    this.logger.log(`\n=====================================================================\n` +
-      `       OVERALL CATALOG FETCH COMPLETE — Total Unique Products: ${allProducts.length}\n` +
-      `=====================================================================\n`
-    );
+    this.logger.log(`Fetch -> Unique Products: ${allProducts.length}`);
 
     return allProducts;
   }
@@ -779,11 +694,6 @@ export class CjService {
     return result;
   }
 
-  // ─── Private: metrics helpers ─────────────────────────────────────────────
-
-  private async saveSyncMetrics(metrics: SyncMetrics): Promise<void> {
-    await this.redisService.setJson(SYNC_METRICS_KEY, metrics, 60 * 60 * 25); // 25h TTL
-  }
 
   private async saveProductCount(count: number): Promise<void> {
     await this.redisService.setJson(PRODUCT_COUNT_CACHE_KEY, count, PRODUCT_COUNT_TTL);
@@ -828,7 +738,7 @@ export class CjService {
       response?.accessToken ??
       response?.access_token;
 
-    if (!token) throw new InternalServerErrorException('CJ access token was not returned by authentication API');
+    if (!token) throw new InternalServerErrorException('CJ auth api not returned');
     return token;
   }
 
@@ -873,7 +783,7 @@ export class CjService {
       const status = error?.response?.status;
 
       if (status === 401 && attempt < 2) {
-        this.logger.warn('[CJ] Access token unauthorized (HTTP 401) — clearing token and retrying...');
+        this.logger.warn('[CJ] Access token unauthorized (HTTP 401)');
         await this.clearCachedAccessToken();
         const headers = await this.authHeaders();
         return this.request(path, { ...init, headers }, attempt + 1);
@@ -912,10 +822,7 @@ export class CjService {
     return { ...response, categories };
   }
 
-  private isBlocked(catName: string): boolean {
-    const name = catName.toLowerCase().replace(/[\s_'&-]+/g, '');
-    return BLOCKED.some(word => name.includes(word));
-  }
+  // when blocked 
 
   private flattenCategories(items: any[]): any[] {
     const results: any[] = [];
@@ -927,7 +834,7 @@ export class CjService {
         item.categoryName || item.categoryThirdName || item.categorySecondName || item.categoryFirstName || '',
       ).toLowerCase();
 
-      if (catName && this.isBlocked(catName)) return;
+      // if (catName && this.isBlocked(catName)) return;
 
       const childArrayKey = Object.keys(item).find(
         key => Array.isArray(item[key]) && item[key].length > 0 && typeof item[key][0] === 'object',
@@ -979,24 +886,24 @@ export class CjService {
 
   private normalizeProduct(product: any, query?: Record<string, any>) {
     const categoryId = String(product?.categoryId ?? product?.category ?? '');
-    if (EXCLUDED_CATEGORY_IDS.has(categoryId)) return null;
+    // if (EXCLUDED_CATEGORY_IDS.has(categoryId)) return null;
 
     const pid = String(
       product?.pid ?? product?.id ?? product?.productId ?? product?.productPid ?? product?.product_id ?? product?.productCode ?? '',
     );
-    if (EXCLUDED_PRODUCT_PIDS.has(pid)) return null;
+    // if (EXCLUDED_PRODUCT_PIDS.has(pid)) return null;
 
     let gender = product._gender || query?._gender;
     let subcategoryName = product._category || query?._category;
     let collectionType = product._collectionType || query?._collectionType;
 
-    if (!gender || !subcategoryName) {
-      const info = getCategoryInfoById(categoryId);
-      if (!info) return null; // If category ID is totally unknown, reject the product
-      gender = info.gender;
-      subcategoryName = info.subcategoryName;
-      collectionType = info.collectionType;
-    }
+    // if (!gender || !subcategoryName) {
+    //   const info = getCategoryInfoById(categoryId);
+    //   if (!info) return null; // If category ID is totally unknown, reject the product
+    //   gender = info.gender;
+    //   subcategoryName = info.subcategoryName;
+    //   collectionType = info.collectionType;
+    // }
 
     const images = [
       product?.productImage, product?.image, product?.img, product?.primaryImage,
@@ -1019,11 +926,11 @@ export class CjService {
     const name = product?.productNameEn ?? product?.productName ?? product?.nameEn ?? product?.name ?? '';
     const rawPrice = Number(product?.sellPrice ?? product?.price ?? 0) || 0;
     const price = Number((rawPrice * 93.45).toFixed(2));
-    const sizes = Array.isArray(product?.sizes) && product.sizes.length ? product.sizes : DEFAULT_SIZES;
-    const colors = Array.isArray(product?.colors) && product.colors.length ? product.colors : DEFAULT_COLORS;
-    const variants = Array.isArray(product?.variants) && product.variants.length
-      ? product.variants
-      : colors.flatMap((color: string) => sizes.map((size: string) => ({ color, size, stock: 999 })));
+    // const sizes = Array.isArray(product?.sizes) && product.sizes.length ? product.sizes : DEFAULT_SIZES;
+    // const colors = Array.isArray(product?.colors) && product.colors.length ? product.colors : DEFAULT_COLORS;
+    // const variants = Array.isArray(product?.variants) && product.variants.length
+    //   ? product.variants
+    //   : colors.flatMap((color: string) => sizes.map((size: string) => ({ color, size, stock: 999 })));
 
     const categoryName = product?.categoryName ?? product?.categoryThirdName ?? product?.categorySecondName ?? product?.categoryFirstName ?? '';
 
@@ -1042,9 +949,9 @@ export class CjService {
       category: categoryName || categoryId,
       collectionType: product?.collectionType ?? collectionType,
       tags: Array.isArray(product?.tags) ? product.tags : [],
-      sizes,
-      colors,
-      variants,
+      // sizes,
+      // colors,
+      // variants,
       numReviews: 0,
       averageRating: 0,
       reviews: [],
@@ -1138,3 +1045,4 @@ export class CjService {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
+

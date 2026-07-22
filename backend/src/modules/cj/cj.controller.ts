@@ -27,7 +27,8 @@ export class CjController {
   }
   @Get('sync-status')
   async syncStatus() {
-    return this.cjService.getSyncMetrics();
+    const count = await this.cjService.getProductCount();
+    return { status: 'active', productCount: count };
   }
   @Post('sync-now')
   triggerSync() {

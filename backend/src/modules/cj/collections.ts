@@ -42,3 +42,20 @@ export const CLOTHING_CATEGORIES = {
     { categoryId: "4CF7E664-A644-4B96-951B-B76FA973320A", name: "Women Basic Jackets" }
   ]
 };
+
+export function getCategoryInfoById(categoryId: string): { gender: string; subcategoryName: string; collectionType: string } | null {
+  if (!categoryId) return null;
+
+  for (const cat of CLOTHING_CATEGORIES.men) {
+    if (cat.categoryId === categoryId) {
+      return { gender: 'Men', subcategoryName: cat.name, collectionType: 'Men' };
+    }
+  }
+  for (const cat of CLOTHING_CATEGORIES.women) {
+    if (cat.categoryId === categoryId) {
+      return { gender: 'Women', subcategoryName: cat.name, collectionType: 'Women' };
+    }
+  }
+  return null;
+}
+
