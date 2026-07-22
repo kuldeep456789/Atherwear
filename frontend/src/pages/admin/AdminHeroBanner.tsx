@@ -160,19 +160,6 @@ export default function AdminHeroBanner() {
               />
             </div>
           </div>
-
-          <div className="flex items-center justify-between p-5 bg-gray-50/50 border border-gray-200/60 rounded-xl mt-4">
-            <div>
-              <p className="text-sm font-bold text-gray-900">Maintenance Mode</p>
-              <p className="text-xs text-gray-500 mt-1">Temporarily disable storefront for customers</p>
-            </div>
-            <button
-              onClick={() => setSettings(p => p ? { ...p, maintenanceMode: !p.maintenanceMode } : p)}
-              className={`w-12 h-6 rounded-full transition-colors relative focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0050cb] ${settings?.maintenanceMode ? 'bg-orange-500' : 'bg-gray-300'}`}
-            >
-              <div className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform absolute top-0.5 left-0.5 ${settings?.maintenanceMode ? 'translate-x-6' : 'translate-x-0'}`} />
-            </button>
-          </div>
         </div>
 
 
