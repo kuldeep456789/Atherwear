@@ -101,7 +101,7 @@ export interface AdminReturn {
   _id: string;
   userId: { _id: string; name?: string; email?: string } | null;
   orderId: string;
-  productId: string;
+  // productId: string;
   productName: string;
   productImage?: string;
   reason: string;
@@ -149,7 +149,7 @@ export interface StoreSettings {
   storeEmail: string;
   currency: string;
   heroBannerImages: string[];
-  maintenanceMode: boolean;
+  // maintenanceMode: boolean;
   freeShippingThreshold: number;
   socialLinks: Record<string, string>;
   logoUrl?: string;
@@ -257,7 +257,7 @@ export const adminApi = {
       const res = await fetch('/api/contact');
       if (!res.ok) throw new Error('Failed to fetch contact messages');
       const contacts = (await res.json()) || [];
-      
+
       try {
         const issuesRes = await request<CustomerIssue[]>('GET', '/issues');
         if (Array.isArray(issuesRes)) {
@@ -274,7 +274,7 @@ export const adminApi = {
           }));
           return [...contacts, ...formattedIssues];
         }
-      } catch {}
+      } catch { }
 
       return contacts as ContactMessage[];
     },

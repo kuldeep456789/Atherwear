@@ -456,15 +456,19 @@ export class CjService {
         return { success: false, count: allProducts.length };
       }
 
-      // ── Double-buffer: write to :next keys, then swap ───────────────────────
-      const menProducts = allProducts.filter(p => String(p._gender ?? '').toLowerCase() === 'men');
-      const womenProducts = allProducts.filter(p => String(p._gender ?? '').toLowerCase() === 'women');
+      // ── Double-buffer: write to :next buffer with balanced category distribution ──
+      const rawMen = allProducts.filter(p => String(p._gender ?? '').toLowerCase() === 'men');
+      const rawWomen = allProducts.filter(p => String(p._gender ?? '').toLowerCase() === 'women');
 
-      this.logger.log(`[Cron] ✅ Products Fetched — Men: ${menProducts.length}, Women: ${womenProducts.length}, Total: ${allProducts.length}`);
+      const menProducts = this.interleaveByCategory(rawMen);
+      const womenProducts = this.interleaveByCategory(rawWomen);
+      const balancedAll = this.interleaveByCategory(allProducts);
+
+      this.logger.log(`[Cron] ✅ Products Fetched & Interleaved — Men: ${menProducts.length}, Women: ${womenProducts.length}, Total: ${allProducts.length}`);
 
       // Write to :next buffer without TTL to make it persistent
       await Promise.all([
-        this.redisService.setJson(WAREHOUSE_NEXT_ALL, allProducts),
+        this.redisService.setJson(WAREHOUSE_NEXT_ALL, balancedAll),
         this.redisService.setJson(WAREHOUSE_NEXT_MEN, menProducts),
         this.redisService.setJson(WAREHOUSE_NEXT_WOMEN, womenProducts),
       ]);
@@ -548,11 +552,9 @@ export class CjService {
 
   private async fetchCatalog(): Promise<any[]> {
     const allProducts: any[] = [];
-    const seenPids = new Set<string>();
+    const globalSeenPids = new Set<string>();
 
-    this.logger.log(`[CJ] Fetching categories to discover category IDs...`);
-
-    // 1 & 2. Map target categories directly from local CLOTHING_CATEGORIES
+    // 1. Target categories from CLOTHING_CATEGORIES
     const targetCategories: { categoryId: string; gender: string; categoryName: string }[] = [];
 
     for (const cat of CLOTHING_CATEGORIES.men) {
@@ -565,60 +567,173 @@ export class CjService {
 
     const uniqueTargets = Array.from(new Map(targetCategories.map(item => [item.categoryId, item])).values());
 
-    this.logger.log(`[CJ] Discovered ${uniqueTargets.length} target categories for sync.`);
+    this.logger.log(`[CJ] Starting full catalog sync across ${uniqueTargets.length} categories (processing ONE category at a time)...`);
 
-    // 3. Fetch products for each targeted category
+    let totalPagesSyncedAll = 0;
+
+    // 2. Process ONE CATEGORY AT A TIME sequentially
     for (const entry of uniqueTargets) {
       const { categoryId, gender, categoryName } = entry;
-      let pageNum = 1;
-      let consecutiveEmpty = 0;
+      const catKey = categoryKey(gender, categoryName);
+      const catStart = Date.now();
 
+      // Read existing products from Redis for safe merge (NEVER CLEAR keys)
+      const existingCatProducts = (await this.redisService.getJson<any[]>(catKey)) || [];
+      const productsBefore = existingCatProducts.length;
+
+      // Product Map indexed by PID for deduplication, merge & updates
+      const productMap = new Map<string, any>();
+      for (const p of existingCatProducts) {
+        const pid = String(p.pid || p.id || '');
+        if (pid) productMap.set(pid, p);
+      }
+
+      let pageNum = 1;
+      const pageSize = 50; // Use 50 products per page for optimal throughput
+      let pagesSynced = 0;
+      let newProductsCount = 0;
+      let updatedProductsCount = 0;
+      let duplicatesRemovedCount = 0;
+      let catApiCalls = 0;
+
+      // Multi-page fetch loop: continue fetching pages until supplier has no more products
       while (true) {
-        const url = `/v1/product/list?categoryId=${categoryId}&pageNum=${pageNum}&pageSize=20`;
-        let response;
+        const url = `/v1/product/list?categoryId=${categoryId}&pageNum=${pageNum}&pageSize=${pageSize}`;
+        let response: any = null;
+
         try {
           response = await this.scheduleRequest(url, { method: 'GET', headers: await this.authHeaders() });
           this.apiCallsThisSync++;
+          catApiCalls++;
         } catch (err: any) {
-          this.logger.warn(`[CJ] Failed to fetch products for category ${categoryId}: ${err?.message}`);
-          break; // Skip this category if it fails completely
+          this.logger.warn(`[CJ] Failed to fetch page ${pageNum} for category "${categoryName}" (${categoryId}): ${err?.message ?? err}`);
+          // Exponential backoff delay & retry up to 2 times for page
+          let retrySuccess = false;
+          for (let retry = 1; retry <= 2; retry++) {
+            const backoffDelay = 2000 * Math.pow(2, retry);
+            this.logger.warn(`[CJ] Retrying page ${pageNum} in ${backoffDelay}ms (retry ${retry})...`);
+            await this.delay(backoffDelay);
+            try {
+              response = await this.scheduleRequest(url, { method: 'GET', headers: await this.authHeaders() });
+              this.apiCallsThisSync++;
+              catApiCalls++;
+              retrySuccess = true;
+              break;
+            } catch (rErr: any) {
+              this.logger.warn(`[CJ] Retry ${retry} failed for page ${pageNum}: ${rErr?.message ?? rErr}`);
+            }
+          }
+          if (!retrySuccess) {
+            this.logger.error(`[CJ] Skipping remaining pages for category "${categoryName}" due to repeated API failures.`);
+            break;
+          }
         }
 
         const normalized = this.normalizeProductResponse(response, { categoryId });
         const products: any[] = normalized?.products ?? [];
 
         if (products.length === 0) {
-          consecutiveEmpty++;
-          if (consecutiveEmpty >= 2 || pageNum > 5) break;
-          pageNum++;
-          continue;
+          break; // Supplier has no more products for this category
         }
 
-        consecutiveEmpty = 0;
+        pagesSynced++;
+        totalPagesSyncedAll++;
 
         for (const product of products) {
           const pid = String(product?.pid || product?.id || '');
-          if (!pid || seenPids.has(pid)) continue;
-          seenPids.add(pid);
-          if (isHardBlocked(product)) continue;
+          if (!pid) continue;
 
-          allProducts.push({
-            ...product,
-            _gender: gender,
-            _category: categoryName,
-            _collectionType: gender,
-          });
+          if (isHardBlocked(product)) {
+            continue; // Filter non-apparel items
+          }
+
+          if (productMap.has(pid)) {
+            // Update changed fields (price, stock, images, variants, title, etc.)
+            const existing = productMap.get(pid);
+            const isChanged =
+              existing.price !== product.price ||
+              existing.discountPrice !== product.discountPrice ||
+              existing.name !== product.name ||
+              existing.title !== product.title ||
+              JSON.stringify(existing.productImageSet ?? []) !== JSON.stringify(product.productImageSet ?? []);
+
+            if (isChanged) {
+              productMap.set(pid, {
+                ...existing,
+                ...product,
+                _gender: gender,
+                _category: categoryName,
+                _collectionType: gender,
+              });
+              updatedProductsCount++;
+            } else {
+              duplicatesRemovedCount++;
+            }
+          } else {
+            // New product discovered
+            productMap.set(pid, {
+              ...product,
+              _gender: gender,
+              _category: categoryName,
+              _collectionType: gender,
+            });
+            newProductsCount++;
+          }
         }
 
-        // Limit to 10 pages per category to avoid endless sync loops
-        if (products.length < 100 || pageNum >= 10) break;
+        // Stop conditions: CJ reports last page OR returned count < pageSize
+        if (products.length < pageSize) {
+          break;
+        }
+
         pageNum++;
+        // Small delay between page requests to minimize CJ API rate limits
+        await this.delay(200);
       }
 
-      this.logger.log(`[CJ] Category ID ${categoryId} ("${categoryName}") → ${allProducts.length} products total so far`);
+      const mergedCatProducts = Array.from(productMap.values());
+      const productsAfter = mergedCatProducts.length;
+
+      // Safely update Redis category key without flushing or clearing existing data
+      await this.redisService.setJson(catKey, mergedCatProducts);
+
+      const catDurationSec = ((Date.now() - catStart) / 1000).toFixed(1);
+
+      // Print Detailed Category Sync Report
+      this.logger.log(
+        `\n---------------------------------------------------------------------\n` +
+        `📂 CATEGORY SYNC REPORT: ${categoryName} (${gender.toUpperCase()})\n` +
+        `---------------------------------------------------------------------\n` +
+        `  Category Name:      ${categoryName}\n` +
+        `  Products Before:    ${productsBefore}\n` +
+        `  Products After:     ${productsAfter}\n` +
+        `  Pages Synced:       ${pagesSynced}\n` +
+        `  New Products:       ${newProductsCount}\n` +
+        `  Updated Products:   ${updatedProductsCount}\n` +
+        `  Duplicates Removed: ${duplicatesRemovedCount}\n` +
+        `  Duration:           ${catDurationSec}s\n` +
+        `  Total API Calls:    ${catApiCalls}\n` +
+        `---------------------------------------------------------------------`
+      );
+
+      // Append to global pool for top-level gender keys
+      for (const p of mergedCatProducts) {
+        const pid = String(p.pid || p.id || '');
+        if (pid && !globalSeenPids.has(pid)) {
+          globalSeenPids.add(pid);
+          allProducts.push(p);
+        }
+      }
+
+      // Small delay before starting next category
+      await this.delay(300);
     }
 
-    this.logger.log(`[CJ] Catalog fetch complete. Unique products: ${allProducts.length}`);
+    this.logger.log(`\n=====================================================================\n` +
+      `       OVERALL CATALOG FETCH COMPLETE — Total Unique Products: ${allProducts.length}\n` +
+      `=====================================================================\n`
+    );
+
     return allProducts;
   }
 
@@ -637,6 +752,31 @@ export class CjService {
     }
 
     return groups;
+  }
+
+  private interleaveByCategory(products: any[]): any[] {
+    if (!products || products.length === 0) return [];
+    const groups = new Map<string, any[]>();
+    for (const p of products) {
+      const cat = String(p._category ?? p.subcategoryName ?? 'other').trim().toLowerCase();
+      if (!groups.has(cat)) groups.set(cat, []);
+      groups.get(cat)!.push(p);
+    }
+    const result: any[] = [];
+    let added = true;
+    let idx = 0;
+    const catArrays = Array.from(groups.values());
+    while (added) {
+      added = false;
+      for (const arr of catArrays) {
+        if (idx < arr.length) {
+          result.push(arr[idx]);
+          added = true;
+        }
+      }
+      idx++;
+    }
+    return result;
   }
 
   // ─── Private: metrics helpers ─────────────────────────────────────────────
