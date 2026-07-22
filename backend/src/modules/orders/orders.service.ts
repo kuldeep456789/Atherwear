@@ -24,24 +24,26 @@ export class OrdersService {
     return { orders };
   }
 
-  async getOrder(token: string, id: string) {
-    const user = await this.resolveUser(token);
-    
+  async getOrder(token: string | undefined, id: string) {
+    let user;
+    if (token) {
+      try {
+        user = await this.resolveUser(token);
+      } catch {}
+    }
+
+    const cleanId = (id || '').trim().replace(/^#/, '');
     let order;
-    
-    if (Types.ObjectId.isValid(id) && id.length === 24) {
-      order = await this.orderModel
-        .findOne({ _id: id, userId: new Types.ObjectId(user.id) })
-        .exec();
+
+    if (Types.ObjectId.isValid(cleanId) && cleanId.length === 24) {
+      order = await this.orderModel.findById(cleanId).exec();
     } else {
-      // User might have entered the short ID (last 8 characters)
-      const orders = await this.orderModel
-        .find({ userId: new Types.ObjectId(user.id) })
-        .sort({ createdAt: -1 })
-        .limit(100)
-        .exec();
-        
-      order = orders.find(o => o._id.toString().toUpperCase().endsWith(id.toUpperCase()));
+      const allOrders = await this.orderModel.find().sort({ createdAt: -1 }).lean().exec();
+      order = allOrders.find(
+        (o: any) =>
+          o._id.toString().toUpperCase().endsWith(cleanId.toUpperCase()) ||
+          o._id.toString().toUpperCase() === cleanId.toUpperCase()
+      );
     }
 
     if (!order) {

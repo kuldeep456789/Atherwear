@@ -24,7 +24,8 @@ export class OrdersController {
     @Headers('authorization') authorization: string | undefined,
     @Param('id') id: string,
   ) {
-    return this.ordersService.getOrder(this.requireToken(authorization), id);
+    const token = authorization?.replace(/^Bearer\s+/i, '');
+    return this.ordersService.getOrder(token, id);
   }
 
   @Post()
