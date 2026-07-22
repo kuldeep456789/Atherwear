@@ -274,17 +274,7 @@ const LoginPage = () => {
             {/* Mobile brand */}
             <Link to="/" className="mb-8 block text-2xl font-black tracking-tight lg:hidden">VASTRA</Link>
 
-            {/* Pending-item banner */}
-            {hasPendingItem && !isRegister && (
-              <div className="mb-6 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 px-5 py-4">
-                <h3 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
-                  Please sign in to continue
-                </h3>
-                <p className="mt-1.5 text-xs leading-5 text-zinc-500 dark:text-zinc-400 normal-case tracking-normal">
-                  Sign in to add products to your bag, manage your wishlist, and complete checkout.
-                </p>
-              </div>
-            )}
+
 
             <div className="mb-8">
               <h2 className="text-4xl font-black tracking-tight">
