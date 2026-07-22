@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useDispatch } from 'react-redux';
-import { X, Loader2, User, Mail, Phone, Calendar, Users2, Image } from 'lucide-react';
+import { X, Loader2, User, Mail, Phone, Calendar, Users2, Image, Camera, Trash2 } from 'lucide-react';
 import { useUpdateProfileMutation } from '../../store/slices/userApiSlice';
 import { setCredentials } from '../../store/slices/authSlice';
 import type { UserInfo } from '../../store/slices/authSlice';
@@ -15,11 +15,13 @@ interface EditProfileModalProps {
 const EditProfileModal = ({ isOpen, onClose, user }: EditProfileModalProps) => {
   const dispatch = useDispatch();
   const [updateProfile, { isLoading }] = useUpdateProfileMutation();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [gender, setGender] = useState('');
+  const [avatar, setAvatar] = useState<string | null>(null);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -29,9 +31,25 @@ const EditProfileModal = ({ isOpen, onClose, user }: EditProfileModalProps) => {
       setEmail(user.email);
       setPhone(user.phone || '');
       setGender(user.gender || '');
+      setAvatar(user.avatar || (user as any).image || user.profileImage || null);
       setErrors({});
     }
   }, [isOpen, user]);
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image size should be less than 5MB');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatar(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -53,10 +71,12 @@ const EditProfileModal = ({ isOpen, onClose, user }: EditProfileModalProps) => {
         email: email.trim(),
         phone: phone.trim() || undefined,
         gender: gender || undefined,
+        avatar: avatar || undefined,
       }).unwrap();
       const updatedUser = {
         ...user,
         ...res.user,
+        avatar: avatar || res.user.avatar || user.avatar,
         _id: res.user._id || res.user.id || user._id,
         accessToken: user.accessToken,
       };
@@ -83,7 +103,54 @@ const EditProfileModal = ({ isOpen, onClose, user }: EditProfileModalProps) => {
         </div>
 
         {/* Body */}
-        <div className="px-6 py-5 space-y-5 max-h-[65vh] overflow-y-auto">
+        <div className="px-6 py-5 space-y-5 max-h-[70vh] overflow-y-auto">
+          {/* Avatar / Profile Picture Upload */}
+          <div className="flex flex-col items-center justify-center pb-2">
+            <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()} title="Click to change profile photo">
+              <div className="w-24 h-24 rounded-full border-4 border-zinc-200 dark:border-[#2A2A2A] bg-zinc-100 dark:bg-zinc-800 overflow-hidden flex items-center justify-center text-zinc-600 dark:text-zinc-300 font-bold text-3xl shadow-inner">
+                {avatar ? (
+                  <img src={avatar} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  (name[0] || user?.email?.[0] || 'U').toUpperCase()
+                )}
+              </div>
+              <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                <Camera size={24} />
+              </div>
+              <div className="absolute bottom-0 right-0 w-7 h-7 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-full flex items-center justify-center shadow-md border-2 border-white dark:border-[#18181B]">
+                <Camera size={13} />
+              </div>
+            </div>
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+            />
+            <div className="flex items-center gap-2 mt-2.5">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="text-xs font-semibold text-zinc-900 dark:text-white hover:underline cursor-pointer"
+              >
+                {avatar ? 'Change Photo' : 'Upload Photo'}
+              </button>
+              {avatar && (
+                <>
+                  <span className="text-zinc-400 text-xs">•</span>
+                  <button
+                    type="button"
+                    onClick={() => setAvatar(null)}
+                    className="text-xs font-semibold text-red-500 hover:underline cursor-pointer flex items-center gap-1"
+                  >
+                    <Trash2 size={11} /> Remove
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+
           {/* Full Name */}
           <div>
             <label className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">Full Name</label>

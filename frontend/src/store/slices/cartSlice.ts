@@ -93,12 +93,19 @@ export const COUPONS: Record<string, { discount: (price: number) => number; min:
   },
 };
 
+const parsePrice = (val: any): number => {
+  if (typeof val === 'number') return isNaN(val) ? 0 : val;
+  if (!val) return 0;
+  const cleaned = String(val).replace(/[^0-9.]/g, '');
+  const num = parseFloat(cleaned);
+  return isNaN(num) ? 0 : num;
+};
+
 // Helper function to update prices
 const updateCart = (state: CartState) => {
   state.itemsPrice = state.cartItems.reduce((acc, item) => {
-    // Round the price to match the UI display so qty * price = exact expected total
-    const price = Math.round(Number(item.price));
-    return isNaN(price) ? acc : acc + price * item.qty;
+    const price = Math.round(parsePrice(item.price));
+    return acc + price * item.qty;
   }, 0);
 
   // Calculate coupon discount
@@ -125,6 +132,9 @@ const updateCart = (state: CartState) => {
   localStorage.setItem('appliedCoupon', state.appliedCoupon);
   localStorage.setItem('couponDiscount', String(state.couponDiscount));
 };
+
+// Calculate initial prices for persisted cart items
+updateCart(initialState);
 
 const cartSlice = createSlice({
   name: 'cart',

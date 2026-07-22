@@ -121,28 +121,28 @@ export default function AdminDashboard() {
           title="Total Revenue" value={`₹${((stats?.totalRevenue ?? 0) / 100000).toFixed(1)}L`}
           subtitle={`₹${(stats?.totalRevenue ?? 0).toLocaleString()} lifetime`}
           chartColor="#0050cb"
-          chartPath="M0 25 Q 15 25, 25 15 T 45 25 T 60 5 T 80 25 T 95 10"
+          chartPath="M0 18 Q 15 18, 25 10 T 45 18 T 60 4 T 80 18 T 95 8"
         />
         <StatCard
           icon={Calendar} iconBg="bg-gray-100 text-gray-600"
           title="Total Orders" value={String(stats?.totalOrders ?? 0)}
           subtitle="All time orders"
           chartColor="#565e74"
-          chartPath="M0 25 Q 10 20, 20 25 T 40 10 T 60 25 T 75 5 T 95 20"
+          chartPath="M0 18 Q 10 14, 20 18 T 40 8 T 60 18 T 75 4 T 95 14"
         />
         <StatCard
           icon={ShoppingBag} iconBg="bg-orange-50 text-orange-600"
           title="Pending Returns" value={String(stats?.pendingReturns ?? 0)}
           subtitle="Awaiting processing"
           chartColor="#ba1a1a"
-          chartPath="M0 25 Q 10 20, 25 25 T 45 10 T 65 25 T 80 5 T 95 15"
+          chartPath="M0 18 Q 10 14, 25 18 T 45 8 T 65 18 T 80 4 T 95 10"
         />
         <StatCard
           icon={MousePointerClick} iconBg="bg-blue-50 text-blue-600"
           title="Total Users" value={String(stats?.totalUsers ?? 0)}
           subtitle="Registered customers"
           chartColor="#0054d6"
-          chartPath="M0 25 Q 15 25, 25 15 T 45 25 T 60 5 T 80 25 T 95 10"
+          chartPath="M0 18 Q 15 18, 25 10 T 45 18 T 60 4 T 80 18 T 95 8"
         />
       </section>
 
@@ -250,24 +250,28 @@ export default function AdminDashboard() {
 }
 
 function StatCard({ icon: Icon, iconBg, title, value, subtitle, chartColor, chartPath }: any) {
-  const path = chartPath || "M0 25 Q 10 15, 20 20 T 40 10 T 60 18 T 80 5 T 100 15";
+  const path = chartPath || "M0 18 Q 10 14, 20 18 T 40 8 T 60 18 T 80 4 T 100 12";
   return (
-    <div className="bg-white border border-gray-200 p-6 rounded-xl shadow-sm hover:border-[#0050cb] transition-colors group">
-      <div className="flex justify-between items-start mb-4">
-        <div className={`p-2 rounded-lg ${iconBg}`}>
-          <Icon className="h-5 w-5" />
+    <div className="bg-white border border-gray-200 p-6 rounded-xl shadow-sm hover:border-[#0050cb] transition-colors group flex flex-col justify-between">
+      <div>
+        <div className="flex justify-between items-start mb-4">
+          <div className={`p-2 rounded-lg ${iconBg}`}>
+            <Icon className="h-5 w-5" />
+          </div>
         </div>
+        <p className="text-gray-500 font-mono text-[10px] uppercase tracking-wider">{title}</p>
+        <h3 className="text-[32px] font-bold text-gray-900 mt-1">{value}</h3>
+        <p className="text-xs text-gray-400 mt-1">{subtitle}</p>
       </div>
-      <p className="text-gray-500 font-mono text-[10px] uppercase tracking-wider">{title}</p>
-      <h3 className="text-[32px] font-bold text-gray-900 mt-1">{value}</h3>
-      <p className="text-xs text-gray-400 mt-1">{subtitle}</p>
-      <div className="mt-4 h-12 w-full">
-        <svg className="w-full h-full" viewBox="0 0 100 30">
+      <div className="mt-3 h-10 w-full overflow-visible">
+        <svg className="w-full h-full overflow-visible" viewBox="0 0 100 24" preserveAspectRatio="none">
           <path 
             d={path} 
             fill="none" 
             stroke={chartColor} 
-            strokeWidth="2" 
+            strokeWidth="2.5" 
+            strokeLinecap="round"
+            strokeLinejoin="round"
             strokeDasharray="200"
             strokeDashoffset="200"
             style={{ animation: 'drawChartPath 2s ease-out forwards' }}

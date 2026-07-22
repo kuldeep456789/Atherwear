@@ -20,7 +20,7 @@ const InputField = ({
 
   return (
     <div className="relative group">
-      <div className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors duration-200 ${
+      <div className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors duration-200 z-10 ${
         focused || hasValue ? 'text-zinc-900 dark:text-white' : 'text-zinc-400 dark:text-zinc-500'
       }`}>
         {icon}
@@ -31,20 +31,19 @@ const InputField = ({
         autoComplete={autoComplete}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
-        className="w-full h-[56px] pl-11 pr-4 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-[#18181B] text-[15px] font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-zinc-900 dark:focus:border-white focus:ring-1 focus:ring-zinc-900/10 dark:focus:ring-white/10 transition-all duration-200"
-        placeholder={placeholder || label}
+        className="w-full h-[56px] pl-11 pr-4 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-[#18181B] text-[15px] font-medium text-zinc-900 dark:text-white text-left placeholder:text-left placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-zinc-900 dark:focus:border-white focus:ring-1 focus:ring-zinc-900/10 dark:focus:ring-white/10 transition-all duration-200"
+        placeholder={focused ? '' : (placeholder || label)}
         value={value}
         required={required}
         onChange={(e) => onChange(e.target.value)}
       />
       <label
         htmlFor={id}
-        className={`absolute left-11 -top-2.5 px-1.5 text-[11px] font-semibold uppercase tracking-wider transition-all duration-200 ${
+        className={`absolute left-10 -top-2.5 px-1.5 text-[11px] font-semibold uppercase tracking-wider bg-white dark:bg-[#18181B] transition-all duration-200 z-10 ${
           focused || hasValue
-            ? 'opacity-100 translate-y-0 text-zinc-500 dark:text-zinc-400'
+            ? 'opacity-100 translate-y-0 text-zinc-700 dark:text-zinc-300'
             : 'opacity-0 translate-y-2 pointer-events-none'
         }`}
-        style={{ backgroundColor: 'inherit' }}
       >
         {label}{required && ' *'}
       </label>
@@ -52,27 +51,54 @@ const InputField = ({
   );
 };
 
+const parsePrice = (val: any): number => {
+  if (typeof val === 'number') return isNaN(val) ? 0 : val;
+  if (!val) return 0;
+  const cleaned = String(val).replace(/[^0-9.]/g, '');
+  const num = parseFloat(cleaned);
+  return isNaN(num) ? 0 : num;
+};
+
 const ShippingPage = () => {
   const cart = useSelector((state: RootState) => state.cart);
-  const { shippingAddress, totalPrice } = cart;
+  const { userInfo } = useSelector((state: RootState) => state.auth);
+  const { shippingAddress } = cart;
   const navigate = useNavigate();
 
+  const calculatedItemsPrice = cart.itemsPrice > 0
+    ? cart.itemsPrice
+    : (cart.cartItems || []).reduce((acc: number, item: any) => acc + Math.round(parsePrice(item.price)) * item.qty, 0);
+
   useEffect(() => {
-    if (totalPrice < 50000) {
+    if (!cart.cartItems || cart.cartItems.length === 0) {
+      navigate('/cart');
+    } else if (calculatedItemsPrice < 50000) {
       navigate('/cart');
     }
-  }, [totalPrice, navigate]);
+  }, [cart.cartItems, calculatedItemsPrice, navigate]);
 
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
+  const [firstName, setFirstName] = useState(() => {
+    if (userInfo?.name) {
+      const parts = userInfo.name.trim().split(/\s+/);
+      return parts[0] || '';
+    }
+    return '';
+  });
+  const [lastName, setLastName] = useState(() => {
+    if (userInfo?.name) {
+      const parts = userInfo.name.trim().split(/\s+/);
+      return parts.slice(1).join(' ') || '';
+    }
+    return '';
+  });
+  const [email, setEmail] = useState(() => userInfo?.email || '');
   const [address, setAddress] = useState(shippingAddress.address || '');
   const [address2, setAddress2] = useState('');
   const [city, setCity] = useState(shippingAddress.city || '');
   const [state, setState] = useState('');
   const [postalCode, setPostalCode] = useState(shippingAddress.postalCode || '');
   const [country, setCountry] = useState(shippingAddress.country || 'India');
-  const [phone, setPhone] = useState(shippingAddress.phone || '');
+  const [phone, setPhone] = useState(shippingAddress.phone || userInfo?.phone || '');
 
   const dispatch = useDispatch();
 

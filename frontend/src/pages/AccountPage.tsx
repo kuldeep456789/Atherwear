@@ -7,7 +7,7 @@ import { toggleWishlist } from '../store/slices/wishlistSlice';
 import { addToCart, saveShippingAddress } from '../store/slices/cartSlice';
 import { useGetUserOrdersQuery } from '../store/slices/orderApiSlice';
 import { useGetMyReturnsQuery } from '../store/slices/returnApiSlice';
-import { Package, User, MapPin, Heart, Settings, LogOut, ChevronRight, ShoppingBag, Clock, CheckCircle, XCircle, Trash2, Plus, Pencil, Bell, Shield, Moon, Sun, Mail, Phone, MapPinHouse, Truck, RotateCcw } from 'lucide-react';
+import { Package, User, MapPin, Heart, Settings, LogOut, ChevronRight, ShoppingBag, Clock, CheckCircle, XCircle, Trash2, Plus, Pencil, Bell, Shield, Moon, Sun, Mail, Phone, MapPinHouse, Truck, RotateCcw, Camera } from 'lucide-react';
 import { formatINR } from '../lib/currency';
 import { useTheme } from '../context/ThemeContext';
 import EditProfileModal from '../components/profile/EditProfileModal';
@@ -215,24 +215,35 @@ const AccountPage = () => {
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-[#0F0F10]">
       {/* ── Profile Header ── */}
-      <div className="bg-gradient-to-r from-zinc-900 via-zinc-800 to-zinc-900 dark:from-[#18181B] dark:via-[#1f1f23] dark:to-[#18181B] border-b border-zinc-200 dark:border-[#2A2A2A]">
+      <div className="bg-white dark:bg-gradient-to-r dark:from-[#18181B] dark:via-[#1f1f23] dark:to-[#18181B] border-b border-zinc-200 dark:border-[#2A2A2A] transition-colors duration-200">
         <div className="mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 sm:gap-6">
             {/* Avatar */}
-            <div className="relative shrink-0">
-              <div className="w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-full bg-white/15 flex items-center justify-center text-white text-2xl sm:text-3xl font-bold border-2 border-white/20 shadow-lg backdrop-blur-sm">
-                {(userInfo.name?.[0] || userInfo.firstName?.[0] || userInfo.email?.[0] || 'U').toUpperCase()}
+            <div className="relative shrink-0 group cursor-pointer" onClick={() => setShowEditModal(true)} title="Click to upload profile photo">
+              <div className="w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-full bg-zinc-100 dark:bg-white/15 flex items-center justify-center text-zinc-900 dark:text-white text-2xl sm:text-3xl font-bold border-2 border-zinc-200 dark:border-white/20 shadow-md backdrop-blur-sm overflow-hidden relative transition-colors duration-200">
+                {(userInfo.avatar || (userInfo as any).image || userInfo.profileImage) ? (
+                  <img
+                    src={userInfo.avatar || (userInfo as any).image || userInfo.profileImage}
+                    alt={userInfo.name || 'User Avatar'}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  (userInfo.name?.[0] || userInfo.firstName?.[0] || userInfo.email?.[0] || 'U').toUpperCase()
+                )}
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                  <Camera size={20} />
+                </div>
               </div>
-              <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-emerald-500 border-2 border-zinc-900 dark:border-[#18181B] flex items-center justify-center">
+              <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-emerald-500 border-2 border-white dark:border-[#18181B] flex items-center justify-center">
                 <CheckCircle size={10} className="text-white" strokeWidth={3} />
               </div>
             </div>
             {/* Info */}
             <div className="flex-1 min-w-0">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-zinc-900 dark:text-white tracking-tight">
                 {userInfo.name || `${userInfo.firstName || ''} ${userInfo.lastName || ''}`.trim()}
               </h1>
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-sm text-white/70">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-sm text-zinc-600 dark:text-white/70">
                 <span className="flex items-center gap-1.5">
                   <Mail size={14} strokeWidth={1.5} />
                   {userInfo.email}
@@ -243,10 +254,6 @@ const AccountPage = () => {
                     {userInfo.phone}
                   </span>
                 )}
-                <span className="flex items-center gap-1.5">
-                  <Clock size={14} strokeWidth={1.5} />
-                  Member since {memberSince}
-                </span>
               </div>
             </div>
           </div>
