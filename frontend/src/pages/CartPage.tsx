@@ -27,9 +27,9 @@ const getItemDescription = (name: string) => {
   if (n.includes('jacket') || n.includes('coat') || n.includes('hoodie') || n.includes('sweater')) {
     return { desc: "Weather-ready outerwear with superior thermal insulation.", fact: "Fun Fact: The modern zipper was first used widely on jackets in the 1930s." };
   }
-  if (n.includes('shoe') || n.includes('sneaker') || n.includes('boot')) {
-    return { desc: "Ergonomic footwear designed for maximum support and style.", fact: "Fun Fact: Sneakers got their name because their rubber soles make them quiet." };
-  }
+  // if (n.includes('shoe') || n.includes('sneaker') || n.includes('boot')) {
+  //   return { desc: "Ergonomic footwear designed for maximum support and style.", fact: "Fun Fact: Sneakers got their name because their rubber soles make them quiet." };
+  // }
   return { desc: "High-quality material offering a perfect blend of style and durability.", fact: "Fun Fact: Fashion is one of the world's oldest and largest industries." };
 };
 
@@ -217,7 +217,7 @@ const CartPage = () => {
                               <span>Color: <span className="text-[hsl(var(--foreground))] font-medium">{item.variant.color}</span></span>
                               <span>Size: <span className="text-[hsl(var(--foreground))] font-medium">{item.variant.size}</span></span>
                             </div>
-                            
+
                             {/* Description & Fact */}
                             {(() => {
                               const info = getItemDescription(item.name);
@@ -262,11 +262,10 @@ const CartPage = () => {
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => moveToWishlistHandler(item)}
-                              className={`flex items-center gap-1.5 h-9 px-3 rounded-full border transition-all duration-200 cursor-pointer text-[12px] font-semibold ${
-                                isItemWishlisted(item._id)
+                              className={`flex items-center gap-1.5 h-9 px-3 rounded-full border transition-all duration-200 cursor-pointer text-[12px] font-semibold ${isItemWishlisted(item._id)
                                   ? 'border-red-200 dark:border-red-900 text-red-500 bg-red-50 dark:bg-red-950/20'
                                   : 'border-zinc-200 dark:border-zinc-700 text-zinc-500 hover:border-zinc-400 dark:hover:border-zinc-500 hover:text-[hsl(var(--foreground))]'
-                              }`}
+                                }`}
                             >
                               <Heart size={14} strokeWidth={2} fill={isItemWishlisted(item._id) ? 'currentColor' : 'none'} />
                               <span>Wishlist</span>
@@ -439,10 +438,10 @@ const CartPage = () => {
         )}
       </AnimatePresence>
 
-      <MinimumOrderModal 
-        isOpen={isMinOrderModalOpen} 
-        onClose={() => setIsMinOrderModalOpen(false)} 
-        cartTotal={totalPrice} 
+      <MinimumOrderModal
+        isOpen={isMinOrderModalOpen}
+        onClose={() => setIsMinOrderModalOpen(false)}
+        cartTotal={totalPrice}
       />
     </div>
   );
