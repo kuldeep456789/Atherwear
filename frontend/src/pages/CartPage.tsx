@@ -115,7 +115,7 @@ const CartPage = () => {
   };
 
   const checkoutHandler = () => {
-    if (totalPrice < 50000) {
+    if (itemsPrice < 50000) {
       setIsMinOrderModalOpen(true);
       return;
     }
@@ -173,32 +173,12 @@ const CartPage = () => {
                   {cartItems.reduce((sum, i) => sum + i.qty, 0)} {cartItems.reduce((sum, i) => sum + i.qty, 0) === 1 ? 'Item' : 'Items'}
                 </p>
               </div>
-              <Link to="/collections" className="hidden sm:flex items-center gap-1 text-[13px] font-semibold text-zinc-500 hover:text-[hsl(var(--foreground))] transition-colors">
+              <Link to="/collections/men" className="flex items-center gap-1 text-[13px] font-semibold text-zinc-500 hover:text-[hsl(var(--foreground))] cursor-pointer transition-colors">
                 Continue Shopping <ChevronRight size={14} strokeWidth={2} />
               </Link>
             </div>
 
-            {/* Free Shipping Progress */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-[hsl(var(--card))] border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 mb-8">
-              <div className="flex items-center gap-2.5 mb-2.5">
-                <Truck className="w-[18px] h-[18px] text-zinc-500 shrink-0" strokeWidth={1.5} />
-                <span className="text-[13px] font-medium text-zinc-600 dark:text-zinc-400">
-                  {shippingStatus.free ? (
-                    <span className="text-green-600 dark:text-green-400 font-bold">{shippingStatus.msg}</span>
-                  ) : (
-                    shippingStatus.msg
-                  )}
-                </span>
-              </div>
-              <div className="w-full h-[6px] rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden">
-                <motion.div
-                  className="h-full rounded-full bg-zinc-900 dark:bg-zinc-100"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${shippingStatus.pct}%` }}
-                  transition={{ duration: 0.6, ease: 'easeOut' }}
-                />
-              </div>
-            </motion.div>
+
 
             <div className="flex flex-col lg:flex-row gap-8 lg:gap-10 items-start">
               {/* Left Column — Cart Items (70%) */}
@@ -289,11 +269,12 @@ const CartPage = () => {
                               }`}
                             >
                               <Heart size={14} strokeWidth={2} fill={isItemWishlisted(item._id) ? 'currentColor' : 'none'} />
-                              <span className="hidden sm:inline">Wishlist</span>
+                              <span>Wishlist</span>
                             </button>
                             <button
-                              onClick={() => setRemoveConfirm(`${item._id}-${item.variant.size}-${item.variant.color}`)}
+                              onClick={() => removeFromCartHandler(item._id, item.variant.size, item.variant.color)}
                               className="w-9 h-9 rounded-full flex items-center justify-center text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all duration-200 cursor-pointer"
+                              title="Remove item"
                             >
                               <Trash2 size={16} strokeWidth={1.5} />
                             </button>
@@ -325,12 +306,7 @@ const CartPage = () => {
                     <Percent size={16} strokeWidth={1.5} className="text-zinc-500" /> Offers & Coupons
                   </h3>
 
-                  {totalSavings > 0 && (
-                    <div className="flex items-center gap-2 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900/30 rounded-lg p-3 mb-4">
-                      <Tag size={16} className="text-green-600 shrink-0" strokeWidth={1.5} />
-                      <span className="text-[13px] font-semibold text-green-700 dark:text-green-400">You're saving {formatINR(totalSavings)} on this order!</span>
-                    </div>
-                  )}
+
 
                   {/* Coupon Input */}
                   <div className="flex gap-2 mb-3">
@@ -359,45 +335,7 @@ const CartPage = () => {
                     </div>
                   )}
 
-                  {/* Coupon List */}
-                  <div className="space-y-2.5 mt-2">
-                    {couponList.map((coupon) => {
-                      const isEligible = itemsPrice >= coupon.min;
-                      const isCurrentlyApplied = cart.appliedCoupon === coupon.code;
-                      return (
-                        <div key={coupon.code} className={`rounded-lg border p-3 transition-all duration-200 ${isCurrentlyApplied ? 'border-green-500 bg-green-50/30 dark:bg-green-950/10' : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500'}`}>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${isCurrentlyApplied ? 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:text-green-200 dark:border-green-800' : 'bg-zinc-100 text-zinc-800 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700'}`}>
-                                {coupon.code}
-                              </span>
-                              {!isEligible && (
-                                <span className="text-[10px] text-zinc-400">Min: {formatINR(coupon.min)}</span>
-                              )}
-                            </div>
-                            {isCurrentlyApplied ? (
-                              <span className="text-[11px] font-bold text-green-600 dark:text-green-400 flex items-center gap-1">
-                                <Check size={14} strokeWidth={2.5} /> APPLIED
-                              </span>
-                            ) : (
-                              <button
-                                onClick={() => handleApplyCoupon(coupon.code)}
-                                disabled={!isEligible || !!cart.appliedCoupon}
-                                className={`text-[11px] font-bold transition-all px-3 py-1.5 rounded-lg border cursor-pointer ${
-                                  !isEligible || !!cart.appliedCoupon
-                                    ? 'opacity-40 border-zinc-200 dark:border-zinc-700 text-zinc-400 cursor-not-allowed'
-                                    : 'border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100 hover:bg-zinc-900 hover:text-white dark:hover:bg-zinc-100 dark:hover:text-black'
-                                }`}
-                              >
-                                Apply
-                              </button>
-                            )}
-                          </div>
-                          <p className="text-[11px] text-zinc-500 mt-1">{coupon.desc}</p>
-                        </div>
-                      );
-                    })}
-                  </div>
+
                 </div>
 
                 {/* Order Summary */}

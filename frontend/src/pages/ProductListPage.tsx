@@ -101,10 +101,10 @@ const ProductListPage = () => {
       </div>
 
       {/* Page header */}
-      {(!isLoading && sortedProducts.length === 0) ? null : (
+      {(!isLoading && sortedProducts.length === 0) || keyword ? null : (
         <div className="w-full border-b-2 border-black dark:border-white">
-          <div className={`max-w-[1920px] mx-auto px-6 sm:px-10 ${keyword ? 'py-4 sm:py-6' : 'py-10 sm:py-14'}`}>
-            <h1 className={`${keyword ? 'text-3xl sm:text-4xl' : 'text-5xl sm:text-7xl lg:text-8xl'} font-black uppercase tracking-tight text-[hsl(var(--foreground))] leading-none`}>
+          <div className="max-w-[1920px] mx-auto px-6 sm:px-10 py-10 sm:py-14">
+            <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black uppercase tracking-tight text-[hsl(var(--foreground))] leading-none">
               {pageTitle}
             </h1>
           </div>

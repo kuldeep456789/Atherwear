@@ -1,7 +1,7 @@
 import {
   Controller, Get, Post, Patch, Delete,
   Headers, Param, Body, Query,
-  UnauthorizedException, ConflictException, NotFoundException,
+  UnauthorizedException, ConflictException, NotFoundException, BadRequestException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -191,9 +191,12 @@ export class AdminController {
     await this.requireAdmin(authorization);
     const order = await this.orderModel.findById(id).exec();
     if (!order) throw new NotFoundException('Order not found');
-    const validStatuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
-    if (!validStatuses.includes(body.status)) {
-      throw new UnauthorizedException(`Invalid status. Must be one of: ${validStatuses.join(', ')}`);
+    if (!body || !body.status) throw new BadRequestException('Status is required');
+    
+    const statusLower = String(body.status).toLowerCase();
+    const validStatuses = ['pending', 'confirmed', 'processing', 'shipped', 'out_for_delivery', 'out for delivery', 'delivered', 'cancelled'];
+    if (!validStatuses.includes(statusLower)) {
+      throw new BadRequestException(`Invalid status. Must be one of: ${validStatuses.join(', ')}`);
     }
     order.status = body.status;
     await order.save();

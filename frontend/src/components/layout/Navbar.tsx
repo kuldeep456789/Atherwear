@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { ShoppingBag, Heart, UserRound, X, Search, Menu, Package, MapPin, Settings, LogOut, Clock, TrendingUp, Loader2, HelpCircle, Shield } from 'lucide-react';
+import { ShoppingBag, Heart, UserRound, X, Search, Menu, Package, MapPin, Settings, LogOut, Clock, TrendingUp, Loader2, HelpCircle, Shield, Mail, Bell } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { RootState } from '../../store/store';
@@ -505,6 +505,7 @@ const Navbar = () => {
                           {[
                             { to: '/account?tab=profile', label: 'My Profile', icon: UserRound },
                             { to: '/account', label: 'My Orders', icon: Package },
+                            { to: '/account?tab=notifications', label: 'Notifications', icon: Bell },
                             { to: '/account?tab=wishlist', label: 'Wishlist', icon: Heart },
                             { to: '/account?tab=addresses', label: 'Saved Addresses', icon: MapPin },
                             { to: '/account?tab=settings', label: 'Settings', icon: Settings },

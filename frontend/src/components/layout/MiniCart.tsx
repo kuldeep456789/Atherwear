@@ -21,7 +21,7 @@ const MiniCart = ({ isOpen, onClose }: MiniCartProps) => {
   const [isMinOrderModalOpen, setIsMinOrderModalOpen] = useState(false);
 
   const handleCheckout = () => {
-    if (totalPrice < 50000) {
+    if (itemsPrice < 50000) {
       setIsMinOrderModalOpen(true);
       return;
     }

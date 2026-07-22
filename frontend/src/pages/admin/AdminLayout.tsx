@@ -13,6 +13,7 @@ const navItems = [
   { to: '/admin/users', label: 'Customers', icon: Users },
   { to: '/admin/commission-finance', label: 'Finance', icon: Banknote },
   { to: '/admin/returns', label: 'Return Requests', icon: RotateCcw },
+  { to: '/admin/messages', label: 'Messages', icon: MessageSquare },
   { to: '/admin/hero-banner', label: 'Settings', icon: Settings },
 ];
 

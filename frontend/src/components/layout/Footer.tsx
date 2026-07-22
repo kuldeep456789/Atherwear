@@ -56,11 +56,6 @@ const Footer = () => {
                     Support
                   </Link>
                 </li>
-                <li>
-                  <Link to="/faq" className="text-zinc-400 hover:text-white transition-colors duration-200 block py-1">
-                    FAQs
-                  </Link>
-                </li>
               </ul>
             </div>
           </div>

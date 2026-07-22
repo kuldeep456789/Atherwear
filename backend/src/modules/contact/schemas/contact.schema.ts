@@ -14,6 +14,15 @@ export class Contact extends Document {
 
   @Prop({ required: true })
   message: string;
+
+  @Prop({ default: 'pending', enum: ['pending', 'resolved'] })
+  status: string;
+
+  @Prop()
+  adminReply: string;
+
+  @Prop()
+  repliedAt: Date;
 }
 
 export const ContactSchema = SchemaFactory.createForClass(Contact);

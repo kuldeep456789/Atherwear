@@ -163,6 +163,10 @@ const cartSlice = createSlice({
     },
     clearCartItems: (state) => {
       state.cartItems = [];
+      state.appliedCoupon = '';
+      state.couponDiscount = 0;
+      localStorage.removeItem('appliedCoupon');
+      localStorage.removeItem('couponDiscount');
       updateCart(state);
     },
     applyCoupon: (state, action: PayloadAction<string>) => {

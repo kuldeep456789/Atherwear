@@ -1,4 +1,4 @@
-import { Controller, Post, Body, BadRequestException, Get } from '@nestjs/common';
+import { Controller, Post, Body, BadRequestException, Get, Patch, Param } from '@nestjs/common';
 import { ContactService } from './contact.service';
 
 @Controller('contact')
@@ -18,5 +18,37 @@ export class ContactController {
   @Get()
   async getMessages() {
     return this.contactService.findAll();
+  }
+
+  @Get('user/:email')
+  async getUserMessages(@Param('email') email: string) {
+    if (!email) {
+      throw new BadRequestException('Email is required');
+    }
+    return this.contactService.findByEmail(email);
+  }
+
+  @Patch(':id/status')
+  @Post(':id/status')
+  async updateStatus(
+    @Param('id') id: string,
+    @Body() body: { status: string }
+  ) {
+    if (!body.status) {
+      throw new BadRequestException('Status is required');
+    }
+    return this.contactService.updateStatus(id, body.status);
+  }
+
+  @Patch(':id/reply')
+  @Post(':id/reply')
+  async replyMessage(
+    @Param('id') id: string,
+    @Body() body: { adminReply: string; status?: string }
+  ) {
+    if (!body.adminReply) {
+      throw new BadRequestException('Reply text is required');
+    }
+    return this.contactService.replyMessage(id, body.adminReply, body.status || 'resolved');
   }
 }

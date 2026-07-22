@@ -287,43 +287,7 @@ const OrderTrackingPage = () => {
               </div>
             </motion.div>
 
-            {/* Additional Information */}
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: loaded ? 1 : 0 }}
-              transition={{ duration: 0.4, delay: 0.3 }}
-              className="rounded-2xl border border-zinc-200 dark:border-[#2A2A2A] bg-white dark:bg-[#18181B] overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-250"
-            >
-              <div className="px-6 sm:px-8 py-5 border-b border-zinc-100 dark:border-zinc-800">
-                <h2 className="text-[16px] font-bold text-zinc-900 dark:text-white flex items-center gap-2">
-                  <MapPin size={18} className="text-zinc-400" strokeWidth={1.5} />
-                  Additional Information
-                </h2>
-              </div>
-              <div className="px-6 sm:px-8 py-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2">Shipping Address</p>
-                  <div className="text-[14px] text-zinc-700 dark:text-zinc-300 leading-relaxed">
-                    <p className="font-semibold">VASTRA Customer</p>
-                    <p>HSR Layout, Sector 3</p>
-                    <p>Bangalore, Karnataka 560102</p>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2">Payment Method</p>
-                  <p className="text-[14px] font-semibold text-zinc-900 dark:text-white capitalize mb-2">{paymentLabel}</p>
-                  <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-3 py-1 rounded-full border ${
-                    isPaid
-                      ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
-                      : 'bg-yellow-50 dark:bg-yellow-950/20 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800'
-                  }`}>
-                    {isPaid ? <><CheckCircle size={12} strokeWidth={2.5} /> PAID</> : 'PENDING'}
-                  </span>
-                </div>
-              </div>
-            </motion.div>
-
-          </div>
+            </div>
 
           {/* Right Column - 35% */}
           <div className="w-full lg:w-[35%] space-y-6">
@@ -355,50 +319,9 @@ const OrderTrackingPage = () => {
                   <span className="text-zinc-500 dark:text-zinc-400">Subtotal</span>
                   <span className="font-semibold text-zinc-900 dark:text-white">{formatINR(totalItemsPrice)}</span>
                 </div>
-                <div className="flex items-center justify-between text-[14px]">
-                  <span className="text-zinc-500 dark:text-zinc-400">Shipping</span>
-                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">FREE</span>
-                </div>
-                <div className="flex items-center justify-between text-[14px]">
-                  <span className="text-zinc-500 dark:text-zinc-400">Tax</span>
-                  <span className="font-semibold text-zinc-900 dark:text-white">Included</span>
-                </div>
                 <div className="border-t border-zinc-200 dark:border-zinc-700 pt-3 flex items-center justify-between">
                   <span className="text-[15px] font-bold text-zinc-900 dark:text-white">Total</span>
                   <span className="text-[22px] font-bold text-zinc-900 dark:text-white tracking-tight">{formatINR(totalItemsPrice)}</span>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Delivery Card */}
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: loaded ? 1 : 0 }}
-              transition={{ duration: 0.4, delay: 0.35 }}
-              className="rounded-2xl border border-zinc-200 dark:border-[#2A2A2A] bg-white dark:bg-[#18181B] p-6 shadow-sm hover:shadow-md transition-shadow duration-250"
-            >
-              <h2 className="text-[16px] font-bold text-zinc-900 dark:text-white flex items-center gap-2 mb-5">
-                <Truck size={18} className="text-zinc-400" strokeWidth={1.5} />
-                Delivery Details
-              </h2>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-[13px] text-zinc-500 dark:text-zinc-400">Courier</span>
-                  <span className="text-[13px] font-semibold text-zinc-900 dark:text-white">Blue Dart</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[13px] text-zinc-500 dark:text-zinc-400">Tracking</span>
-                  <span className="text-[13px] font-semibold font-mono text-zinc-900 dark:text-white tracking-wider select-all">BD{order._id.slice(-9).toUpperCase()}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[13px] text-zinc-500 dark:text-zinc-400">Estimated</span>
-                  <span className="text-[13px] font-semibold text-zinc-900 dark:text-white">
-                    {new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[13px] text-zinc-500 dark:text-zinc-400">Destination</span>
-                  <span className="text-[13px] font-semibold text-zinc-900 dark:text-white">Bangalore</span>
                 </div>
               </div>
             </motion.div>

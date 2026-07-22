@@ -2,18 +2,28 @@ import { useState, useEffect, useCallback } from 'react';
 import { Search, Package, MoreVertical, Download, RefreshCw } from 'lucide-react';
 import { adminApi, type AdminOrder } from '../../services/adminApi';
 
-const statusFilters = ['All', 'Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
+const statusFilters = ['All', 'Pending', 'Confirmed', 'Processing', 'Shipped', 'Out For Delivery', 'Delivered'];
 const statusColors: Record<string, string> = {
   pending: 'bg-orange-100 text-orange-700',
+  confirmed: 'bg-teal-100 text-teal-700',
   processing: 'bg-blue-100 text-blue-700',
   shipped: 'bg-indigo-100 text-indigo-700',
+  out_for_delivery: 'bg-purple-100 text-purple-700',
+  'out for delivery': 'bg-purple-100 text-purple-700',
   delivered: 'bg-emerald-100 text-emerald-700',
   cancelled: 'bg-red-100 text-red-700',
   paid: 'bg-green-100 text-green-700',
   unpaid: 'bg-gray-100 text-gray-700',
 };
 
-const orderStatuses = ['pending', 'processing', 'shipped', 'delivered'];
+const orderStatusOptions = [
+  { value: 'pending', label: 'Pending' },
+  { value: 'confirmed', label: 'Confirmed' },
+  { value: 'processing', label: 'Processing' },
+  { value: 'shipped', label: 'Shipped' },
+  { value: 'out_for_delivery', label: 'Out For Delivery' },
+  { value: 'delivered', label: 'Delivered' },
+];
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState<AdminOrder[]>([]);
@@ -173,12 +183,12 @@ export default function AdminOrders() {
                           <div className="w-5 h-5 border-2 border-[#0050cb] border-t-transparent rounded-full animate-spin" />
                         ) : (
                           <select
-                            value={order.status}
+                            value={(order.status || 'pending').toLowerCase()}
                             onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                            className="text-sm border border-gray-200 rounded px-3 py-1.5 w-36 bg-white text-gray-900 focus:outline-none focus:ring-1 focus:ring-[#0050cb] cursor-pointer"
+                            className="text-sm border border-gray-200 rounded px-3 py-1.5 w-44 bg-white text-gray-900 focus:outline-none focus:ring-1 focus:ring-[#0050cb] cursor-pointer"
                           >
-                            {orderStatuses.map(s => (
-                              <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+                            {orderStatusOptions.map(opt => (
+                              <option key={opt.value} value={opt.value}>{opt.label}</option>
                             ))}
                           </select>
                         )}

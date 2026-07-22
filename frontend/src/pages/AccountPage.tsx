@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '../store/store';
 import { logout } from '../store/slices/authSlice';
 import { toggleWishlist } from '../store/slices/wishlistSlice';
-import { addToCart } from '../store/slices/cartSlice';
+import { addToCart, saveShippingAddress } from '../store/slices/cartSlice';
 import { useGetUserOrdersQuery } from '../store/slices/orderApiSlice';
 import { useGetMyReturnsQuery } from '../store/slices/returnApiSlice';
 import { Package, User, MapPin, Heart, Settings, LogOut, ChevronRight, ShoppingBag, Clock, CheckCircle, XCircle, Trash2, Plus, Pencil, Bell, Shield, Moon, Sun, Mail, Phone, MapPinHouse, Truck, RotateCcw } from 'lucide-react';
@@ -17,6 +17,7 @@ import toast from 'react-hot-toast';
 
 const tabs = [
   { id: 'orders', label: 'Orders', icon: Package },
+  { id: 'notifications', label: 'Admin Messages', icon: Bell },
   { id: 'profile', label: 'Profile', icon: User },
   { id: 'addresses', label: 'Addresses', icon: MapPin },
   { id: 'wishlist', label: 'Wishlist', icon: Heart },
@@ -24,13 +25,13 @@ const tabs = [
 ] as const;
 
 const statusConfig: Record<string, { label: string; color: string; bg: string; icon: typeof Clock }> = {
-  pending:   { label: 'Payment Pending', color: 'text-yellow-700 dark:text-yellow-300', bg: 'bg-yellow-50 dark:bg-yellow-950/30 border-yellow-200 dark:border-yellow-800', icon: Clock },
-  processing:{ label: 'Processing',      color: 'text-blue-700 dark:text-blue-300',     bg: 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800',       icon: Package },
-  shipped:   { label: 'Shipped',         color: 'text-purple-700 dark:text-purple-300', bg: 'bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800', icon: Truck },
-  delivered: { label: 'Delivered',       color: 'text-green-700 dark:text-green-300',   bg: 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800',   icon: CheckCircle },
-  confirmed: { label: 'Confirmed',       color: 'text-blue-700 dark:text-blue-300',     bg: 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800',       icon: CheckCircle },
-  cancelled: { label: 'Cancelled',       color: 'text-red-700 dark:text-red-300',       bg: 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800',           icon: XCircle },
-  refunded:  { label: 'Refunded',        color: 'text-orange-700 dark:text-orange-300', bg: 'bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-800', icon: RotateCcw },
+  pending: { label: 'Payment Pending', color: 'text-yellow-700 dark:text-yellow-300', bg: 'bg-yellow-50 dark:bg-yellow-950/30 border-yellow-200 dark:border-yellow-800', icon: Clock },
+  processing: { label: 'Processing', color: 'text-blue-700 dark:text-blue-300', bg: 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800', icon: Package },
+  shipped: { label: 'Shipped', color: 'text-purple-700 dark:text-purple-300', bg: 'bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800', icon: Truck },
+  delivered: { label: 'Delivered', color: 'text-green-700 dark:text-green-300', bg: 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800', icon: CheckCircle },
+  confirmed: { label: 'Confirmed', color: 'text-blue-700 dark:text-blue-300', bg: 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800', icon: CheckCircle },
+  cancelled: { label: 'Cancelled', color: 'text-red-700 dark:text-red-300', bg: 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800', icon: XCircle },
+  refunded: { label: 'Refunded', color: 'text-orange-700 dark:text-orange-300', bg: 'bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-800', icon: RotateCcw },
 };
 
 const PAGE_SIZE = 5;
@@ -47,9 +48,9 @@ const AccountPage = () => {
   const prevTabRef = useRef(activeTab);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [showAddress, setShowAddress] = useState(true);
   const [showEditAddressModal, setShowEditAddressModal] = useState(false);
-  const [addressInfo, setAddressInfo] = useState<AddressData>({
+  const [addressModalTitle, setAddressModalTitle] = useState('Edit Address');
+  const [selectedAddress, setSelectedAddress] = useState<AddressData>({
     name: 'Kuldeep Vyas',
     line1: '19 Residency Road',
     line2: 'Bengaluru, Karnataka 560025',
@@ -57,8 +58,138 @@ const AccountPage = () => {
     phone: '+91 98765 43210'
   });
 
+  const [addressList, setAddressList] = useState<AddressData[]>(() => {
+    const saved = localStorage.getItem('savedAddresses');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch { }
+    }
+    return [
+      {
+        id: 'addr_1',
+        tag: 'HOME',
+        name: 'Kuldeep Vyas',
+        line1: '19 Residency Road',
+        line2: 'Bengaluru, Karnataka 560025',
+        country: 'India',
+        phone: '+91 98765 43210',
+        isDefault: true,
+      },
+    ];
+  });
+
+  const saveAddressList = (newAddresses: AddressData[]) => {
+    setAddressList(newAddresses);
+    localStorage.setItem('savedAddresses', JSON.stringify(newAddresses));
+  };
+
+  const handleOpenAddAddress = () => {
+    setSelectedAddress({
+      id: `addr_${Date.now()}`,
+      tag: 'HOME',
+      name: userInfo?.name || `${userInfo?.firstName || ''} ${userInfo?.lastName || ''}`.trim() || 'Kuldeep Vyas',
+      line1: '',
+      line2: '',
+      country: 'India',
+      phone: userInfo?.phone || '',
+      isDefault: addressList.length === 0,
+    });
+    setAddressModalTitle('Add New Address');
+    setShowEditAddressModal(true);
+  };
+
+  const handleOpenEditAddress = (addr: AddressData) => {
+    setSelectedAddress(addr);
+    setAddressModalTitle('Edit Address');
+    setShowEditAddressModal(true);
+  };
+
+  const handleSaveAddress = (savedAddr: AddressData) => {
+    let updated: AddressData[];
+    const exists = addressList.some((a) => a.id === savedAddr.id);
+
+    if (exists) {
+      updated = addressList.map((a) => (a.id === savedAddr.id ? savedAddr : a));
+    } else {
+      updated = [...addressList, savedAddr];
+    }
+
+    if (savedAddr.isDefault) {
+      updated = updated.map((a) => ({
+        ...a,
+        isDefault: a.id === savedAddr.id,
+      }));
+
+      const defaultShipping = {
+        name: savedAddr.name,
+        address: savedAddr.line1,
+        city: savedAddr.line2,
+        postalCode: '',
+        country: savedAddr.country,
+        phone: savedAddr.phone,
+      };
+      dispatch(saveShippingAddress(defaultShipping));
+    }
+
+    saveAddressList(updated);
+    toast.success(savedAddr.isDefault ? 'Set as default address!' : 'Address saved successfully!');
+  };
+
+  const handleDeleteAddress = (id?: string) => {
+    if (!id) return;
+    const updated = addressList.filter((a) => a.id !== id);
+    if (updated.length > 0 && !updated.some((a) => a.isDefault)) {
+      updated[0].isDefault = true;
+    }
+    saveAddressList(updated);
+    toast.success('Address deleted successfully!');
+  };
+
   const { data: allOrders = [], isLoading: ordersLoading } = useGetUserOrdersQuery(undefined);
   const { data: myReturns = [] } = useGetMyReturnsQuery(undefined, { skip: !userInfo, pollingInterval: 3000 });
+
+  const [userMessages, setUserMessages] = useState<any[]>([]);
+  const [loadingMessages, setLoadingMessages] = useState(false);
+
+  useEffect(() => {
+    if ((activeTab === 'notifications' || activeTab === 'messages') && userInfo?.email) {
+      setLoadingMessages(true);
+      const email = userInfo.email.trim().toLowerCase();
+
+      fetch(`/api/contact/user/${encodeURIComponent(email)}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (Array.isArray(data) && data.length > 0) {
+            setUserMessages(data);
+          } else {
+            // Fallback: fetch all contact messages & filter locally
+            fetch('/api/contact')
+              .then((res) => res.json())
+              .then((all) => {
+                if (Array.isArray(all)) {
+                  const filtered = all.filter((m: any) =>
+                    (m.email || '').toLowerCase().includes(email) ||
+                    (m.name || '').toLowerCase().includes((userInfo.firstName || '').toLowerCase())
+                  );
+                  setUserMessages(filtered.length > 0 ? filtered : all);
+                } else {
+                  setUserMessages([]);
+                }
+              })
+              .catch(() => setUserMessages([]));
+          }
+        })
+        .catch(() => {
+          // Additional fallback if endpoint fails
+          fetch('/api/contact')
+            .then((res) => res.json())
+            .then((all) => setUserMessages(Array.isArray(all) ? all : []))
+            .catch(() => setUserMessages([]));
+        })
+        .finally(() => setLoadingMessages(false));
+    }
+  }, [activeTab, userInfo?.email, userInfo?.firstName]);
 
   useEffect(() => {
     if (prevTabRef.current !== activeTab) {
@@ -145,11 +276,10 @@ const AccountPage = () => {
                 <button
                   key={tab.id}
                   onClick={() => setTab(tab.id)}
-                  className={`relative shrink-0 flex items-center gap-2 sm:gap-3.5 rounded-xl px-4 py-3 sm:py-3.5 text-[14px] sm:text-[15px] font-medium transition-all duration-200 group ${
-                    isActive
-                      ? 'bg-white dark:bg-[#18181B] text-zinc-900 dark:text-white shadow-sm border border-zinc-200 dark:border-[#2A2A2A]'
-                      : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-[#18181B]/60 border border-transparent'
-                  }`}
+                  className={`relative shrink-0 flex items-center gap-2 sm:gap-3.5 rounded-xl px-4 py-3 sm:py-3.5 text-[14px] sm:text-[15px] font-medium transition-all duration-200 group ${isActive
+                    ? 'bg-white dark:bg-[#18181B] text-zinc-900 dark:text-white shadow-sm border border-zinc-200 dark:border-[#2A2A2A]'
+                    : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-[#18181B]/60 border border-transparent'
+                    }`}
                 >
                   {/* Left accent bar (Desktop) / Bottom accent (Mobile) */}
                   {isActive && (
@@ -161,11 +291,10 @@ const AccountPage = () => {
                   <Icon size={18} className="lg:w-[22px] lg:h-[22px]" strokeWidth={isActive ? 2 : 1.5} />
                   <span className="whitespace-nowrap">{tab.label}</span>
                   {tab.id === 'wishlist' && wishlistItems.length > 0 && (
-                    <span className={`ml-1 lg:ml-auto rounded-full px-2 py-0.5 text-[10px] sm:text-[11px] font-bold transition-all ${
-                      isActive
-                        ? 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-900'
-                        : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300'
-                    }`}>
+                    <span className={`ml-1 lg:ml-auto rounded-full px-2 py-0.5 text-[10px] sm:text-[11px] font-bold transition-all ${isActive
+                      ? 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-900'
+                      : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300'
+                      }`}>
                       {wishlistItems.length}
                     </span>
                   )}
@@ -305,11 +434,10 @@ const AccountPage = () => {
                             <button
                               key={p}
                               onClick={() => setPage(p)}
-                              className={`w-11 h-11 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                                p === page
-                                  ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 shadow-sm'
-                                  : 'border border-zinc-200 dark:border-[#2A2A2A] bg-white dark:bg-[#18181B] text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800'
-                              }`}
+                              className={`w-11 h-11 rounded-xl text-sm font-semibold transition-all duration-200 ${p === page
+                                ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 shadow-sm'
+                                : 'border border-zinc-200 dark:border-[#2A2A2A] bg-white dark:bg-[#18181B] text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800'
+                                }`}
                             >
                               {p}
                             </button>
@@ -403,40 +531,70 @@ const AccountPage = () => {
                     <h2 className="text-[26px] sm:text-[30px] font-bold text-zinc-900 dark:text-white tracking-tight">Addresses</h2>
                   </div>
 
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    {showAddress && (
-                      <div className="rounded-2xl border border-zinc-200 dark:border-[#2A2A2A] bg-white dark:bg-[#18181B] p-6 hover:border-zinc-300 dark:hover:border-zinc-600 hover:shadow-lg dark:hover:shadow-[0_8px_30px_rgba(0,0,0,0.4)] transition-all duration-250">
-                      <div className="flex items-start justify-between mb-3">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-[12px] font-semibold text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
-                          <MapPinHouse size={13} strokeWidth={2} />
-                          HOME
-                        </span>
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/30 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/30">
-                          <CheckCircle size={10} strokeWidth={3} />
-                          DEFAULT
-                        </span>
-                      </div>
-                      <p className="text-[15px] font-semibold text-zinc-900 dark:text-white">{addressInfo.name}</p>
-                      <p className="mt-1.5 text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                        {addressInfo.line1}<br />
-                        {addressInfo.line2}<br />
-                        {addressInfo.country}
-                      </p>
-                      <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">{addressInfo.phone}</p>
-                      <div className="flex gap-2 mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
-                        <button onClick={() => setShowEditAddressModal(true)} className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg text-[13px] font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all duration-200">
-                          <Pencil size={14} strokeWidth={1.5} />
-                          Edit
-                        </button>
-                        <button onClick={() => { setShowAddress(false); toast.success('Address deleted successfully!'); }} className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg text-[13px] font-semibold text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all duration-200">
-                          <Trash2 size={14} strokeWidth={1.5} />
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                    )}
+                  <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+                    {addressList.map((addr) => (
+                      <div
+                        key={addr.id}
+                        className="rounded-2xl border border-zinc-200 dark:border-[#2A2A2A] bg-white dark:bg-[#18181B] p-6 hover:border-zinc-300 dark:hover:border-zinc-600 hover:shadow-lg dark:hover:shadow-[0_8px_30px_rgba(0,0,0,0.4)] transition-all duration-250 flex flex-col justify-between"
+                      >
+                        <div>
+                          {addr.isDefault && (
+                            <div className="flex justify-end mb-3">
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/30 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/30">
+                                <CheckCircle size={10} strokeWidth={3} />
+                                DEFAULT
+                              </span>
+                            </div>
+                          )}
+                          <p className="text-[15px] font-semibold text-zinc-900 dark:text-white">{addr.name}</p>
+                          <p className="mt-1.5 text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                            {addr.line1}<br />
+                            {addr.line2}<br />
+                            {addr.country}
+                          </p>
+                          <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">{addr.phone}</p>
+                        </div>
 
+                        <div className="flex flex-wrap items-center justify-between gap-2 mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleOpenEditAddress(addr)}
+                              className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-lg text-[13px] font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all"
+                            >
+                              <Pencil size={14} strokeWidth={1.5} />
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteAddress(addr.id)}
+                              className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-lg text-[13px] font-semibold text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all"
+                            >
+                              <Trash2 size={14} strokeWidth={1.5} />
+                              Delete
+                            </button>
+                          </div>
+                          {!addr.isDefault && (
+                            <button
+                              onClick={() => handleSaveAddress({ ...addr, isDefault: true })}
+                              className="text-xs font-bold text-zinc-500 hover:text-zinc-900 dark:hover:text-white underline decoration-dashed"
+                            >
+                              Set as Default
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
 
+                    {/* Add New Address Card */}
+                    <button
+                      onClick={handleOpenAddAddress}
+                      className="rounded-2xl border-2 border-dashed border-zinc-300 dark:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/20 p-6 flex flex-col items-center justify-center min-h-[220px] hover:border-zinc-900 dark:hover:border-white hover:bg-white dark:hover:bg-zinc-800/50 transition-all duration-250 cursor-pointer group"
+                    >
+                      <div className="w-12 h-12 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                        <Plus className="w-6 h-6 text-zinc-600 dark:text-zinc-300" strokeWidth={2} />
+                      </div>
+                      <span className="text-base font-bold text-zinc-900 dark:text-white">Add New Address</span>
+                      <span className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Add shipping or billing location</span>
+                    </button>
                   </div>
                 </section>
               )}
@@ -540,6 +698,83 @@ const AccountPage = () => {
                 </section>
               )}
 
+              {(activeTab === 'notifications' || activeTab === 'messages') && (
+                <section className="space-y-6">
+                  <div>
+                    <h2 className="text-[26px] sm:text-[30px] font-bold text-zinc-900 dark:text-white tracking-tight flex items-center gap-2">
+                      <Bell className="w-7 h-7 text-amber-500" strokeWidth={2} />
+                      Messages
+                    </h2>
+                  </div>
+
+                  {loadingMessages ? (
+                    <div className="p-12 text-center text-zinc-500">Loading your notifications and admin messages...</div>
+                  ) : userMessages.length === 0 ? (
+                    <div className="rounded-2xl border border-zinc-200 dark:border-[#2A2A2A] bg-white dark:bg-[#18181B] p-12 text-center">
+                      <Bell className="w-10 h-10 text-zinc-300 dark:text-zinc-600 mx-auto mb-3" strokeWidth={1.5} />
+                      <h3 className="text-lg font-bold text-zinc-800 dark:text-zinc-200">No notifications yet</h3>
+                      <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">Messages and resolution replies sent by Admin will appear here.</p>
+                      <Link to="/contact" className="mt-4 inline-block px-5 py-2.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-xs font-bold rounded-xl">
+                        Send Message to Admin
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {userMessages.map((msg: any) => {
+                        const isResolved = msg.status === 'resolved';
+                        return (
+                          <div key={msg._id} className="rounded-2xl border border-zinc-200 dark:border-[#2A2A2A] bg-white dark:bg-[#18181B] p-6 shadow-sm hover:shadow-md transition-all">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                              <h3 className="text-base font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                                {msg.subject}
+                              </h3>
+                              <div className="flex items-center gap-3">
+                                <span className="text-xs text-zinc-400 font-mono">
+                                  {new Date(msg.createdAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
+                                </span>
+                                <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider ${isResolved ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800' : 'bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400 border border-amber-200 dark:border-amber-800'
+                                  }`}>
+                                  {isResolved ? 'Admin Resolved' : 'Pending Response'}
+                                </span>
+                              </div>
+                            </div>
+
+                            <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed bg-zinc-50 dark:bg-zinc-900/50 p-4 rounded-xl border border-zinc-100 dark:border-zinc-800 whitespace-pre-wrap">
+                              {msg.message}
+                            </p>
+
+                            {/* Admin Resolution Response */}
+                            {msg.adminReply ? (
+                              <div className="mt-4 p-4 rounded-xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800">
+                                <div className="flex items-center justify-between mb-1.5">
+                                  <span className="text-xs font-bold text-blue-900 dark:text-blue-200 uppercase tracking-wider flex items-center gap-1.5">
+                                    <CheckCircle size={15} className="text-blue-600 dark:text-blue-400" />
+                                    Admin Message / Response:
+                                  </span>
+                                  {msg.repliedAt && (
+                                    <span className="text-[11px] text-blue-600 dark:text-blue-400 font-mono">
+                                      {new Date(msg.repliedAt).toLocaleString()}
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-sm text-blue-950 dark:text-blue-100 font-medium whitespace-pre-wrap">
+                                  {msg.adminReply}
+                                </p>
+                              </div>
+                            ) : (
+                              <div className="mt-3 flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400 font-medium">
+                                <Clock size={14} />
+                                <span>Message sent to Admin. You will receive a resolution notification here once Admin responds.</span>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </section>
+              )}
+
               {activeTab === 'settings' && (
                 <section className="space-y-6">
                   <h2 className="text-[26px] sm:text-[30px] font-bold text-zinc-900 dark:text-white tracking-tight">Settings</h2>
@@ -598,13 +833,11 @@ const AccountPage = () => {
                         </div>
                         <button
                           onClick={toggleTheme}
-                          className={`relative w-[52px] h-7 rounded-full transition-colors duration-300 ${
-                            theme === 'dark' ? 'bg-zinc-700' : 'bg-zinc-300'
-                          }`}
+                          className={`relative w-[52px] h-7 rounded-full transition-colors duration-300 ${theme === 'dark' ? 'bg-zinc-700' : 'bg-zinc-300'
+                            }`}
                         >
-                          <div className={`absolute top-0.5 w-6 h-6 rounded-full bg-white shadow-md transition-transform duration-300 flex items-center justify-center ${
-                            theme === 'dark' ? 'translate-x-6' : 'translate-x-0.5'
-                          }`}>
+                          <div className={`absolute top-0.5 w-6 h-6 rounded-full bg-white shadow-md transition-transform duration-300 flex items-center justify-center ${theme === 'dark' ? 'translate-x-6' : 'translate-x-0.5'
+                            }`}>
                             {theme === 'dark' ? (
                               <Moon size={11} className="text-zinc-700" strokeWidth={2} />
                             ) : (
@@ -631,7 +864,7 @@ const AccountPage = () => {
           user={userInfo}
         />
       )}
-      
+
       {userInfo && (
         <ChangePasswordModal
           isOpen={showPasswordModal}
@@ -642,8 +875,9 @@ const AccountPage = () => {
       <EditAddressModal
         isOpen={showEditAddressModal}
         onClose={() => setShowEditAddressModal(false)}
-        address={addressInfo}
-        onSave={(newAddr) => setAddressInfo(newAddr)}
+        address={selectedAddress}
+        title={addressModalTitle}
+        onSave={handleSaveAddress}
       />
     </div>
   );

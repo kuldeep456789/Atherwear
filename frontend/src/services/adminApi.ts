@@ -85,6 +85,18 @@ export interface CustomerIssue {
   createdAt: string;
 }
 
+export interface ContactMessage {
+  _id: string;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  status: 'pending' | 'resolved';
+  adminReply?: string;
+  repliedAt?: string;
+  createdAt: string;
+}
+
 export interface AdminReturn {
   _id: string;
   userId: { _id: string; name?: string; email?: string } | null;
@@ -237,5 +249,66 @@ export const adminApi = {
     list: () => request<{ issues: CustomerIssue[] }>('GET', '/issues'),
     updateStatus: (id: string, status: string) =>
       request<{ message: string; issue: CustomerIssue }>('PATCH', `/issues/${id}/status`, { status }),
+  },
+
+  // Contact Messages
+  messages: {
+    list: async () => {
+      const res = await fetch('/api/contact');
+      if (!res.ok) throw new Error('Failed to fetch contact messages');
+      const contacts = (await res.json()) || [];
+      
+      try {
+        const issuesRes = await request<CustomerIssue[]>('GET', '/issues');
+        if (Array.isArray(issuesRes)) {
+          const formattedIssues = issuesRes.map((i: any) => ({
+            _id: i._id,
+            name: i.user?.name || i.user?.email || 'Customer',
+            email: i.user?.email || 'customer@example.com',
+            subject: `[Issue] ${i.subject || i.issueType || 'Order Support'}`,
+            message: i.description || i.message || '',
+            status: i.status || 'pending',
+            adminReply: i.adminReply,
+            createdAt: i.createdAt,
+            repliedAt: i.updatedAt,
+          }));
+          return [...contacts, ...formattedIssues];
+        }
+      } catch {}
+
+      return contacts as ContactMessage[];
+    },
+    updateStatus: async (id: string, status: string) => {
+      let res = await fetch(`/api/contact/${id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+      if (!res.ok) {
+        res = await fetch(`/api/contact/${id}/status`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status }),
+        });
+      }
+      if (!res.ok) throw new Error('Failed to update message status');
+      return res.json();
+    },
+    reply: async (id: string, adminReply: string, status = 'resolved') => {
+      let res = await fetch(`/api/contact/${id}/reply`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminReply, status }),
+      });
+      if (!res.ok) {
+        res = await fetch(`/api/contact/${id}/reply`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ adminReply, status }),
+        });
+      }
+      if (!res.ok) throw new Error('Failed to save reply');
+      return res.json() as Promise<ContactMessage>;
+    },
   },
 };

@@ -34,6 +34,7 @@ import AdminReturnRequests from './pages/admin/AdminReturnRequests';
 import AdminCustomerIssues from './pages/admin/AdminCustomerIssues';
 import AdminCommissionFinance from './pages/admin/AdminCommissionFinance';
 import AdminHeroBanner from './pages/admin/AdminHeroBanner';
+import AdminCustomerMessages from './pages/admin/AdminCustomerMessages';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -71,11 +72,13 @@ function App() {
           <Route path="customer-issues" element={<AdminCustomerIssues />} />
           <Route path="commission-finance" element={<AdminCommissionFinance />} />
           <Route path="hero-banner" element={<AdminHeroBanner />} />
+          <Route path="messages" element={<AdminCustomerMessages />} />
         </Route>
 
         {/* Main app routes with Navbar & Footer */}
         <Route element={<MainLayout />}>
           <Route path="/" element={<HomePage />} />
+          <Route path="/collections" element={<CollectionPage />} />
           <Route path="/collections/all" element={<CollectionPage />} />
           <Route path="/collections/:gender" element={<CollectionPage />} />
           <Route path="/collections/:gender/:subcategory" element={<CollectionPage />} />

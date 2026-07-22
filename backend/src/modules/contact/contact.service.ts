@@ -26,4 +26,42 @@ export class ContactService {
       throw new InternalServerErrorException('Failed to fetch contact messages');
     }
   }
+
+  async findByEmail(email: string) {
+    try {
+      const clean = (email || '').trim();
+      if (!clean) return [];
+      return await this.contactModel.find({
+        email: { $regex: new RegExp(`^${clean.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') }
+      }).sort({ createdAt: -1 }).exec();
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to fetch user messages');
+    }
+  }
+
+  async updateStatus(id: string, status: string) {
+    try {
+      const updated = await this.contactModel.findByIdAndUpdate(
+        id,
+        { status },
+        { new: true }
+      ).exec();
+      return updated;
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to update message status');
+    }
+  }
+
+  async replyMessage(id: string, adminReply: string, status = 'resolved') {
+    try {
+      const updated = await this.contactModel.findByIdAndUpdate(
+        id,
+        { adminReply, repliedAt: new Date(), status },
+        { new: true }
+      ).exec();
+      return updated;
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to save reply');
+    }
+  }
 }
