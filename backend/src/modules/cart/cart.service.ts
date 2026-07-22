@@ -12,7 +12,7 @@ export class CartService {
     @InjectModel(Cart.name) private readonly cartModel: Model<Cart>,
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
-  ) {}
+  ) { }
 
   async getCart(token: string) {
     const user = await this.resolveUser(token);

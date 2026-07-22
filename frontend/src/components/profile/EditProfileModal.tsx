@@ -18,10 +18,8 @@ const EditProfileModal = ({ isOpen, onClose, user }: EditProfileModalProps) => {
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [phone] = useState(user.phone || '');
+  const [phone, setPhone] = useState('');
   const [gender, setGender] = useState('');
-  const [dateOfBirth, setDateOfBirth] = useState('');
-  const [avatar, setAvatar] = useState('');
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -29,9 +27,8 @@ const EditProfileModal = ({ isOpen, onClose, user }: EditProfileModalProps) => {
     if (isOpen && user) {
       setName(user.firstName && user.lastName ? `${user.firstName} ${user.lastName}`.trim() : user.name || '');
       setEmail(user.email);
+      setPhone(user.phone || '');
       setGender(user.gender || '');
-      setDateOfBirth(user.dateOfBirth ? user.dateOfBirth.split('T')[0] : '');
-      setAvatar(user.avatar || '');
       setErrors({});
     }
   }, [isOpen, user]);
@@ -51,7 +48,12 @@ const EditProfileModal = ({ isOpen, onClose, user }: EditProfileModalProps) => {
     if (!validate()) return;
 
     try {
-      const res = await updateProfile({ name: name.trim(), email, gender: gender || undefined, dateOfBirth: dateOfBirth || undefined, avatar: avatar || undefined }).unwrap();
+      const res = await updateProfile({
+        name: name.trim(),
+        email: email.trim(),
+        phone: phone.trim() || undefined,
+        gender: gender || undefined,
+      }).unwrap();
       dispatch(setCredentials({ ...user, ...res.user, accessToken: user.accessToken }));
       toast.success('Profile updated successfully.');
       onClose();
@@ -92,7 +94,7 @@ const EditProfileModal = ({ isOpen, onClose, user }: EditProfileModalProps) => {
             {errors.name && <p className="mt-1 text-[13px] text-red-500">{errors.name}</p>}
           </div>
 
-          {/* Email (read-only) */}
+          {/* Email Address */}
           <div>
             <label className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">Email Address</label>
             <div className="relative">
@@ -108,7 +110,7 @@ const EditProfileModal = ({ isOpen, onClose, user }: EditProfileModalProps) => {
             {errors.email && <p className="mt-1 text-[13px] text-red-500">{errors.email}</p>}
           </div>
 
-          {/* Mobile Number (read-only) */}
+          {/* Mobile Number */}
           <div>
             <label className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">Mobile Number</label>
             <div className="relative">
@@ -116,24 +118,9 @@ const EditProfileModal = ({ isOpen, onClose, user }: EditProfileModalProps) => {
               <input
                 type="text"
                 value={phone}
-                disabled
-                className="w-full h-[48px] pl-10 pr-4 rounded-xl border border-zinc-200 dark:border-[#2A2A2A] bg-zinc-100 dark:bg-zinc-900 text-zinc-500 dark:text-zinc-400 text-[15px] cursor-not-allowed"
-              />
-            </div>
-            <p className="mt-1 text-[12px] text-zinc-400 dark:text-zinc-500">Verified phone number cannot be changed.</p>
-          </div>
-
-          {/* Profile Picture URL */}
-          <div>
-            <label className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">Profile Picture URL (optional)</label>
-            <div className="relative">
-              <Image size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" strokeWidth={1.5} />
-              <input
-                type="text"
-                value={avatar}
-                onChange={(e) => setAvatar(e.target.value)}
+                onChange={(e) => setPhone(e.target.value)}
                 className="w-full h-[48px] pl-10 pr-4 rounded-xl border border-zinc-200 dark:border-[#2A2A2A] bg-zinc-50 dark:bg-[#0F0F10] text-zinc-900 dark:text-white text-[15px] outline-none focus:ring-2 focus:ring-zinc-900/20 dark:focus:ring-white/20 transition-all"
-                placeholder="https://example.com/avatar.jpg"
+                placeholder="+91 9876543210"
               />
             </div>
           </div>
@@ -153,21 +140,6 @@ const EditProfileModal = ({ isOpen, onClose, user }: EditProfileModalProps) => {
                 <option value="female">Female</option>
                 <option value="other">Other</option>
               </select>
-            </div>
-          </div>
-
-          {/* Date of Birth */}
-          <div>
-            <label className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">Date of Birth (optional)</label>
-            <div className="relative">
-              <Calendar size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" strokeWidth={1.5} />
-              <input
-                type="date"
-                value={dateOfBirth}
-                onChange={(e) => setDateOfBirth(e.target.value)}
-                max={new Date().toISOString().split('T')[0]}
-                className="w-full h-[48px] pl-10 pr-4 rounded-xl border border-zinc-200 dark:border-[#2A2A2A] bg-zinc-50 dark:bg-[#0F0F10] text-zinc-900 dark:text-white text-[15px] outline-none focus:ring-2 focus:ring-zinc-900/20 dark:focus:ring-white/20 transition-all"
-              />
             </div>
           </div>
         </div>

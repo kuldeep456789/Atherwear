@@ -84,6 +84,16 @@ export class UsersService {
     }
 
     if (data.name !== undefined) user.name = data.name.trim();
+    if (data.phone !== undefined && data.phone !== user.phone) {
+      const trimmedPhone = data.phone.trim();
+      if (trimmedPhone) {
+        const existingPhone = await this.userModel.findOne({ phone: trimmedPhone }).exec();
+        if (existingPhone && existingPhone.id !== userId) {
+          throw new ConflictException('Phone number is already in use');
+        }
+      }
+      user.phone = trimmedPhone || undefined;
+    }
     if (data.avatar !== undefined) user.avatar = data.avatar || undefined;
     if (data.gender !== undefined) user.gender = data.gender || undefined;
     if (data.dateOfBirth !== undefined) user.dateOfBirth = data.dateOfBirth ? new Date(data.dateOfBirth) : undefined;
