@@ -21,11 +21,14 @@ const rootReducer = (state: any, action: any) => {
     localStorage.removeItem('appliedCoupon');
     localStorage.removeItem('couponDiscount');
     localStorage.removeItem('wishlistItems');
+    localStorage.removeItem('savedAddresses_undefined');
 
     if (action.type === 'auth/logout') {
       localStorage.removeItem('userInfo');
-      state = undefined; // Force complete reset of RTK Query cache and Redux slices
     }
+
+    // Force complete reset of RTK Query cache and Redux slices for fresh user session
+    state = undefined;
   }
   return appReducer(state, action);
 };

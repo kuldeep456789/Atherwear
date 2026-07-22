@@ -54,7 +54,13 @@ const EditProfileModal = ({ isOpen, onClose, user }: EditProfileModalProps) => {
         phone: phone.trim() || undefined,
         gender: gender || undefined,
       }).unwrap();
-      dispatch(setCredentials({ ...user, ...res.user, accessToken: user.accessToken }));
+      const updatedUser = {
+        ...user,
+        ...res.user,
+        _id: res.user._id || res.user.id || user._id,
+        accessToken: user.accessToken,
+      };
+      dispatch(setCredentials(updatedUser));
       toast.success('Profile updated successfully.');
       onClose();
     } catch (err: any) {

@@ -7,6 +7,7 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 
 export type SafeUser = {
+  _id?: string;
   id: string;
   firstName: string;
   lastName: string;
@@ -59,7 +60,8 @@ export class UsersService {
     const trimmedName = (user.name || '').trim();
     const [firstName, ...rest] = trimmedName.split(/\s+/);
     return {
-      id: user.id,
+      _id: user.id || user._id?.toString(),
+      id: user.id || user._id?.toString(),
       firstName: firstName || trimmedName,
       lastName: rest.join(' '),
       name: trimmedName,

@@ -58,9 +58,11 @@ const AccountPage = () => {
     phone: '+91 98765 43210'
   });
 
+  const currentUserId = userInfo?._id || userInfo?.id;
+
   const [addressList, setAddressList] = useState<AddressData[]>(() => {
-    if (!userInfo?._id) return [];
-    const saved = localStorage.getItem(`savedAddresses_${userInfo._id}`);
+    if (!currentUserId) return [];
+    const saved = localStorage.getItem(`savedAddresses_${currentUserId}`);
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -70,8 +72,8 @@ const AccountPage = () => {
   });
 
   useEffect(() => {
-    if (userInfo?._id) {
-      const saved = localStorage.getItem(`savedAddresses_${userInfo._id}`);
+    if (currentUserId) {
+      const saved = localStorage.getItem(`savedAddresses_${currentUserId}`);
       if (saved) {
         try {
           setAddressList(JSON.parse(saved));
@@ -79,13 +81,15 @@ const AccountPage = () => {
         } catch { }
       }
       setAddressList([]);
+    } else {
+      setAddressList([]);
     }
-  }, [userInfo?._id]);
+  }, [currentUserId]);
 
   const saveAddressList = (newAddresses: AddressData[]) => {
     setAddressList(newAddresses);
-    if (userInfo?._id) {
-      localStorage.setItem(`savedAddresses_${userInfo._id}`, JSON.stringify(newAddresses));
+    if (currentUserId) {
+      localStorage.setItem(`savedAddresses_${currentUserId}`, JSON.stringify(newAddresses));
     }
   };
 
@@ -214,7 +218,7 @@ const AccountPage = () => {
             {/* Avatar */}
             <div className="relative shrink-0">
               <div className="w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-full bg-white/15 flex items-center justify-center text-white text-2xl sm:text-3xl font-bold border-2 border-white/20 shadow-lg backdrop-blur-sm">
-                {(userInfo.firstName?.[0] || userInfo.email?.[0] || 'U').toUpperCase()}
+                {(userInfo.name?.[0] || userInfo.firstName?.[0] || userInfo.email?.[0] || 'U').toUpperCase()}
               </div>
               <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-emerald-500 border-2 border-zinc-900 dark:border-[#18181B] flex items-center justify-center">
                 <CheckCircle size={10} className="text-white" strokeWidth={3} />
@@ -223,7 +227,7 @@ const AccountPage = () => {
             {/* Info */}
             <div className="flex-1 min-w-0">
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight">
-                {userInfo.firstName} {userInfo.lastName}
+                {userInfo.name || `${userInfo.firstName || ''} ${userInfo.lastName || ''}`.trim()}
               </h1>
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-sm text-white/70">
                 <span className="flex items-center gap-1.5">
@@ -242,11 +246,6 @@ const AccountPage = () => {
                 </span>
               </div>
             </div>
-            {/* Edit button */}
-            <button onClick={() => setShowEditModal(true)} className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm font-semibold transition-all duration-200 border border-white/10 hover:border-white/20 active:scale-[0.97]">
-              <Pencil size={15} strokeWidth={1.5} />
-              Edit Profile
-            </button>
           </div>
         </div>
       </div>
@@ -486,8 +485,6 @@ const AccountPage = () => {
                         <ProfileField label="Last Name" value={userInfo.lastName} />
                         <ProfileField label="Email" value={userInfo.email} icon={<Mail size={16} />} />
                         {userInfo.phone && <ProfileField label="Phone" value={userInfo.phone} icon={<Phone size={16} />} />}
-                        <ProfileField label="Role" value={userInfo.role} />
-                        <ProfileField label="Member Since" value={memberSince} icon={<Clock size={16} />} />
                       </div>
                     </div>
                   </div>
@@ -766,32 +763,6 @@ const AccountPage = () => {
               {activeTab === 'settings' && (
                 <section className="space-y-6">
                   <h2 className="text-[26px] sm:text-[30px] font-bold text-zinc-900 dark:text-white tracking-tight">Settings</h2>
-
-                  {/* Account */}
-                  <div className="rounded-2xl border border-zinc-200 dark:border-[#2A2A2A] bg-white dark:bg-[#18181B] overflow-hidden hover:shadow-md dark:hover:shadow-[0_4px_20px_rgba(0,0,0,0.3)] transition-all duration-250">
-                    <div className="px-6 sm:px-8 pt-6 sm:pt-8 pb-2">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
-                          <User size={20} className="text-zinc-600 dark:text-zinc-400" strokeWidth={1.5} />
-                        </div>
-                        <div>
-                          <h3 className="text-[18px] sm:text-[20px] font-bold text-zinc-900 dark:text-white">Account</h3>
-                          <p className="text-[15px] text-zinc-500 dark:text-zinc-400">Manage your profile and security settings.</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="px-6 sm:px-8 pb-6 sm:pb-8 pt-4">
-                      <div className="flex flex-wrap gap-3">
-                        <button onClick={() => setShowEditModal(true)} className="inline-flex items-center gap-2 h-[50px] px-6 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[15px] font-semibold hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all duration-200 active:scale-[0.98] shadow-sm">
-                          <Pencil size={16} strokeWidth={2} />
-                          Edit Profile
-                        </button>
-                        <button onClick={() => setShowPasswordModal(true)} className="inline-flex items-center gap-2 h-[50px] px-6 rounded-xl border-2 border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 text-[15px] font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all duration-200 active:scale-[0.98]">
-                          Change Password
-                        </button>
-                      </div>
-                    </div>
-                  </div>
 
 
                   {/* Appearance */}
