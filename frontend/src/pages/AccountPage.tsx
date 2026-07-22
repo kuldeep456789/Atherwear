@@ -59,36 +59,41 @@ const AccountPage = () => {
   });
 
   const [addressList, setAddressList] = useState<AddressData[]>(() => {
-    const saved = localStorage.getItem('savedAddresses');
+    if (!userInfo?._id) return [];
+    const saved = localStorage.getItem(`savedAddresses_${userInfo._id}`);
     if (saved) {
       try {
         return JSON.parse(saved);
       } catch { }
     }
-    return [
-      {
-        id: 'addr_1',
-        tag: 'HOME',
-        name: 'Kuldeep Vyas',
-        line1: '19 Residency Road',
-        line2: 'Bengaluru, Karnataka 560025',
-        country: 'India',
-        phone: '+91 98765 43210',
-        isDefault: true,
-      },
-    ];
+    return [];
   });
+
+  useEffect(() => {
+    if (userInfo?._id) {
+      const saved = localStorage.getItem(`savedAddresses_${userInfo._id}`);
+      if (saved) {
+        try {
+          setAddressList(JSON.parse(saved));
+          return;
+        } catch { }
+      }
+      setAddressList([]);
+    }
+  }, [userInfo?._id]);
 
   const saveAddressList = (newAddresses: AddressData[]) => {
     setAddressList(newAddresses);
-    localStorage.setItem('savedAddresses', JSON.stringify(newAddresses));
+    if (userInfo?._id) {
+      localStorage.setItem(`savedAddresses_${userInfo._id}`, JSON.stringify(newAddresses));
+    }
   };
 
   const handleOpenAddAddress = () => {
     setSelectedAddress({
       id: `addr_${Date.now()}`,
       tag: 'HOME',
-      name: userInfo?.name || `${userInfo?.firstName || ''} ${userInfo?.lastName || ''}`.trim() || 'Kuldeep Vyas',
+      name: userInfo?.name || `${userInfo?.firstName || ''} ${userInfo?.lastName || ''}`.trim() || '',
       line1: '',
       line2: '',
       country: 'India',
@@ -146,7 +151,7 @@ const AccountPage = () => {
     toast.success('Address deleted successfully!');
   };
 
-  const { data: allOrders = [], isLoading: ordersLoading } = useGetUserOrdersQuery(undefined);
+  const { data: allOrders = [], isLoading: ordersLoading } = useGetUserOrdersQuery(undefined, { skip: !userInfo });
   const { data: myReturns = [] } = useGetMyReturnsQuery(undefined, { skip: !userInfo, pollingInterval: 3000 });
 
   const [userMessages, setUserMessages] = useState<any[]>([]);
@@ -160,36 +165,19 @@ const AccountPage = () => {
       fetch(`/api/contact/user/${encodeURIComponent(email)}`)
         .then((res) => res.json())
         .then((data) => {
-          if (Array.isArray(data) && data.length > 0) {
-            setUserMessages(data);
+          if (Array.isArray(data)) {
+            const filtered = data.filter((m: any) => (m.email || '').trim().toLowerCase() === email);
+            setUserMessages(filtered);
           } else {
-            // Fallback: fetch all contact messages & filter locally
-            fetch('/api/contact')
-              .then((res) => res.json())
-              .then((all) => {
-                if (Array.isArray(all)) {
-                  const filtered = all.filter((m: any) =>
-                    (m.email || '').toLowerCase().includes(email) ||
-                    (m.name || '').toLowerCase().includes((userInfo.firstName || '').toLowerCase())
-                  );
-                  setUserMessages(filtered.length > 0 ? filtered : all);
-                } else {
-                  setUserMessages([]);
-                }
-              })
-              .catch(() => setUserMessages([]));
+            setUserMessages([]);
           }
         })
-        .catch(() => {
-          // Additional fallback if endpoint fails
-          fetch('/api/contact')
-            .then((res) => res.json())
-            .then((all) => setUserMessages(Array.isArray(all) ? all : []))
-            .catch(() => setUserMessages([]));
-        })
+        .catch(() => setUserMessages([]))
         .finally(() => setLoadingMessages(false));
+    } else {
+      setUserMessages([]);
     }
-  }, [activeTab, userInfo?.email, userInfo?.firstName]);
+  }, [activeTab, userInfo?.email]);
 
   useEffect(() => {
     if (prevTabRef.current !== activeTab) {

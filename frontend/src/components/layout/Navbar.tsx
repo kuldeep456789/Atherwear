@@ -5,6 +5,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { RootState } from '../../store/store';
 import { logout } from '../../store/slices/authSlice';
+import { apiSlice } from '../../store/slices/apiSlice';
+import { clearCartItems } from '../../store/slices/cartSlice';
+import { clearWishlist } from '../../store/slices/wishlistSlice';
 import { useGetProductsQuery, productApiSlice } from '../../store/slices/productApiSlice';
 import { useGetCategoriesQuery } from '../../store/slices/categoryApiSlice';
 import { getProductId } from '../../lib/product';
@@ -533,7 +536,13 @@ const Navbar = () => {
                             </Link>
                           )}
                           <button
-                            onClick={() => { dispatch(logout()); setProfileOpen(false); }}
+                            onClick={() => {
+                              dispatch(logout());
+                              dispatch(apiSlice.util.resetApiState());
+                              dispatch(clearCartItems());
+                              dispatch(clearWishlist());
+                              setProfileOpen(false);
+                            }}
                             className="w-full flex items-center gap-3 mx-2 my-0.5 px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl transition-all duration-200 cursor-pointer"
                           >
                             <LogOut className="h-4 w-4" strokeWidth={1.5} />

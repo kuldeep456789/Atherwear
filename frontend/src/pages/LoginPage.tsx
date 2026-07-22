@@ -4,6 +4,9 @@ import { Eye, EyeOff, Lock, Mail, Phone, Smartphone, ArrowLeft, Shield } from 'l
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '../store/store';
 import { setCredentials } from '../store/slices/authSlice';
+import { apiSlice } from '../store/slices/apiSlice';
+import { clearCartItems } from '../store/slices/cartSlice';
+import { clearWishlist } from '../store/slices/wishlistSlice';
 import {
   useLoginMutation,
   useRegisterMutation,
@@ -115,6 +118,12 @@ const LoginPage = () => {
     }
   };
 
+  const resetToFreshSession = () => {
+    dispatch(apiSlice.util.resetApiState());
+    dispatch(clearCartItems());
+    dispatch(clearWishlist());
+  };
+
   const handleVerifyOtp = async () => {
     const code = otpValues.join('');
     if (code.length !== 6) { setErrorMessage('Enter the 6-digit OTP'); return; }
@@ -123,6 +132,7 @@ const LoginPage = () => {
     try {
       const phone = `+91${mobileNumber.replace(/\D/g, '')}`;
       const payload = await verifyOtp({ phone, code }).unwrap();
+      resetToFreshSession();
       dispatch(setCredentials({ ...payload.user, accessToken: payload.accessToken }));
       toast.success('Login successful');
     } catch (err: any) {
@@ -141,6 +151,7 @@ const LoginPage = () => {
     if (!loginEmail.trim() || !loginPassword.trim()) { setErrorMessage('Email and password are required.'); return; }
     try {
       const payload = await login({ email: loginEmail.trim(), password: loginPassword }).unwrap();
+      resetToFreshSession();
       dispatch(setCredentials({ ...payload.user, accessToken: payload.token || payload.accessToken }));
       toast.success('Login successful');
     } catch (err: any) {
@@ -167,6 +178,7 @@ const LoginPage = () => {
       await fetch('/api/admin/seed', { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
       
       const finalRes = await login({ email: 'admin@vastra.app', password: 'password123' }).unwrap();
+      resetToFreshSession();
       dispatch(setCredentials({ ...finalRes.user, accessToken: finalRes.token || finalRes.accessToken }));
       toast.dismiss(toastId);
       toast.success('Admin login successful!');
@@ -225,6 +237,7 @@ const LoginPage = () => {
         },
         code
       }).unwrap();
+      resetToFreshSession();
       dispatch(setCredentials({ ...payload.user, accessToken: payload.token || payload.accessToken }));
       toast.success('Registration successful! Welcome to VASTRA');
     } catch (err: any) {
