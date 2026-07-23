@@ -171,7 +171,7 @@ const CollectionPage = () => {
             <div
               ref={scrollRef}
               onScroll={checkScroll}
-              className="flex items-center gap-2 sm:gap-3 overflow-x-auto hide-scrollbar touch-pan-x py-3 px-8 lg:px-0"
+              className="flex items-center gap-2 sm:gap-3 overflow-x-auto hide-scrollbar scrollbar-hide [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden touch-pan-x py-3 px-8 lg:px-0"
             >
               {derivedTabs.map((tab) => {
                 let tabSlug = toSlug(tab.name);
