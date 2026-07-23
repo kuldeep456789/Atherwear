@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../store/store';
 import { useCreateReturnMutation, useGetMyReturnsQuery } from '../store/slices/returnApiSlice';
@@ -51,6 +51,11 @@ const nonReturnable = ['Innerwear', 'Accessories', 'Gift Cards', 'Final Sale Ite
 
 const ReturnsPage = () => {
   const userInfo = useSelector((state: RootState) => state.auth.userInfo);
+
+  if (!userInfo) {
+    return <Navigate to="/login?redirect=/returns" replace />;
+  }
+
   const [activeTab, setActiveTab] = useState<'form' | 'history'>('form');
   const [faqOpen, setFaqOpen] = useState<string | null>(null);
   const [createReturn, { isLoading: isSubmitting }] = useCreateReturnMutation();

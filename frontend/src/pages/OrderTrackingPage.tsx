@@ -1,4 +1,6 @@
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, Navigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import type { RootState } from '../store/store';
 import { useGetOrderDetailsQuery } from '../store/slices/orderApiSlice';
 import { useGetProductDetailsQuery, useGetRelatedProductsQuery } from '../store/slices/productApiSlice';
 import { ChevronRight, ShoppingBag, Package, CheckCircle, Clock, Truck, MapPin, AlertCircle, HelpCircle, ArrowRight, RotateCcw } from 'lucide-react';
@@ -102,6 +104,12 @@ const Skeleton = () => (
 
 const OrderTrackingPage = () => {
   const { id } = useParams();
+  const userInfo = useSelector((state: RootState) => state.auth.userInfo);
+
+  if (!userInfo) {
+    return <Navigate to={id ? `/login?redirect=/orders/${id}` : '/login?redirect=/account'} replace />;
+  }
+
   const { data: order, isLoading, error } = useGetOrderDetailsQuery(id);
   const { data: myReturns } = useGetMyReturnsQuery(undefined, { skip: !id, pollingInterval: 3000 });
   const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
