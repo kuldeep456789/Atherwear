@@ -138,12 +138,7 @@
   *::before,
   *::after {
     border-color: hsl(var(--border));
-    transition:
-      background-color 250ms ease,
-      color 250ms ease,
-      border-color 250ms ease,
-      box-shadow 250ms ease,
-      opacity 250ms ease;
+    -webkit-tap-highlight-color: transparent;
   }
 
   body {
@@ -152,23 +147,16 @@
     font-family: "Outfit", "Space Grotesk", sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    -webkit-tap-highlight-color: transparent;
   }
 
-  /* Exclude transitions from elements that need instant changes */
-  input,
-  textarea,
-  select,
+  /* Instant responsive feedback without layout blinking */
   button,
   a,
-  .no-theme-transition,
-  .no-theme-transition * {
-    transition:
-      background-color 250ms ease,
-      color 250ms ease,
-      border-color 250ms ease,
-      box-shadow 250ms ease,
-      opacity 250ms ease,
-      transform 150ms ease;
+  input,
+  textarea,
+  select {
+    -webkit-tap-highlight-color: transparent;
   }
 
   img {

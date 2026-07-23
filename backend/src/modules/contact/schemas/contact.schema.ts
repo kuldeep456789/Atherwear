@@ -26,3 +26,5 @@ export class Contact extends Document {
 }
 
 export const ContactSchema = SchemaFactory.createForClass(Contact);
+
+

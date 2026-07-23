@@ -11,11 +11,19 @@ export class ContactService {
 
   async createContactMessage(data: { name: string; email: string; subject: string; message: string }) {
     try {
-      const newContact = new this.contactModel(data);
-      await newContact.save();
-      return { success: true, message: 'Message sent successfully' };
-    } catch (error) {
-      throw new InternalServerErrorException('Failed to save contact message');
+      const newContact = new this.contactModel({
+        name: data.name?.trim(),
+        email: data.email?.toLowerCase().trim(),
+        subject: data.subject?.trim(),
+        message: data.message?.trim(),
+        status: 'pending',
+      });
+      const saved = await newContact.save();
+      console.log('[ContactService] Contact message saved to MongoDB successfully ID:', saved._id);
+      return { success: true, message: 'Message sent successfully', data: saved };
+    } catch (error: any) {
+      console.error('[ContactService] Error saving contact message to MongoDB:', error);
+      throw new InternalServerErrorException(error?.message || 'Failed to save contact message');
     }
   }
 
