@@ -25,9 +25,11 @@ const tabs = [
 ] as const;
 
 const statusConfig: Record<string, { label: string; color: string; bg: string; icon: typeof Clock }> = {
-  pending: { label: 'Payment Pending', color: 'text-yellow-700 dark:text-yellow-300', bg: 'bg-yellow-50 dark:bg-yellow-950/30 border-yellow-200 dark:border-yellow-800', icon: Clock },
+  pending: { label: 'Order Placed', color: 'text-amber-700 dark:text-amber-300', bg: 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800', icon: Clock },
   processing: { label: 'Processing', color: 'text-blue-700 dark:text-blue-300', bg: 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800', icon: Package },
+  packed: { label: 'Packed', color: 'text-indigo-700 dark:text-indigo-300', bg: 'bg-indigo-50 dark:bg-indigo-950/30 border-indigo-200 dark:border-indigo-800', icon: Package },
   shipped: { label: 'Shipped', color: 'text-purple-700 dark:text-purple-300', bg: 'bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800', icon: Truck },
+  out_for_delivery: { label: 'Out For Delivery', color: 'text-orange-700 dark:text-orange-300', bg: 'bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-800', icon: Truck },
   delivered: { label: 'Delivered', color: 'text-green-700 dark:text-green-300', bg: 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800', icon: CheckCircle },
   confirmed: { label: 'Confirmed', color: 'text-blue-700 dark:text-blue-300', bg: 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800', icon: CheckCircle },
   cancelled: { label: 'Cancelled', color: 'text-red-700 dark:text-red-300', bg: 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800', icon: XCircle },
@@ -338,11 +340,14 @@ const AccountPage = () => {
                     <div className="space-y-4">
                       {ordersData.orders.map((order: any) => {
                         const orderReturn = myReturns.find((r: any) => r.orderId === order._id);
-                        let displayStatusStr = order.status;
+                        let displayStatusStr = (order.status || 'pending').toLowerCase().replace(/\s+/g, '_');
+                        if (displayStatusStr === 'pending' && order.paymentStatus === 'paid') {
+                          displayStatusStr = 'confirmed';
+                        }
                         if (orderReturn && orderReturn.status === 'refunded') {
                           displayStatusStr = 'refunded';
                         }
-                        const status = statusConfig[displayStatusStr] || statusConfig.pending;
+                        const status = statusConfig[displayStatusStr] || statusConfig[order.status?.toLowerCase()] || statusConfig.pending;
                         const StatusIcon = status.icon;
                         const firstItem = order.items?.[0];
                         const itemCount = order.items?.reduce((a: number, i: any) => a + i.quantity, 0) || 0;

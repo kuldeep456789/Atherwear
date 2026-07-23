@@ -129,23 +129,41 @@ export class ProductsService {
 
     const user = await this.resolveUser(token);
 
-    // Verify user has purchased and received the product
-    const hasOrdered = await this.orderModel.exists({
-      userId: new Types.ObjectId(user.id),
+    // Verify user has placed an order
+    const userObjId = Types.ObjectId.isValid(user.id) ? new Types.ObjectId(user.id) : null;
+    const userStrId = user.id || (user as any)._id?.toString() || '';
+
+    const hasOrderedProduct = await this.orderModel.exists({
+      $or: [
+        ...(userObjId ? [{ userId: userObjId }] : []),
+        { userId: userStrId },
+        { 'shippingDetails.phone': user.phone },
+      ],
       'items.productId': id,
-      status: 'delivered'
     });
 
-    if (!hasOrdered) {
-      throw new BadRequestException('You can only review products you have purchased and received.');
+    if (!hasOrderedProduct) {
+      const hasAnyOrder = await this.orderModel.exists({
+        $or: [
+          ...(userObjId ? [{ userId: userObjId }] : []),
+          { userId: userStrId },
+        ],
+      });
+
+      if (!hasAnyOrder) {
+        throw new BadRequestException('You can only review products after placing an order.');
+      }
     }
 
     const review = await this.reviewModel.create({
       productId: id,
       rating: dto.rating,
       comment: dto.comment.trim(),
-      userName: user.name || `${user.firstName} ${user.lastName}`.trim(),
+      userName: user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Verified Customer',
     });
+
+    // Clear single product cache so the new review is immediately returned on reload
+    await this.redisService.del(`product:${id}`);
 
     return { review };
   }

@@ -174,9 +174,6 @@ const OrderTrackingPage = () => {
           <h1 className="text-[28px] sm:text-[36px] font-bold text-zinc-900 dark:text-white tracking-tight">Track Your Order</h1>
           <p className="text-[14px] text-zinc-500 dark:text-zinc-400 mt-1">Stay updated with your shipment in real time.</p>
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mt-4">
-            <span className="text-[13px] font-mono font-semibold text-zinc-500 dark:text-zinc-400 tracking-wider select-all bg-zinc-100 dark:bg-zinc-800 px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700">
-              #{order._id}
-            </span>
             <span className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[12px] font-bold border shadow-sm w-fit ${status.className}`}>
               <span className="w-2 h-2 rounded-full bg-current" />
               {status.label.toUpperCase()}
@@ -217,12 +214,6 @@ const OrderTrackingPage = () => {
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-1">Payment</p>
                   <p className="text-[14px] font-semibold text-zinc-900 dark:text-white capitalize">{paymentLabel}</p>
-                </div>
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-1">Status</p>
-                  <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-3 py-1 rounded-full border ${status.className}`}>
-                    {status.label.toUpperCase()}
-                  </span>
                 </div>
               </div>
             </motion.div>
