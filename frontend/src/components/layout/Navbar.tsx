@@ -316,7 +316,7 @@ const Navbar = () => {
 
               {/* Search Suggestions Dropdown */}
               <AnimatePresence>
-                {searchFocused && (
+                {searchFocused && debouncedQuery.trim().length >= 2 && (
                   <motion.div
                     initial={{ opacity: 0, y: -8, scaleY: 0.95 }}
                     animate={{ opacity: 1, y: 0, scaleY: 1 }}
@@ -325,67 +325,13 @@ const Navbar = () => {
                     className="absolute top-full mt-2 left-0 right-0 bg-white dark:bg-zinc-900 rounded-xl shadow-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden z-50"
                     style={{ transformOrigin: 'top center' }}
                   >
-                    {debouncedQuery.length < 2 ? (
-                      <div className="py-2">
-                        {/* Recent Searches */}
-                        {recentSearches.length > 0 && (
-                          <div>
-                            <p className="px-4 py-2 text-[10px] font-semibold tracking-widest text-zinc-400 uppercase">Recent</p>
-                            {recentSearches.map((s, i) => (
-                              <button
-                                key={s}
-                                onClick={() => { setSearchQuery(s); doSearchRefValue(s); }}
-                                onMouseEnter={() => setSelectedSuggestionIdx(i)}
-                                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left transition-colors cursor-pointer ${selectedSuggestionIdx === i ? 'bg-zinc-100 dark:bg-zinc-800' : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50'}`}
-                              >
-                                <Clock className="h-3.5 w-3.5 text-zinc-400 shrink-0" strokeWidth={1.5} />
-                                <span className="truncate text-zinc-800 dark:text-zinc-200">{s}</span>
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                        {/* Trending Searches */}
-                        <div>
-                          <p className="px-4 py-2 text-[10px] font-semibold tracking-widest text-zinc-400 uppercase flex items-center gap-1.5">
-                            <TrendingUp className="h-3 w-3" strokeWidth={1.5} /> Trending
-                          </p>
-                          {TRENDING_SEARCHES.map((s, i) => (
-                            <button
-                              key={s}
-                              onClick={() => { setSearchQuery(s); doSearchRefValue(s); }}
-                              onMouseEnter={() => setSelectedSuggestionIdx(recentSearches.length + i)}
-                              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left transition-colors cursor-pointer ${selectedSuggestionIdx === recentSearches.length + i ? 'bg-zinc-100 dark:bg-zinc-800' : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50'}`}
-                            >
-                              <TrendingUp className="h-3.5 w-3.5 text-zinc-400 shrink-0" strokeWidth={1.5} />
-                              <span className="truncate">{s}</span>
-                            </button>
-                          ))}
+                    <div className="py-2">
+                      {/* Loading */}
+                      {isSearchFetching && (
+                        <div className="flex items-center justify-center py-6">
+                          <Loader2 className="h-5 w-5 animate-spin text-zinc-400" strokeWidth={1.5} />
                         </div>
-                        {/* Categories */}
-                        <div className="border-t border-zinc-100 dark:border-zinc-800 mt-1">
-                          <p className="px-4 py-2 text-[10px] font-semibold tracking-widest text-zinc-400 uppercase">Categories</p>
-                          {navItems.map((item, i) => (
-                            <Link
-                              key={item.to}
-                              to={item.to}
-                              onClick={() => setSearchFocused(false)}
-                              onMouseEnter={() => setSelectedSuggestionIdx(recentSearches.length + TRENDING_SEARCHES.length + i)}
-                              className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${selectedSuggestionIdx === recentSearches.length + TRENDING_SEARCHES.length + i ? 'bg-zinc-100 dark:bg-zinc-800' : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50'}`}
-                            >
-                              <Search className="h-3.5 w-3.5 text-zinc-400 shrink-0" strokeWidth={1.5} />
-                              <span>{item.label}</span>
-                            </Link>
-                          ))}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="py-2">
-                        {/* Loading */}
-                        {isSearchFetching && (
-                          <div className="flex items-center justify-center py-6">
-                            <Loader2 className="h-5 w-5 animate-spin text-zinc-400" strokeWidth={1.5} />
-                          </div>
-                        )}
+                      )}
                         {/* Results */}
                         {!isSearchFetching && (suggestionList.length > 0) && (
                           <div>
@@ -447,7 +393,6 @@ const Navbar = () => {
                           </div>
                         )}
                       </div>
-                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -860,59 +805,9 @@ const Navbar = () => {
                     </div>
                   )
                 ) : (
-                  <div className="space-y-6">
-                    {/* Recent */}
-                    {recentSearches.length > 0 && (
-                      <div>
-                        <p className="text-xs font-semibold tracking-widest text-zinc-400 uppercase mb-2">Recent</p>
-                        <div className="space-y-1">
-                          {recentSearches.map((s) => (
-                            <button
-                              key={s}
-                              onClick={() => { setSearchQuery(s); doSearchRefValue(s); }}
-                              className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-lg transition-colors cursor-pointer"
-                            >
-                              <Clock className="h-4 w-4 text-zinc-400 shrink-0" strokeWidth={1.5} />
-                              <span className="truncate">{s}</span>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {/* Trending */}
-                    <div>
-                      <p className="text-xs font-semibold tracking-widest text-zinc-400 uppercase mb-2 flex items-center gap-1.5">
-                        <TrendingUp className="h-3.5 w-3.5" strokeWidth={1.5} /> Trending
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {TRENDING_SEARCHES.map((s) => (
-                          <button
-                            key={s}
-                            onClick={() => { setSearchQuery(s); doSearchRefValue(s); }}
-                            className="px-4 py-2 text-sm font-medium text-zinc-700 bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-full transition-colors cursor-pointer"
-                          >
-                            {s}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    {/* Categories */}
-                    <div>
-                      <p className="text-xs font-semibold tracking-widest text-zinc-400 uppercase mb-2">Categories</p>
-                      <div className="space-y-1">
-                        {navItems.map((item) => (
-                          <Link
-                            key={item.to}
-                            to={item.to}
-                            onClick={() => setMobileSearchOpen(false)}
-                            className="flex items-center gap-3 px-3 py-2.5 text-sm text-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-lg transition-colors"
-                          >
-                            <Search className="h-4 w-4 text-zinc-400 shrink-0" strokeWidth={1.5} />
-                            {item.label}
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
+                  <div className="text-center py-12">
+                    <Search className="h-10 w-10 mx-auto mb-3 text-zinc-300 dark:text-zinc-600" strokeWidth={1.5} />
+                    <p className="text-sm font-medium text-zinc-400 dark:text-zinc-500">Type at least 2 characters to search...</p>
                   </div>
                 )}
               </div>
