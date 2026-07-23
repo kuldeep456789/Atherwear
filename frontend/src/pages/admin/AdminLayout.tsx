@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Outlet, Link, useLocation, Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import {
   LayoutDashboard, Package, Users, RotateCcw, MessageSquare, Banknote,
@@ -21,6 +21,11 @@ export default function AdminLayout() {
   const location = useLocation();
   const userInfo = useSelector((state: RootState) => state.auth.userInfo);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Strict route protection: non-admins cannot land on admin pages
+  if (!userInfo || userInfo.role !== 'admin') {
+    return <Navigate to="/login?redirect=/admin" replace />;
+  }
 
   // Close sidebar on route change on mobile
   useEffect(() => {

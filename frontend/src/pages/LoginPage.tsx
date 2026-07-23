@@ -42,7 +42,6 @@ const LoginPage = () => {
 
   const handleAdminDemoLogin = () => {
     setAdminError('');
-    setAdminSecretCode('');
     setAdminPassword('');
     setIsAdminModalOpen(true);
   };
@@ -50,13 +49,22 @@ const LoginPage = () => {
   const handleAdminModalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAdminError('');
+    if (!adminEmail.trim() || !adminPassword.trim()) {
+      setAdminError('Please enter both Admin Email ID and Password.');
+      return;
+    }
     setAdminSubmitting(true);
     try {
-      const payload = await adminSecretLogin({
-        secretCode: adminSecretCode.trim() || undefined,
-        email: adminEmail.trim() || undefined,
-        password: adminPassword.trim() || undefined,
+      const payload = await login({
+        email: adminEmail.trim(),
+        password: adminPassword,
       }).unwrap();
+
+      if (payload?.user?.role !== 'admin') {
+        setAdminError('Access denied. This account does not have administrator privileges.');
+        setAdminSubmitting(false);
+        return;
+      }
 
       resetToFreshSession();
       dispatch(setCredentials({ ...payload.user, accessToken: payload.token || payload.accessToken }));
@@ -64,7 +72,7 @@ const LoginPage = () => {
       setIsAdminModalOpen(false);
       navigate('/admin');
     } catch (err: any) {
-      const msg = err?.data?.message || 'Invalid administrator secret code or credentials.';
+      const msg = err?.data?.message || 'Invalid administrator credentials.';
       setAdminError(msg);
     } finally {
       setAdminSubmitting(false);
@@ -253,7 +261,13 @@ const LoginPage = () => {
       }).unwrap();
       resetToFreshSession();
       dispatch(setCredentials({ ...payload.user, accessToken: payload.token || payload.accessToken }));
-      toast.success('Registration successful! Welcome to VASTRA');
+      if (payload?.user?.role === 'admin') {
+        toast.success('Administrator account created! Directing to dashboard...');
+        navigate('/admin');
+      } else {
+        toast.success('Registration successful! Welcome to VASTRA');
+        navigate(redirect);
+      }
     } catch (err: any) {
       setErrorMessage(err?.data?.message || 'Invalid or expired OTP');
       toast.error(err?.data?.message || 'Invalid OTP');
