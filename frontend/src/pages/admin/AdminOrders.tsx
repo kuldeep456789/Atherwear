@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Search, Package, MoreVertical, Download, RefreshCw } from 'lucide-react';
 import { adminApi, type AdminOrder } from '../../services/adminApi';
+import Pagination from '../../components/Pagination';
 
 const statusFilters = ['All', 'Pending', 'Confirmed', 'Processing', 'Shipped', 'Out For Delivery', 'Delivered'];
 const statusColors: Record<string, string> = {
@@ -33,6 +34,10 @@ export default function AdminOrders() {
   const [search, setSearch] = useState('');
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
+  // Pagination state (20 orders per page)
+  const ITEMS_PER_PAGE = 20;
+  const [currentPage, setCurrentPage] = useState(1);
+
   const fetchOrders = useCallback(async () => {
     try {
       setLoading(true);
@@ -47,6 +52,10 @@ export default function AdminOrders() {
   }, []);
 
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, search]);
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
     try {
@@ -63,7 +72,7 @@ export default function AdminOrders() {
   };
 
   const filtered = orders.filter((o) => {
-    const status = o.status || 'Pending'; // Default to Pending if missing
+    const status = o.status || 'Pending';
     const matchTab = activeTab === 'All' || status.toLowerCase() === activeTab.toLowerCase();
     const customerName = o.userId
       ? (o.userId.name || `${o.userId.firstName ?? ''} ${o.userId.lastName ?? ''}`.trim() || (o.userId.email ?? ''))
@@ -73,6 +82,12 @@ export default function AdminOrders() {
       customerName.toLowerCase().includes(search.toLowerCase());
     return matchTab && matchSearch;
   });
+
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const paginatedOrders = filtered.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   return (
     <div className="space-y-6 pb-10">
@@ -84,11 +99,11 @@ export default function AdminOrders() {
           </p>
         </div>
         <div className="flex gap-3">
-          <button onClick={fetchOrders} className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 shadow-sm">
+          <button onClick={fetchOrders} className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 shadow-sm cursor-pointer">
             <RefreshCw className="h-4 w-4" />
             Refresh
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 shadow-sm">
+          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 shadow-sm cursor-pointer">
             <Download className="h-4 w-4" />
             Export
           </button>
@@ -147,7 +162,7 @@ export default function AdminOrders() {
                 </tr>
               </thead>
               <tbody className="text-[15px]">
-                {filtered.map((order) => {
+                {paginatedOrders.map((order) => {
                   const customer = order.userId;
                   const name = (customer
                     ? (customer.name || `${customer.firstName ?? ''} ${customer.lastName ?? ''}`.trim() || customer.email)
@@ -206,8 +221,15 @@ export default function AdminOrders() {
         )}
 
         {!loading && !error && filtered.length > 0 && (
-          <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between text-sm text-gray-500">
-            <span>Showing {filtered.length} of {orders.length} orders</span>
+          <div className="px-6 py-4 border-t border-gray-200 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-500">
+            <span>
+              Showing {Math.min((currentPage - 1) * ITEMS_PER_PAGE + 1, filtered.length)} to {Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)} of {filtered.length} orders
+            </span>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={(page) => setCurrentPage(page)}
+            />
           </div>
         )}
       </div>
