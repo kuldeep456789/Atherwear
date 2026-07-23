@@ -130,36 +130,10 @@ export class ProductsService implements OnModuleInit {
 
 
   async createReview(id: string, token: string, dto: CreateReviewDto) {
-    if (!dto.comment?.trim()) throw new BadRequestException('comment is required');
-    if (!dto.rating || dto.rating < 1 || dto.rating > 5) throw new BadRequestException('rating must be between 1 and 5');
+    if (!dto.comment?.trim()) throw new BadRequestException('Comment is required');
+    if (!dto.rating || dto.rating < 1 || dto.rating > 5) throw new BadRequestException('Rating must be between 1 and 5');
 
     const user = await this.resolveUser(token);
-
-    // Verify user has placed an order
-    const userObjId = Types.ObjectId.isValid(user.id) ? new Types.ObjectId(user.id) : null;
-    const userStrId = user.id || (user as any)._id?.toString() || '';
-
-    const hasOrderedProduct = await this.orderModel.exists({
-      $or: [
-        ...(userObjId ? [{ userId: userObjId }] : []),
-        { userId: userStrId },
-        { 'shippingDetails.phone': user.phone },
-      ],
-      'items.productId': id,
-    });
-
-    if (!hasOrderedProduct) {
-      const hasAnyOrder = await this.orderModel.exists({
-        $or: [
-          ...(userObjId ? [{ userId: userObjId }] : []),
-          { userId: userStrId },
-        ],
-      });
-
-      if (!hasAnyOrder) {
-        throw new BadRequestException('You can only review products after placing an order.');
-      }
-    }
 
     const review = await this.reviewModel.create({
       productId: id,

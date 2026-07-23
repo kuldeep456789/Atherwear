@@ -5,7 +5,7 @@ import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
 import { AuthService } from './auth.service';
 import { TwilioService } from './services/twilio.service';
-import { EmailOtpService } from './services/email-otp.service';
+import { MailService } from '../mail/mail.service';
 import { OtpStoreService } from './services/otp-store.service';
 
 describe('AuthService', () => {
@@ -24,7 +24,7 @@ describe('AuthService', () => {
   };
 
   const twilioService = {} as any;
-  const emailOtpService = {} as any;
+  const mailService = {} as any;
   const otpStore = {} as any;
 
   beforeEach(async () => {
@@ -36,12 +36,12 @@ describe('AuthService', () => {
         { provide: UsersService, useValue: usersService },
         { provide: JwtService, useValue: jwtService },
         { provide: TwilioService, useValue: twilioService },
-        { provide: EmailOtpService, useValue: emailOtpService },
+        { provide: MailService, useValue: mailService },
         { provide: OtpStoreService, useValue: otpStore },
       ],
     }).compile();
 
-    authService = module.get(AuthService);
+    authService = module.get<AuthService>(AuthService);
   });
 
   it('registers a user and returns a token', async () => {
