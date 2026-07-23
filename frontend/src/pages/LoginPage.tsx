@@ -161,32 +161,13 @@ const LoginPage = () => {
     }
   };
 
-  const handleAdminDemoLogin = async () => {
-    try {
-      setErrorMessage('');
-      const toastId = toast.loading('Setting up Admin Demo...');
-      let userRes;
-      try {
-        userRes = await register({
-          firstName: 'Admin', lastName: 'Demo', email: 'admin@vastra.app', password: 'password123'
-        }).unwrap();
-      } catch {
-        userRes = await login({ email: 'admin@vastra.app', password: 'password123' }).unwrap();
-      }
-      
-      const token = userRes.token || userRes.accessToken;
-      await fetch('/api/admin/seed', { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
-      
-      const finalRes = await login({ email: 'admin@vastra.app', password: 'password123' }).unwrap();
-      resetToFreshSession();
-      dispatch(setCredentials({ ...finalRes.user, accessToken: finalRes.token || finalRes.accessToken }));
-      toast.dismiss(toastId);
-      toast.success('Admin login successful!');
-      navigate('/admin');
-    } catch (err: any) {
-      toast.dismiss();
-      toast.error('Admin login failed');
-    }
+  const handleAdminDemoLogin = () => {
+    setIsRegister(false);
+    setEmail('admin@vastra.app');
+    setUseOtpLogin(false);
+    setPassword('');
+    setErrorMessage('');
+    toast.info('Admin email loaded (admin@vastra.app). Enter your password to sign in.');
   };
 
   const handleRegister = async (e: React.FormEvent) => {

@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException, BadRequestException, OnModuleInit } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
@@ -21,8 +21,30 @@ export type SafeUser = {
 };
 
 @Injectable()
-export class UsersService {
+export class UsersService implements OnModuleInit {
   constructor(@InjectModel(User.name) private readonly userModel: Model<User>) { }
+
+  async onModuleInit() {
+    try {
+      const adminEmail = 'admin@vastra.app';
+      const existing = await this.userModel.findOne({ email: adminEmail }).exec();
+      if (!existing) {
+        const passwordHash = await bcrypt.hash('password123', 12);
+        await this.userModel.create({
+          name: 'System Admin',
+          email: adminEmail,
+          password: passwordHash,
+          role: 'admin',
+          phone: '+919999999999',
+        });
+        console.log('[UsersService] Default Admin user created: admin@vastra.app / password123');
+      } else if (existing.role !== 'admin') {
+        await this.userModel.findByIdAndUpdate(existing._id, { role: 'admin' }).exec();
+      }
+    } catch (err: any) {
+      console.warn('[UsersService] Admin seed check error:', err?.message);
+    }
+  }
 
   /** Registers a new user account with hashed password. */
   async create(name: string, email: string, password: string, phone?: string, role: string = 'customer'): Promise<SafeUser> {
