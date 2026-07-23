@@ -300,7 +300,7 @@ const Navbar = () => {
                     onChange={(e) => { setSearchQuery(e.target.value); setSelectedSuggestionIdx(-1); }}
                     onFocus={() => setSearchFocused(true)}
                     placeholder={SEARCH_PLACEHOLDERS[placeholderIdx]}
-                    className="flex-1 bg-transparent text-[15px] text-zinc-800 dark:text-white placeholder:text-zinc-400 focus:outline-none min-w-[180px] max-w-[220px] lg:min-w-[220px]"
+                    className="flex-1 bg-transparent text-[15px] text-zinc-800 dark:text-white placeholder:text-zinc-400 focus:outline-none min-w-[180px] max-w-[220px] lg:min-w-[220px] text-left normal-case"
                   />
                   {searchQuery && (
                     <button
@@ -789,7 +789,7 @@ const Navbar = () => {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search products..."
-                    className="flex-1 bg-transparent text-[15px] text-zinc-800 dark:text-white placeholder:text-zinc-400 focus:outline-none pr-2"
+                    className="flex-1 bg-transparent text-[15px] text-zinc-800 dark:text-white placeholder:text-zinc-400 focus:outline-none pr-2 text-left normal-case"
                   />
                   {searchQuery && (
                     <button type="button" onClick={() => setSearchQuery('')} className="mr-2 p-1 cursor-pointer">

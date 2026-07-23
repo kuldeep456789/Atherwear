@@ -343,14 +343,14 @@ const LoginPage = () => {
                       </div>
                       <div className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-[hsl(var(--card))] px-4 py-3.5 transition focus-within:border-zinc-500">
                         <Mail size={17} className="shrink-0 text-zinc-400" />
-                        <input type="email" placeholder="you@example.com" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-400" />
+                        <input type="email" placeholder="you@example.com" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-400 text-left normal-case" />
                       </div>
                     </div>
                     <div>
                       <label className="mb-2 block text-[11px] font-semibold uppercase tracking-widest text-zinc-500">Password</label>
                       <div className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-[hsl(var(--card))] px-4 py-3.5 transition focus-within:border-zinc-500">
                         <Lock size={17} className="shrink-0 text-zinc-400" />
-                        <input type={showLoginPassword ? 'text' : 'password'} placeholder="Enter your password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-400" />
+                        <input type={showLoginPassword ? 'text' : 'password'} placeholder="Enter your password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-400 text-left normal-case" />
                         <button type="button" onClick={() => setShowLoginPassword((p) => !p)} className="text-zinc-400 hover:text-zinc-700 dark:hover:text-white cursor-pointer">
                           {showLoginPassword ? <EyeOff size={17} /> : <Eye size={17} />}
                         </button>
@@ -501,7 +501,7 @@ const LoginPage = () => {
                     <div>
                       <label className="mb-2 block text-[11px] font-semibold uppercase tracking-widest text-zinc-500">Full Name</label>
                       <div className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-[hsl(var(--card))] px-4 py-3.5 transition focus-within:border-zinc-500">
-                        <input type="text" placeholder="Aarav Sharma" value={fullName} onChange={(e) => setFullName(e.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-400" />
+                        <input type="text" placeholder="Aarav Sharma" value={fullName} onChange={(e) => setFullName(e.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-400 text-left normal-case" />
                       </div>
                     </div>
 
@@ -509,7 +509,7 @@ const LoginPage = () => {
                       <label className="mb-2 block text-[11px] font-semibold uppercase tracking-widest text-zinc-500">Email address</label>
                       <div className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-[hsl(var(--card))] px-4 py-3.5 transition focus-within:border-zinc-500">
                         <Mail size={17} className="shrink-0 text-zinc-400" />
-                        <input type="email" placeholder="you@example.com" value={registerEmail} onChange={(e) => setRegisterEmail(e.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-400" />
+                        <input type="email" placeholder="you@example.com" value={registerEmail} onChange={(e) => setRegisterEmail(e.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-400 text-left normal-case" />
                       </div>
                     </div>
 
@@ -517,7 +517,7 @@ const LoginPage = () => {
                       <label className="mb-2 block text-[11px] font-semibold uppercase tracking-widest text-zinc-500">Password</label>
                       <div className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-[hsl(var(--card))] px-4 py-3.5 transition focus-within:border-zinc-500">
                         <Lock size={17} className="shrink-0 text-zinc-400" />
-                        <input type={showRegisterPassword ? 'text' : 'password'} placeholder="Minimum 6 characters" value={registerPassword} onChange={(e) => setRegisterPassword(e.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-400" />
+                        <input type={showRegisterPassword ? 'text' : 'password'} placeholder="Minimum 6 characters" value={registerPassword} onChange={(e) => setRegisterPassword(e.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-400 text-left normal-case" />
                         <button type="button" onClick={() => setShowRegisterPassword((p) => !p)} className="text-zinc-400 hover:text-zinc-700 dark:hover:text-white cursor-pointer">
                           {showRegisterPassword ? <EyeOff size={17} /> : <Eye size={17} />}
                         </button>
@@ -528,7 +528,7 @@ const LoginPage = () => {
                       <label className="mb-2 block text-[11px] font-semibold uppercase tracking-widest text-zinc-500">Confirm password</label>
                       <div className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-[hsl(var(--card))] px-4 py-3.5 transition focus-within:border-zinc-500">
                         <Lock size={17} className="shrink-0 text-zinc-400" />
-                        <input type={showConfirmPassword ? 'text' : 'password'} placeholder="Re-enter your password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-400" />
+                        <input type={showConfirmPassword ? 'text' : 'password'} placeholder="Re-enter your password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-400 text-left normal-case" />
                         <button type="button" onClick={() => setShowConfirmPassword((p) => !p)} className="text-zinc-400 hover:text-zinc-700 dark:hover:text-white cursor-pointer">
                           {showConfirmPassword ? <EyeOff size={17} /> : <Eye size={17} />}
                         </button>
