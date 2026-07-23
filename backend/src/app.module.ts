@@ -19,7 +19,6 @@ import { WishlistModule } from './modules/wishlist/wishlist.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { ReturnsModule } from './modules/returns/returns.module';
 import { UsersModule } from './modules/users/users.module';
-import { AskVastraModule } from './modules/ask-vastra/ask-vastra.module';
 import { ContactModule } from './modules/contact/contact.module';
 
 @Module({
@@ -40,7 +39,6 @@ import { ContactModule } from './modules/contact/contact.module';
     WishlistModule,
     OrdersModule,
     ReturnsModule,
-    AskVastraModule,
     ContactModule,
   ],
   controllers: [AppController],

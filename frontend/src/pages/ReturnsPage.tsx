@@ -5,6 +5,7 @@ import type { RootState } from '../store/store';
 import { useCreateReturnMutation, useGetMyReturnsQuery } from '../store/slices/returnApiSlice';
 import { Check, X, ChevronRight, ChevronDown, RotateCcw, Truck, Clock, ShieldCheck, Image as ImageIcon, Star, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
 
 const RETURN_REASONS = [
   'Wrong Size', 'Poor Fit', 'Damaged Item', 'Missing Product',
@@ -115,13 +116,15 @@ const ReturnsPage = () => {
       if (exchangeSize) body.exchangeSize = exchangeSize;
 
       await createReturn(body).unwrap();
-      setSuccessMsg('Return request submitted successfully! Track its status below.');
+      setSuccessMsg('Return request submitted successfully! Our support team will review your request shortly.');
+      toast.success('Return request submitted successfully!');
       setOrderId(''); setProductId(''); setProductName(''); setProductImage('');
       setProductSize(''); setProductColor(''); setReason(''); setDescription('');
       setImages([]); setExchangeSize(''); setPickupStreet(''); setPickupCity('');
       setPickupState(''); setPickupPincode(''); setPickupPhone('');
       refetch();
-      setTimeout(() => setSuccessMsg(''), 5000);
+      window.scrollTo({ top: 100, behavior: 'smooth' });
+      setTimeout(() => setSuccessMsg(''), 15000);
     } catch (err: any) {
       setFormError(err?.data?.message || 'Failed to submit return request.');
     }
@@ -198,9 +201,16 @@ const ReturnsPage = () => {
               </div>
 
               {successMsg && (
-                <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900/30 rounded-xl p-4 mb-6 flex items-center gap-3">
-                  <Check size={18} strokeWidth={2.5} className="text-green-600 shrink-0" />
-                  <p className="text-[13px] font-semibold text-green-700 dark:text-green-400">{successMsg}</p>
+                <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 rounded-2xl p-5 sm:p-6 mb-6 flex items-start gap-4 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center shrink-0 text-emerald-600 dark:text-emerald-400">
+                    <Check size={20} strokeWidth={2.5} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-base font-bold text-emerald-900 dark:text-emerald-200">Return Request Submitted Successfully!</h3>
+                    <p className="text-xs sm:text-sm text-emerald-700 dark:text-emerald-300/90 mt-1 leading-relaxed">
+                      Thank you for submitting your request. Our support team will review your details and contact you shortly. You can also track your return progress anytime under the <strong className="cursor-pointer underline" onClick={() => setActiveTab('history')}>My Returns</strong> tab.
+                    </p>
+                  </div>
                 </div>
               )}
 

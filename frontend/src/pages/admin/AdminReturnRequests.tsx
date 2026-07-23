@@ -152,12 +152,12 @@ export default function AdminReturnRequests() {
 
                   return (
                     <tr key={ret._id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors">
-                      <td className="px-6 py-4 font-mono text-xs text-gray-900 font-bold whitespace-nowrap">
-                        DF-{(ret.orderId || '').toUpperCase().slice(0, 10)}-{(ret.orderId || '').toUpperCase().slice(10)}
+                      <td className="px-6 py-4 font-mono text-xs text-[#3b2416] font-extrabold whitespace-nowrap">
+                        #{ret.orderId ? (ret.orderId.length > 8 ? ret.orderId.slice(-8).toUpperCase() : ret.orderId.toUpperCase()) : 'N/A'}
                       </td>
                       <td className="px-6 py-4">
-                        <p className="font-medium text-gray-900 truncate max-w-[150px]">{customerName}</p>
-                        <p className="text-xs text-gray-400 truncate max-w-[150px]">{customer?.email || 'N/A'}</p>
+                        <p className="font-bold text-gray-900 truncate max-w-[180px]">{customerName}</p>
+                        <p className="text-xs text-gray-500 truncate max-w-[180px]">{customer?.email || 'N/A'}</p>
                       </td>
 
                       <td className="px-6 py-4 text-gray-500 max-w-[200px] truncate">{ret.reason}</td>
@@ -198,7 +198,7 @@ export default function AdminReturnRequests() {
               <div>
                 <p className="text-[10px] font-bold tracking-widest text-[#a37951] uppercase mb-1">Return Request</p>
                 <h2 className="text-xl font-bold text-gray-900">
-                  DF-{(reviewModalReturn.orderId || '').toUpperCase().slice(0, 10)}-{(reviewModalReturn.orderId || '').toUpperCase().slice(10)}
+                  Order #{reviewModalReturn.orderId ? (reviewModalReturn.orderId.length > 8 ? reviewModalReturn.orderId.slice(-8).toUpperCase() : reviewModalReturn.orderId.toUpperCase()) : 'N/A'}
                 </h2>
                 <p className="text-xs text-gray-500 mt-1">
                   {reviewModalReturn.userId?.name || 'Unknown'} · {reviewModalReturn.userId?.email || 'N/A'}
