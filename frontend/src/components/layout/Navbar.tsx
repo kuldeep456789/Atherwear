@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { ShoppingBag, Heart, UserRound, X, Search, Menu, Package, MapPin, Settings, LogOut, Clock, TrendingUp, Loader2, HelpCircle, Shield, Mail, Bell } from 'lucide-react';
+import { ShoppingBag, Heart, UserRound, X, Search, Menu, Package, MapPin, Settings, LogOut, Loader2, Shield, Mail, Bell } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { RootState } from '../../store/store';
@@ -15,21 +15,6 @@ import { formatINR } from '../../lib/currency';
 import MiniCart from './MiniCart';
 import VastraLogo from './VastraLogo';
 import ThemeToggle from '../theme/ThemeToggle';
-
-const SEARCH_PLACEHOLDERS = [
-  'Search "Oversized T-Shirts"',
-  'Search "Cargo Pants"',
-  'Search "Women\'s Dresses"',
-  'Search "Accessories"',
-  'Search "Summer Collection"',
-];
-
-const TRENDING_SEARCHES = [
-  'Summer Collection', 'Oversized T-Shirts', 'Sneakers', 'Shirts',
-];
-
-const RECENT_SEARCHES_KEY = 'vastra_recent_searches';
-const MAX_RECENT = 5;
 
 const navItems = [
   { to: '/collections/men', label: 'Men' },
@@ -70,13 +55,7 @@ const Navbar = () => {
   const [miniCartOpen, setMiniCartOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [placeholderIdx, setPlaceholderIdx] = useState(0);
   const [selectedSuggestionIdx, setSelectedSuggestionIdx] = useState(-1);
-  const [recentSearches, setRecentSearches] = useState<string[]>(() => {
-    try {
-      return JSON.parse(localStorage.getItem(RECENT_SEARCHES_KEY) || '[]');
-    } catch { return []; }
-  });
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
@@ -92,13 +71,6 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Rotate placeholders
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setPlaceholderIdx((i) => (i + 1) % SEARCH_PLACEHOLDERS.length);
-    }, 3500);
-    return () => clearInterval(timer);
-  }, []);
 
   // Close search suggestions on outside click
   useEffect(() => {
@@ -166,11 +138,7 @@ const Navbar = () => {
 
   // Build suggestion list
   const suggestionList: { type: string; label: string; to?: string; image?: string; price?: string; category?: string }[] = [];
-  if (debouncedQuery.length < 2) {
-    recentSearches.forEach((s) => suggestionList.push({ type: 'recent', label: s }));
-    TRENDING_SEARCHES.forEach((s) => suggestionList.push({ type: 'trending', label: s }));
-    navItems.forEach((item) => suggestionList.push({ type: 'category', label: item.label, to: item.to }));
-  } else {
+  if (debouncedQuery.length >= 2) {
     const qLower = debouncedQuery.toLowerCase();
     const toSlug = (n: string) => n.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
@@ -194,11 +162,17 @@ const Navbar = () => {
         const discount = num(item.discountPrice);
         const price = num(item.price);
         const sell = num(item.sellPrice);
+        const original = num(item.originalPrice);
+        const mrp = num(item.mrp);
+        const variantPrice = num(item.variants?.[0]?.price || item.variants?.[0]?.discountPrice);
         if (discount && price && discount < price) return discount;
         if (discount) return discount;
         if (price) return price;
         if (sell) return sell;
-        return 0;
+        if (original) return original;
+        if (mrp) return mrp;
+        if (variantPrice) return variantPrice;
+        return price || discount || sell || 399;
       };
 
       suggestionList.push({
@@ -216,14 +190,11 @@ const Navbar = () => {
   const doSearchRefValue = useCallback((q: string) => {
     const trimmed = q.trim();
     if (!trimmed) return;
-    const updated = [trimmed, ...recentSearches.filter((s) => s !== trimmed)].slice(0, MAX_RECENT);
-    setRecentSearches(updated);
-    localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(updated));
     navigate(`/search?q=${encodeURIComponent(trimmed)}`);
     setSearchFocused(false);
     setMobileSearchOpen(false);
     setSelectedSuggestionIdx(-1);
-  }, [navigate, recentSearches]);
+  }, [navigate]);
   doSearchRef.current = doSearchRefValue;
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -299,7 +270,7 @@ const Navbar = () => {
                     value={searchQuery}
                     onChange={(e) => { setSearchQuery(e.target.value); setSelectedSuggestionIdx(-1); }}
                     onFocus={() => setSearchFocused(true)}
-                    placeholder={SEARCH_PLACEHOLDERS[placeholderIdx]}
+                    placeholder="Search products..."
                     className="flex-1 bg-transparent text-[15px] text-zinc-800 dark:text-white placeholder:text-zinc-400 focus:outline-none min-w-[180px] max-w-[220px] lg:min-w-[220px] text-left normal-case"
                   />
                   {searchQuery && (
@@ -376,12 +347,6 @@ const Navbar = () => {
                               }
                               return null;
                             })}
-                            <button
-                              onClick={() => doSearchRefValue(searchQuery)}
-                              className="w-full px-4 py-3 text-center text-xs font-semibold tracking-wider text-zinc-500 hover:text-black dark:hover:text-white hover:bg-zinc-50 dark:hover:bg-zinc-800 border-t border-zinc-100 dark:border-zinc-800 transition-colors cursor-pointer"
-                            >
-                              View all {products.length} results
-                            </button>
                           </div>
                         )}
                         {/* Empty */}
@@ -534,23 +499,6 @@ const Navbar = () => {
                             Sign Up
                           </Link>
                         </div>
-                        <div className="border-t border-zinc-100 dark:border-zinc-800 py-1">
-                          {[
-                            { to: '/account?tab=wishlist', label: 'Wishlist', icon: Heart },
-                            { to: '/track-order', label: 'Track Order', icon: Package },
-                            { to: '/faq', label: 'Help Center', icon: HelpCircle },
-                          ].map(({ to, label, icon: Icon }) => (
-                            <Link
-                              key={to}
-                              to={to}
-                              onClick={() => setProfileOpen(false)}
-                              className="flex items-center gap-3 mx-2 my-0.5 px-3 py-2.5 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-black dark:hover:text-white rounded-xl transition-all duration-200"
-                            >
-                              <Icon className="h-4 w-4 text-zinc-400" strokeWidth={1.5} />
-                              {label}
-                            </Link>
-                          ))}
-                        </div>
                       </>
                     )}
                   </motion.div>
@@ -653,7 +601,7 @@ const Navbar = () => {
 
               {/* Account links */}
               <p className="px-3 py-2 text-[10px] font-semibold tracking-widest text-zinc-400 uppercase">Account</p>
-              {userInfo ? (
+              {userInfo && (
                 <>
                   {[
                     { to: '/account?tab=profile', label: 'My Profile', icon: UserRound },
@@ -689,24 +637,6 @@ const Navbar = () => {
                     <LogOut className="h-5 w-5" strokeWidth={1.5} />
                     Logout
                   </button>
-                </>
-              ) : (
-                <>
-                  {[
-                    { to: '/account?tab=wishlist', label: 'Wishlist', icon: Heart },
-                    { to: '/track-order', label: 'Track Order', icon: Package },
-                    { to: '/faq', label: 'Help Center', icon: HelpCircle },
-                  ].map(({ to, label, icon: Icon }) => (
-                    <Link
-                      key={to}
-                      to={to}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-3 px-4 py-3 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-lg transition-colors"
-                    >
-                      <Icon className="h-5 w-5 text-zinc-400" strokeWidth={1.5} />
-                      {label}
-                    </Link>
-                  ))}
                 </>
               )}
             </div>
@@ -791,12 +721,6 @@ const Navbar = () => {
                         }
                         return null;
                       })}
-                      <button
-                        onClick={() => doSearchRefValue(searchQuery)}
-                        className="w-full py-3 text-center text-sm font-medium text-zinc-500 hover:text-black bg-zinc-50 dark:bg-zinc-800 rounded-lg transition-colors cursor-pointer"
-                      >
-                        View all results
-                      </button>
                     </div>
                   ) : (
                     <div className="text-center py-8">
