@@ -109,6 +109,49 @@ export class AuthService {
     return this.authResponse(this.usersService.toSafeUser(user));
   }
 
+  async adminSecretLogin(secretCode?: string, email?: string, password?: string) {
+    const validSecret = process.env.ADMIN_SECRET_CODE || 'secret_admin_123';
+
+    if (secretCode && secretCode.trim() === validSecret.trim()) {
+      let adminUser = await this.usersService.findByEmail('admin@vastra.app');
+      if (!adminUser) {
+        const passwordHash = await bcrypt.hash('password123', 12);
+        adminUser = await this.usersService.create(
+          'System Admin',
+          'admin@vastra.app',
+          passwordHash,
+          '+919999999999',
+          'admin'
+        );
+      } else if (adminUser.role !== 'admin') {
+        const fullUser = await this.usersService.findByEmailWithPassword('admin@vastra.app');
+        if (fullUser) {
+          fullUser.role = 'admin';
+          await fullUser.save();
+        }
+        adminUser.role = 'admin';
+      }
+      return this.authResponse(adminUser);
+    }
+
+    if (email && password) {
+      const user = await this.usersService.findByEmailWithPassword(email.toLowerCase().trim());
+      if (!user) {
+        throw new UnauthorizedException('Invalid email or password');
+      }
+      const matches = await bcrypt.compare(password, user.password);
+      if (!matches) {
+        throw new UnauthorizedException('Invalid email or password');
+      }
+      if (user.role !== 'admin') {
+        throw new UnauthorizedException('Access denied. Administrator privileges required.');
+      }
+      return this.authResponse(this.usersService.toSafeUser(user));
+    }
+
+    throw new BadRequestException('Invalid Admin Secret Code or credentials.');
+  }
+
   async loginByPhone(phone: string) {
     let user = await this.usersService.findByPhone(phone);
     if (!user) {

@@ -9,6 +9,7 @@ import { clearCartItems } from '../store/slices/cartSlice';
 import { clearWishlist } from '../store/slices/wishlistSlice';
 import {
   useLoginMutation,
+  useAdminSecretLoginMutation,
   useRegisterMutation,
   useSendMobileOtpMutation,
   useVerifyMobileOtpMutation,
@@ -31,11 +32,44 @@ const LoginPage = () => {
 
   // Admin Modal state
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
+  const [adminSecretCode, setAdminSecretCode] = useState('');
   const [adminEmail, setAdminEmail] = useState('admin@vastra.app');
   const [adminPassword, setAdminPassword] = useState('');
   const [showAdminPassword, setShowAdminPassword] = useState(false);
   const [adminError, setAdminError] = useState('');
   const [adminSubmitting, setAdminSubmitting] = useState(false);
+  const [adminSecretLogin] = useAdminSecretLoginMutation();
+
+  const handleAdminDemoLogin = () => {
+    setAdminError('');
+    setAdminSecretCode('');
+    setAdminPassword('');
+    setIsAdminModalOpen(true);
+  };
+
+  const handleAdminModalSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAdminError('');
+    setAdminSubmitting(true);
+    try {
+      const payload = await adminSecretLogin({
+        secretCode: adminSecretCode.trim() || undefined,
+        email: adminEmail.trim() || undefined,
+        password: adminPassword.trim() || undefined,
+      }).unwrap();
+
+      resetToFreshSession();
+      dispatch(setCredentials({ ...payload.user, accessToken: payload.token || payload.accessToken }));
+      toast.success('Administrator authenticated successfully!');
+      setIsAdminModalOpen(false);
+      navigate('/admin');
+    } catch (err: any) {
+      const msg = err?.data?.message || 'Invalid administrator secret code or credentials.';
+      setAdminError(msg);
+    } finally {
+      setAdminSubmitting(false);
+    }
+  };
 
   // Email login fields
   const [loginEmail, setLoginEmail] = useState('');
@@ -166,40 +200,6 @@ const LoginPage = () => {
       const msg = err?.data?.message || 'Login failed. Please check your credentials.';
       setErrorMessage(msg);
       toast.error(msg);
-    }
-  };
-
-  const handleAdminDemoLogin = () => {
-    setAdminError('');
-    setAdminPassword('');
-    setIsAdminModalOpen(true);
-  };
-
-  const handleAdminModalSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setAdminError('');
-    if (!adminEmail.trim() || !adminPassword.trim()) {
-      setAdminError('Please enter both admin email and password.');
-      return;
-    }
-    setAdminSubmitting(true);
-    try {
-      const payload = await login({ email: adminEmail.trim(), password: adminPassword }).unwrap();
-      if (payload?.user?.role !== 'admin') {
-        setAdminError('Access denied. This account does not have administrator privileges.');
-        setAdminSubmitting(false);
-        return;
-      }
-      resetToFreshSession();
-      dispatch(setCredentials({ ...payload.user, accessToken: payload.token || payload.accessToken }));
-      toast.success('Administrator authenticated successfully!');
-      setIsAdminModalOpen(false);
-      navigate('/admin');
-    } catch (err: any) {
-      const msg = err?.data?.message || 'Invalid administrator credentials.';
-      setAdminError(msg);
-    } finally {
-      setAdminSubmitting(false);
     }
   };
 
@@ -587,6 +587,29 @@ const LoginPage = () => {
             <form onSubmit={handleAdminModalSubmit} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider mb-1.5">
+                  Admin Secret Code
+                </label>
+                <div className="relative">
+                  <Shield size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" />
+                  <input
+                    type="password"
+                    value={adminSecretCode}
+                    onChange={(e) => setAdminSecretCode(e.target.value)}
+                    placeholder="Enter Admin Secret Code"
+                    className="w-full h-12 pl-11 pr-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 text-sm font-medium focus:outline-none focus:border-zinc-900 dark:focus:border-white transition-colors"
+                  />
+                </div>
+                <p className="text-[11px] text-zinc-400 mt-1">Entering Secret Code grants Admin access without typing email or password.</p>
+              </div>
+
+              <div className="relative flex py-1 items-center">
+                <div className="flex-grow border-t border-zinc-200 dark:border-zinc-800"></div>
+                <span className="flex-shrink mx-3 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">OR Credentials</span>
+                <div className="flex-grow border-t border-zinc-200 dark:border-zinc-800"></div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider mb-1.5">
                   Admin Email ID
                 </label>
                 <div className="relative">
@@ -596,7 +619,6 @@ const LoginPage = () => {
                     value={adminEmail}
                     onChange={(e) => setAdminEmail(e.target.value)}
                     placeholder="admin@vastra.app"
-                    required
                     className="w-full h-12 pl-11 pr-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 text-sm font-medium focus:outline-none focus:border-zinc-900 dark:focus:border-white transition-colors"
                   />
                 </div>
@@ -613,7 +635,6 @@ const LoginPage = () => {
                     value={adminPassword}
                     onChange={(e) => setAdminPassword(e.target.value)}
                     placeholder="Enter admin password"
-                    required
                     className="w-full h-12 pl-11 pr-11 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 text-sm font-medium focus:outline-none focus:border-zinc-900 dark:focus:border-white transition-colors"
                   />
                   <button
@@ -631,7 +652,7 @@ const LoginPage = () => {
                 disabled={adminSubmitting}
                 className="w-full h-12 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold text-sm hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all duration-200 shadow-md active:scale-[0.98] disabled:opacity-50 mt-2 cursor-pointer"
               >
-                {adminSubmitting ? 'Authenticating...' : 'Sign In as Administrator'}
+                {adminSubmitting ? 'Authenticating...' : 'Access Administrator Dashboard'}
               </button>
             </form>
           </div>

@@ -27,6 +27,11 @@ export class AuthController {
     return this.authService.login(loginDto);
   }
 
+  @Post('admin-secret-login')
+  adminSecretLogin(@Body() body: { secretCode?: string; email?: string; password?: string }) {
+    return this.authService.adminSecretLogin(body.secretCode, body.email, body.password);
+  }
+
   @Post('send-mobile-otp')
   sendMobileOtp(@Body() body: { phone: string }) {
     return this.authService.sendMobileOtp(body.phone);
