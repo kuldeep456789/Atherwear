@@ -502,32 +502,37 @@ const ProductDetailsPage = () => {
               )}
 
               {/* Colour Variants as Images */}
-              <div className="pb-8">
-                <div className="flex gap-2 flex-wrap mt-2">
-                  {colors.map((color: any) => {
-                    const variantImg = product.variants?.find((v: any) => v.color === color)?.variantImage 
-                                       || product.variants?.find((v: any) => v.color === color)?.image 
-                                       || displayImages[0];
-                    return (
-                      <button
-                        key={color}
-                        onClick={() => setSelectedColor(color)}
-                        className={`w-[70px] h-[70px] rounded-md overflow-hidden border transition-all duration-200 cursor-pointer ${selectedColor === color
-                            ? 'border-black dark:border-white ring-1 ring-black dark:ring-white'
-                            : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-400'
-                          }`}
-                        title={color}
-                      >
-                        {variantImg ? (
-                           <img src={variantImg} alt={color} className="w-full h-full object-cover" />
-                        ) : (
-                           <div className="w-full h-full" style={{ backgroundColor: getColorHex(color) }} />
-                        )}
-                      </button>
-                    )
-                  })}
+              {colors && colors.length > 0 && (
+                <div className="pb-8">
+                  <p className="text-[16px] font-medium text-[#111111] dark:text-zinc-200 mb-2">
+                    Choose Color{selectedColor ? `: ${selectedColor}` : ''}
+                  </p>
+                  <div className="flex gap-2 flex-wrap mt-2">
+                    {colors.map((color: any) => {
+                      const variantImg = product.variants?.find((v: any) => v.color === color)?.variantImage 
+                                         || product.variants?.find((v: any) => v.color === color)?.image 
+                                         || displayImages[0];
+                      return (
+                        <button
+                          key={color}
+                          onClick={() => setSelectedColor(color)}
+                          className={`w-[70px] h-[70px] rounded-md overflow-hidden border transition-all duration-200 cursor-pointer ${selectedColor === color
+                              ? 'border-black dark:border-white ring-1 ring-black dark:ring-white'
+                              : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-400'
+                            }`}
+                          title={color}
+                        >
+                          {variantImg ? (
+                             <img src={variantImg} alt={color} className="w-full h-full object-cover" />
+                          ) : (
+                             <div className="w-full h-full" style={{ backgroundColor: getColorHex(color) }} />
+                          )}
+                        </button>
+                      )
+                    })}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Size */}
               <div className="pb-8">
