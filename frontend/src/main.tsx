@@ -14,7 +14,7 @@ createRoot(document.getElementById('root')!).render(
       <ThemeProvider>
         <App />
         <Toaster
-          position="top-right"
+          position="bottom-center"
           toastOptions={{
             duration: 3000,
             style: {
