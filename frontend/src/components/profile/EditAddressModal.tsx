@@ -54,6 +54,12 @@ const EditAddressModal = ({ isOpen, onClose, address, title = 'Edit Address', on
       return;
     }
 
+    const cleanPhone = formData.phone.replace(/\D/g, '');
+    if (cleanPhone.length < 10) {
+      toast.error('Please enter a valid 10-digit phone number.');
+      return;
+    }
+
     onSave(formData);
     toast.success('Address saved successfully!');
     onClose();
@@ -141,9 +147,9 @@ const EditAddressModal = ({ isOpen, onClose, address, title = 'Edit Address', on
             <div className="relative">
               <Phone size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" strokeWidth={1.5} />
               <input
-                type="text"
+                type="tel"
                 value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/[^\d+\s-]/g, '').slice(0, 15) })}
                 className="w-full h-[48px] pl-10 pr-4 rounded-xl border border-zinc-200 dark:border-[#2A2A2A] bg-zinc-50 dark:bg-[#0F0F10] text-zinc-900 dark:text-white text-[15px] outline-none focus:ring-2 focus:ring-zinc-900/20 dark:focus:ring-white/20 transition-all"
                 placeholder="+91 98765 43210"
               />

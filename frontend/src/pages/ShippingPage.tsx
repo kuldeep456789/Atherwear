@@ -6,6 +6,7 @@ import { saveShippingAddress } from '../store/slices/cartSlice';
 import CheckoutSteps from '../components/checkout/CheckoutSteps';
 import OrderSummarySidebar from '../components/checkout/OrderSummarySidebar';
 import { MapPin, Building2, Hash, Globe, Phone, Mail, User } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 
 const InputField = ({
@@ -103,6 +104,11 @@ const ShippingPage = () => {
   const dispatch = useDispatch();
 
   const submitHandler = () => {
+    const cleanPhone = phone.replace(/\D/g, '');
+    if (cleanPhone.length < 10) {
+      toast.error('Please enter a valid 10-digit phone number.');
+      return;
+    }
     dispatch(saveShippingAddress({
       address: `${address}${address2 ? `, ${address2}` : ''}`,
       city, postalCode, country, phone
@@ -157,7 +163,7 @@ const ShippingPage = () => {
                     icon={<Mail size={15} strokeWidth={1.5} />} required type="email" autoComplete="email"
                   />
                   <InputField
-                    id="phone" label="Phone Number" value={phone} onChange={setPhone}
+                    id="phone" label="Phone Number" value={phone} onChange={(val: string) => setPhone(val.replace(/[^\d+]/g, '').slice(0, 13))}
                     icon={<Phone size={15} strokeWidth={1.5} />} required type="tel" autoComplete="tel"
                   />
                 </div>

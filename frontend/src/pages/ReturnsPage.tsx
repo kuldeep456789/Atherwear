@@ -94,6 +94,11 @@ const ReturnsPage = () => {
       setFormError('Please complete the pickup address fields.');
       return;
     }
+    const cleanPhone = pickupPhone.replace(/\D/g, '');
+    if (cleanPhone.length < 10) {
+      setFormError('Please enter a valid 10-digit pickup phone number.');
+      return;
+    }
     try {
       const body: any = {
         orderId,
@@ -289,7 +294,7 @@ const ReturnsPage = () => {
                     <input value={pickupCity} onChange={(e) => setPickupCity(e.target.value)} placeholder="City *" className="h-[44px] px-3 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-transparent text-[13px] focus:outline-none focus:border-[hsl(var(--foreground))]" />
                     <input value={pickupState} onChange={(e) => setPickupState(e.target.value)} placeholder="State *" className="h-[44px] px-3 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-transparent text-[13px] focus:outline-none focus:border-[hsl(var(--foreground))]" />
                     <input value={pickupPincode} onChange={(e) => setPickupPincode(e.target.value)} placeholder="Pincode *" className="h-[44px] px-3 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-transparent text-[13px] focus:outline-none focus:border-[hsl(var(--foreground))]" />
-                    <input value={pickupPhone} onChange={(e) => setPickupPhone(e.target.value)} placeholder="Phone *" className="h-[44px] px-3 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-transparent text-[13px] focus:outline-none focus:border-[hsl(var(--foreground))]" />
+                    <input type="tel" value={pickupPhone} onChange={(e) => setPickupPhone(e.target.value.replace(/[^\d+\s-]/g, '').slice(0, 15))} placeholder="Phone *" className="h-[44px] px-3 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-transparent text-[13px] focus:outline-none focus:border-[hsl(var(--foreground))]" />
                   </div>
                 </div>
 
