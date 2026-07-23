@@ -100,11 +100,7 @@ export class ProductsController {
       throw new BadRequestException('Product ID is required');
     }
 
-    const token = authorization?.replace(/^Bearer\s+/i, '');
-
-    if (!token) {
-      throw new UnauthorizedException('Bearer token is required');
-    }
+    const token = authorization?.replace(/^Bearer\s+/i, '') || '';
 
     return await this.productsService.createReview(
       id,

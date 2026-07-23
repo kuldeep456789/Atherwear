@@ -133,13 +133,21 @@ export class ProductsService implements OnModuleInit {
     if (!dto.comment?.trim()) throw new BadRequestException('Comment is required');
     if (!dto.rating || dto.rating < 1 || dto.rating > 5) throw new BadRequestException('Rating must be between 1 and 5');
 
-    const user = await this.resolveUser(token);
+    let userName = 'Verified Customer';
+    if (token) {
+      try {
+        const user = await this.resolveUser(token);
+        userName = user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Verified Customer';
+      } catch {
+        // Fallback to Verified Customer if token is expired or invalid
+      }
+    }
 
     const review = await this.reviewModel.create({
       productId: id,
       rating: dto.rating,
       comment: dto.comment.trim(),
-      userName: user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Verified Customer',
+      userName,
     });
 
     // Clear single product cache so the new review is immediately returned on reload
