@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Search, Package, MoreVertical, Download, RefreshCw } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { adminApi, type AdminOrder } from '../../services/adminApi';
 import Pagination from '../../components/Pagination';
 
@@ -71,6 +72,34 @@ export default function AdminOrders() {
     }
   };
 
+  const handleExportOrders = () => {
+    if (!orders || orders.length === 0) {
+      toast.error('No orders to export');
+      return;
+    }
+
+    const headers = ['Order ID', 'Customer Name', 'Customer Email', 'Items', 'Total Amount', 'Payment Status', 'Status', 'Date'];
+    const rows = orders.map((o: any) => {
+      const customer = o.userId;
+      const name = (customer ? (customer.name || `${customer.firstName ?? ''} ${customer.lastName ?? ''}`.trim() || customer.email) : 'Guest User') || 'Guest User';
+      const email = customer?.email || o.shippingAddress?.email || 'N/A';
+      const itemsCount = o.orderItems?.length || 0;
+      const date = new Date(o.createdAt).toLocaleDateString();
+      return `"${o._id}","${name.replace(/"/g, '""')}","${email}","${itemsCount}","₹${o.totalAmount}","${o.paymentStatus || 'unpaid'}","${o.status}","${date}"`;
+    });
+
+    const csvContent = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `orders_export_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success('Orders exported successfully!');
+  };
+
   const filtered = orders.filter((o) => {
     const status = o.status || 'Pending';
     const matchTab = activeTab === 'All' || status.toLowerCase() === activeTab.toLowerCase();
@@ -103,7 +132,7 @@ export default function AdminOrders() {
             <RefreshCw className="h-4 w-4" />
             Refresh
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 shadow-sm cursor-pointer">
+          <button onClick={handleExportOrders} className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 shadow-sm cursor-pointer">
             <Download className="h-4 w-4" />
             Export
           </button>

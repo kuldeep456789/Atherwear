@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ChevronRight, Download, RefreshCw, Banknote, Calendar, ShoppingBag, MousePointerClick, MoreVertical, Truck, UserPlus } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import toast from 'react-hot-toast';
 import { adminApi, type DashboardStats, type AdminOrder, type AnalyticsData } from '../../services/adminApi';
 
 export default function AdminDashboard() {
@@ -34,7 +35,7 @@ export default function AdminDashboard() {
 
   const handleExport = () => {
     if (!recentOrders || recentOrders.length === 0) {
-      alert("No data to export");
+      toast.error("No dashboard order data to export");
       return;
     }
 
@@ -46,7 +47,7 @@ export default function AdminDashboard() {
         const name = (customer ? (customer.name || `${customer.firstName ?? ''} ${customer.lastName ?? ''}`.trim() || customer.email) : 'Unknown') || 'Unknown';
         const email = customer?.email || 'N/A';
         const date = new Date(order.createdAt).toLocaleDateString();
-        return `"${order._id}","${name}","${email}","${order.totalAmount}","${order.status}","${date}"`;
+        return `"${order._id}","${name.replace(/"/g, '""')}","${email}","₹${order.totalAmount}","${order.status}","${date}"`;
       })
     ].join('\n');
 
@@ -58,6 +59,7 @@ export default function AdminDashboard() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    toast.success('Dashboard data exported successfully!');
   };
 
   if (loading) {

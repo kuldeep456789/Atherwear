@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Search, Plus, Download, Edit, Trash, Package, RefreshCw } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { adminApi, type AdminProduct } from '../../services/adminApi';
 import Pagination from '../../components/Pagination';
 
@@ -48,6 +49,35 @@ export default function AdminProducts() {
     }
   };
 
+  const handleExportProducts = () => {
+    if (!products || products.length === 0) {
+      toast.error('No products to export');
+      return;
+    }
+
+    const headers = ['Product ID', 'Name', 'Category', 'Price', 'Discount Price', 'Stock', 'Collection'];
+    const rows = products.map((p: any) => {
+      const name = p.name || p.title || p.productName || 'Unnamed Product';
+      const category = p.categoryName || p._category || p.category?.name || 'Uncategorized';
+      const price = p.price || p.sellPrice || 0;
+      const discountPrice = p.discountPrice || 0;
+      const stock = p.countInStock ?? p.stock ?? 0;
+      const collection = p.collectionType || 'All';
+      return `"${p._id}","${name.replace(/"/g, '""')}","${category}","₹${price}","₹${discountPrice}","${stock}","${collection}"`;
+    });
+
+    const csvContent = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `products_export_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success('Products exported successfully!');
+  };
+
   const filtered = products.filter(
     (p) =>
       p.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -72,7 +102,7 @@ export default function AdminProducts() {
             <RefreshCw className="h-4 w-4" />
             Refresh
           </button>
-          <button className="flex-1 sm:flex-none justify-center items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm flex cursor-pointer">
+          <button onClick={handleExportProducts} className="flex-1 sm:flex-none justify-center items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm flex cursor-pointer">
             <Download className="h-4 w-4" />
             Export
           </button>
