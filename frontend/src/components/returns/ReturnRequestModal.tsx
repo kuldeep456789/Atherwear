@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useCreateReturnMutation } from '../../store/slices/returnApiSlice';
-import { X, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { X, AlertCircle, CheckCircle2, CheckSquare, Square } from 'lucide-react';
 import { useGetProductDetailsQuery } from '../../store/slices/productApiSlice';
 
 interface ReturnRequestModalProps {
@@ -10,14 +10,22 @@ interface ReturnRequestModalProps {
   onSuccess: () => void;
 }
 
+interface ProductDetails {
+  id: string;
+  name: string;
+  image: string;
+  size: string;
+  color: string;
+}
+
 const ProductOption = ({
   productId,
   selected,
-  onSelect,
+  onToggle,
 }: {
   productId: string;
   selected: boolean;
-  onSelect: (details: { name: string; image: string; size: string; color: string }) => void;
+  onToggle: (details: ProductDetails) => void;
 }) => {
   const { data: product } = useGetProductDetailsQuery(productId);
   const name = product?.name || product?.title || 'Unknown Product';
@@ -27,26 +35,26 @@ const ProductOption = ({
 
   return (
     <div
-      onClick={() => onSelect({ name, image, size, color })}
-      className={`p-3 border rounded-xl flex items-center gap-4 cursor-pointer transition-colors ${
-        selected ? 'border-[#0050cb] bg-blue-50/50' : 'border-gray-200 hover:bg-gray-50'
+      onClick={() => onToggle({ id: productId, name, image, size, color })}
+      className={`p-3.5 border rounded-xl flex items-center gap-4 cursor-pointer transition-all ${
+        selected ? 'border-[#0050cb] bg-blue-50/60 shadow-sm' : 'border-gray-200 hover:bg-gray-50'
       }`}
     >
-      <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden shrink-0">
+      <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden shrink-0 border border-gray-200">
         {image ? (
           <img src={image} alt={name} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full bg-gray-200" />
         )}
       </div>
-      <div className="flex-1">
-        <p className={`text-sm font-semibold ${selected ? 'text-[#0050cb]' : 'text-gray-900'}`}>{name}</p>
-        <p className="text-xs text-gray-500">
+      <div className="flex-1 min-w-0">
+        <p className={`text-sm font-semibold truncate ${selected ? 'text-[#0050cb]' : 'text-gray-900'}`}>{name}</p>
+        <p className="text-xs text-gray-500 mt-0.5">
           Size: {size} | Color: {color}
         </p>
       </div>
-      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${selected ? 'border-[#0050cb] bg-[#0050cb]' : 'border-gray-300'}`}>
-        {selected && <div className="w-2 h-2 rounded-full bg-white" />}
+      <div className={`w-6 h-6 rounded-md border flex items-center justify-center transition-colors ${selected ? 'border-[#0050cb] bg-[#0050cb] text-white' : 'border-gray-300 bg-white'}`}>
+        {selected ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4 text-gray-300" />}
       </div>
     </div>
   );
@@ -54,7 +62,7 @@ const ProductOption = ({
 
 export default function ReturnRequestModal({ orderId, items, onClose, onSuccess }: ReturnRequestModalProps) {
   const [createReturn, { isLoading }] = useCreateReturnMutation();
-  const [selectedProduct, setSelectedProduct] = useState<{ id: string; name: string; image: string; size: string; color: string } | null>(null);
+  const [selectedProducts, setSelectedProducts] = useState<ProductDetails[]>([]);
   const [reason, setReason] = useState('');
   const [description, setDescription] = useState('');
   const [error, setError] = useState('');
@@ -69,12 +77,23 @@ export default function ReturnRequestModal({ orderId, items, onClose, onSuccess 
     'Other',
   ];
 
+  const handleToggleProduct = (details: ProductDetails) => {
+    setSelectedProducts((prev) => {
+      const exists = prev.some((p) => p.id === details.id);
+      if (exists) {
+        return prev.filter((p) => p.id !== details.id);
+      } else {
+        return [...prev, details];
+      }
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    if (!selectedProduct) {
-      setError('Please select a product to return');
+    if (selectedProducts.length === 0) {
+      setError('Please select at least one item to return');
       return;
     }
     if (!reason) {
@@ -83,17 +102,21 @@ export default function ReturnRequestModal({ orderId, items, onClose, onSuccess 
     }
 
     try {
-      await createReturn({
-        orderId,
-        productId: selectedProduct.id,
-        productName: selectedProduct.name,
-        productImage: selectedProduct.image,
-        productSize: selectedProduct.size,
-        productColor: selectedProduct.color,
-        reason,
-        description,
-      }).unwrap();
-      
+      await Promise.all(
+        selectedProducts.map((product) =>
+          createReturn({
+            orderId,
+            productId: product.id,
+            productName: product.name,
+            productImage: product.image,
+            productSize: product.size,
+            productColor: product.color,
+            reason,
+            description,
+          }).unwrap()
+        )
+      );
+
       setSuccess(true);
       setTimeout(() => {
         onSuccess();
@@ -112,7 +135,7 @@ export default function ReturnRequestModal({ orderId, items, onClose, onSuccess 
             <h2 className="text-xl font-bold text-gray-900 tracking-tight">Request a Return</h2>
             <p className="text-xs text-gray-500 mt-1 uppercase tracking-wider font-medium">Order #{orderId.slice(-6).toUpperCase()}</p>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 p-2 rounded-full transition-colors">
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 p-2 rounded-full transition-colors cursor-pointer">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -122,8 +145,8 @@ export default function ReturnRequestModal({ orderId, items, onClose, onSuccess 
             <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-6">
               <CheckCircle2 className="w-8 h-8" />
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">Request Submitted!</h3>
-            <p className="text-gray-500 text-sm">Your return request has been sent to our team for review. You can track its status in your order timeline.</p>
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">Requests Submitted!</h3>
+            <p className="text-gray-500 text-sm">Return requests for {selectedProducts.length} item(s) have been submitted to our team for review.</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col overflow-hidden">
@@ -137,16 +160,23 @@ export default function ReturnRequestModal({ orderId, items, onClose, onSuccess 
               )}
 
               <div className="space-y-3">
-                <label className="text-sm font-bold text-gray-900">Select Item to Return</label>
+                <div className="flex justify-between items-center">
+                  <label className="text-sm font-bold text-gray-900">
+                    Select Items to Return ({selectedProducts.length}/{items.length})
+                  </label>
+                </div>
                 <div className="space-y-2">
-                  {items.map((item) => (
-                    <ProductOption
-                      key={item.productId}
-                      productId={item.productId}
-                      selected={selectedProduct?.id === item.productId}
-                      onSelect={(details) => setSelectedProduct({ id: item.productId, ...details })}
-                    />
-                  ))}
+                  {items.map((item) => {
+                    const isSelected = selectedProducts.some((p) => p.id === item.productId);
+                    return (
+                      <ProductOption
+                        key={item.productId}
+                        productId={item.productId}
+                        selected={isSelected}
+                        onToggle={handleToggleProduct}
+                      />
+                    );
+                  })}
                 </div>
               </div>
 
@@ -155,11 +185,11 @@ export default function ReturnRequestModal({ orderId, items, onClose, onSuccess 
                 <select
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
-                  className="w-full p-3.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0050cb]/20 focus:border-[#0050cb] bg-white text-gray-900"
+                  className="w-full p-3.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0050cb]/20 focus:border-[#0050cb] bg-white text-gray-900 text-sm"
                   required
                 >
                   <option value="" disabled>Select a reason...</option>
-                  {REASONS.map(r => (
+                  {REASONS.map((r) => (
                     <option key={r} value={r}>{r}</option>
                   ))}
                 </select>
@@ -181,13 +211,13 @@ export default function ReturnRequestModal({ orderId, items, onClose, onSuccess 
             <div className="p-6 border-t border-gray-100 bg-gray-50/50">
               <button
                 type="submit"
-                disabled={isLoading}
-                className="w-full bg-[#0050cb] text-white font-bold py-3.5 rounded-xl hover:bg-[#003d99] transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center h-[52px]"
+                disabled={isLoading || selectedProducts.length === 0}
+                className="w-full bg-[#0050cb] text-white font-bold py-3.5 rounded-xl hover:bg-[#003d99] transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center h-[52px] cursor-pointer"
               >
                 {isLoading ? (
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
-                  'Submit Return Request'
+                  `Submit Return for ${selectedProducts.length} Item${selectedProducts.length === 1 ? '' : 's'}`
                 )}
               </button>
             </div>
