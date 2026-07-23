@@ -164,28 +164,41 @@ const AccountPage = () => {
   const [loadingMessages, setLoadingMessages] = useState(false);
 
   useEffect(() => {
-    if ((activeTab === 'notifications' || activeTab === 'messages') && userInfo?.email) {
-      setLoadingMessages(true);
-      const email = userInfo.email.trim().toLowerCase();
+    let timerId: any = null;
 
-      const token = userInfo?.accessToken;
-      fetch(`/api/contact/user/${encodeURIComponent(email)}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (Array.isArray(data)) {
-            const filtered = data.filter((m: any) => (m.email || '').trim().toLowerCase() === email);
-            setUserMessages(filtered);
-          } else {
-            setUserMessages([]);
-          }
+    const fetchMessages = () => {
+      if ((activeTab === 'notifications' || activeTab === 'messages') && userInfo?.email) {
+        const email = userInfo.email.trim().toLowerCase();
+        const token = userInfo?.accessToken || (userInfo as any)?.token || localStorage.getItem('token') || localStorage.getItem('accessToken') || '';
+
+        fetch(`/api/contact/user/${encodeURIComponent(email)}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
         })
-        .catch(() => setUserMessages([]))
-        .finally(() => setLoadingMessages(false));
-    } else {
-      setUserMessages([]);
+          .then((res) => res.json())
+          .then((data) => {
+            if (Array.isArray(data)) {
+              const filtered = data.filter((m: any) => (m.email || '').trim().toLowerCase() === email);
+              setUserMessages(filtered);
+            } else {
+              setUserMessages([]);
+            }
+          })
+          .catch(() => setUserMessages([]))
+          .finally(() => setLoadingMessages(false));
+      } else {
+        setUserMessages([]);
+      }
+    };
+
+    if (activeTab === 'notifications' || activeTab === 'messages') {
+      setLoadingMessages(true);
+      fetchMessages();
+      timerId = setInterval(fetchMessages, 3000);
     }
+
+    return () => {
+      if (timerId) clearInterval(timerId);
+    };
   }, [activeTab, userInfo?.email]);
 
   useEffect(() => {
@@ -344,7 +357,7 @@ const AccountPage = () => {
                         if (displayStatusStr === 'pending' && order.paymentStatus === 'paid') {
                           displayStatusStr = 'confirmed';
                         }
-                        if (orderReturn && orderReturn.status === 'refunded') {
+                        if (orderReturn && ['refunded', 'refund_completed', 'completed'].includes(String(orderReturn.status).toLowerCase())) {
                           displayStatusStr = 'refunded';
                         }
                         const status = statusConfig[displayStatusStr] || statusConfig[order.status?.toLowerCase()] || statusConfig.pending;

@@ -36,7 +36,7 @@ const ProductDetailsPage = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { data: product, isLoading, error } = useGetProductDetailsQuery(id);
+  const { data: product, isLoading, error, refetch } = useGetProductDetailsQuery(id);
   const [createReview, { isLoading: isReviewLoading }] = useCreateReviewMutation();
   const userInfo = useSelector((state: RootState) => state.auth.userInfo);
   const wishlistItems = useSelector((state: RootState) => state.wishlist.wishlistItems);
@@ -59,6 +59,7 @@ const ProductDetailsPage = () => {
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewHoverRating, setReviewHoverRating] = useState(0);
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
+  const [userNewReviews, setUserNewReviews] = useState<any[]>([]);
   const [helpfulVotes, setHelpfulVotes] = useState<Record<number, boolean>>({});
   const reviewRef = useRef<HTMLDivElement>(null);
   const [showWishlistPopup, setShowWishlistPopup] = useState(false);
@@ -249,9 +250,19 @@ const ProductDetailsPage = () => {
         rating: reviewRating,
         comment: reviewText,
       }).unwrap();
+
+      const newRev = {
+        user: userInfo?.name || `${userInfo?.firstName || ''} ${userInfo?.lastName || ''}`.trim() || 'Verified Customer',
+        rating: reviewRating,
+        comment: reviewText.trim(),
+        date: new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }),
+        helpful: 0,
+      };
+      setUserNewReviews((prev) => [newRev, ...prev]);
       setReviewSubmitted(true);
       setReviewText('');
       setErrorMsg('');
+      refetch();
     } catch (err: any) {
       console.error(err);
       setErrorMsg(err?.data?.message || 'Failed to submit review.');
@@ -259,6 +270,7 @@ const ProductDetailsPage = () => {
   };
 
   const allReviews = [
+    ...userNewReviews,
     ...(product?.reviews || []).map((r: any) => ({
       user: r.userName,
       rating: r.rating,

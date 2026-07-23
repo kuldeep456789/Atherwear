@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../store/store';
 import { useCreateReturnMutation, useGetMyReturnsQuery } from '../store/slices/returnApiSlice';
-import { Check, X, ChevronRight, ChevronDown, RotateCcw, Truck, Clock, ShieldCheck, Image as ImageIcon, Star, AlertCircle } from 'lucide-react';
+import { Check, X, ChevronRight, ChevronDown, RotateCcw, Clock, AlertCircle, PackageCheck, PackageX } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 
@@ -14,20 +14,37 @@ const RETURN_REASONS = [
 ];
 
 const STATUS_STEPS = [
-  { key: 'requested', label: 'Return Requested', icon: RotateCcw },
+  { key: 'requested', label: 'Requested', icon: RotateCcw },
   { key: 'approved', label: 'Approved', icon: Check },
-  { key: 'pickup_scheduled', label: 'Pickup Scheduled', icon: Clock },
-  { key: 'picked_up', label: 'Picked Up', icon: Truck },
-  { key: 'quality_check', label: 'Quality Check', icon: ShieldCheck },
-  { key: 'refund_initiated', label: 'Refund Initiated', icon: Star },
-  { key: 'refund_completed', label: 'Refund Completed', icon: Check },
+  { key: 'item_not_received', label: 'Item Not Received', icon: PackageX },
+  { key: 'item_received', label: 'Item Received', icon: PackageCheck },
+  { key: 'not_refunded', label: 'Not Refunded', icon: AlertCircle },
+  { key: 'refunded', label: 'Refunded', icon: Check },
 ];
 
 const STATUS_ORDER = STATUS_STEPS.map((s) => s.key);
 
 const getStatusIndex = (status: string) => {
-  const idx = STATUS_ORDER.indexOf(status);
+  if (!status) return 0;
+  const s = String(status).toLowerCase().trim().replace(/[\s_-]+/g, '');
+
+  if (s === 'refunded' || s === 'refundcompleted' || s === 'completed') return 5;
+  if (s === 'notrefunded') return 4;
+  if (s === 'itemreceived') return 3;
+  if (s === 'itemnotreceived') return 2;
+  if (s === 'approved') return 1;
+  if (s === 'requested' || s === 'returnrequested' || s === 'pending') return 0;
+
+  const idx = STATUS_ORDER.indexOf(status.toLowerCase());
   return idx >= 0 ? idx : 0;
+};
+
+const shortOrderId = (id: string) => {
+  if (!id) return '';
+  if (id.length > 8 && /^[0-9a-fA-F]+$/.test(id)) {
+    return `#${id.slice(-8).toUpperCase()}`;
+  }
+  return id.startsWith('#') ? id : `#${id}`;
 };
 
 const nonReturnable = ['Innerwear', 'Accessories', 'Gift Cards', 'Final Sale Items'];
@@ -340,13 +357,13 @@ const ReturnsPage = () => {
                             </div>
                             <div>
                               <p className="text-[14px] font-semibold">{ret.productName}</p>
-                              <p className="text-[12px] text-zinc-500">Order: {ret.orderId} · {new Date(ret.createdAt).toLocaleDateString()}</p>
+                              <p className="text-[12px] text-zinc-500">Order: {shortOrderId(ret.orderId)} · {new Date(ret.createdAt).toLocaleDateString()}</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
                             <span className={`text-[11px] font-bold px-3 py-1 rounded-lg ${
                               isRejected ? 'bg-red-100 dark:bg-red-900/20 text-red-600' :
-                              ret.status === 'refund_completed' ? 'bg-green-100 dark:bg-green-900/20 text-green-600' :
+                              stepIdx === 5 || ['refunded', 'refund_completed', 'completed'].includes(String(ret.status).toLowerCase()) ? 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-600' :
                               'bg-amber-100 dark:bg-amber-900/20 text-amber-600'
                             }`}>
                               {ret.status.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())}
