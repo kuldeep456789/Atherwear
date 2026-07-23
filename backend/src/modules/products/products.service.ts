@@ -163,18 +163,26 @@ export class ProductsService implements OnModuleInit {
     const pageSize = Math.min(Math.max(1, Number(query.pageSize || query.limit || 20)), 50000);
 
     // ── Search query: filter warehouse in-memory ───────────────────────────
-    if (query.q) {
-      const searchTerm = query.q.toLowerCase().trim();
-      const warehouseResult = await this.cjService.getWarehouseProducts(gender || 'all', 1, 10000);
+    const searchQueryStr = (query.q || query.keyword || query.search || '').trim();
+    if (searchQueryStr) {
+      const searchTerm = searchQueryStr.toLowerCase();
+      const searchTerms = searchTerm.split(/\s+/).filter(Boolean);
+      const warehouseResult = await this.cjService.getWarehouseProducts(gender || 'all', 1, 50000);
 
       if (!warehouseResult || warehouseResult.products.length === 0) {
-        this.logger.warn(`[Products] Warehouse empty — cannot serve search "${query.q}"`);
+        this.logger.warn(`[Products] Warehouse empty — cannot serve search "${searchQueryStr}"`);
         return { products: [], total: 0, source: 'warehouse_empty' };
       }
 
       const matched = warehouseResult.products.filter((p: any) => {
-        const text = [p.name, p.title, p.productName, p._category, p.subcategoryName, p.categoryName, ...(p.tags ?? [])].filter(Boolean).join(' ').toLowerCase();
-        return text.includes(searchTerm);
+        const text = [
+          p.name, p.title, p.productName, p.productNameEn,
+          p._category, p.subcategoryName, p.categoryName,
+          p.gender, p.collectionType,
+          ...(p.tags ?? [])
+        ].filter(Boolean).join(' ').toLowerCase();
+
+        return text.includes(searchTerm) || searchTerms.every(term => text.includes(term));
       });
 
       const total = matched.length;

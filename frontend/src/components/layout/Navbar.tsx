@@ -188,14 +188,28 @@ const Navbar = () => {
       }
     });
 
-    products.forEach((p: any) => suggestionList.push({
-      type: 'product',
-      label: p.title || p.productName || p.name || '',
-      to: `/product/${getProductId(p)}`,
-      image: p.images?.[0] || p.productImage,
-      price: formatINR(p.sellPrice ? Number(p.sellPrice) : (p.discountPrice || p.price)),
-      category: p.collectionType || p.categoryName || '',
-    }));
+    products.forEach((p: any) => {
+      const getProductPrice = (item: any) => {
+        const num = (v: any) => (typeof v === 'number' && !isNaN(v) && v > 0 ? v : typeof v === 'string' && !isNaN(Number(v)) && Number(v) > 0 ? Number(v) : 0);
+        const discount = num(item.discountPrice);
+        const price = num(item.price);
+        const sell = num(item.sellPrice);
+        if (discount && price && discount < price) return discount;
+        if (discount) return discount;
+        if (price) return price;
+        if (sell) return sell;
+        return 0;
+      };
+
+      suggestionList.push({
+        type: 'product',
+        label: p.title || p.productName || p.name || '',
+        to: `/product/${getProductId(p)}`,
+        image: p.images?.[0] || p.productImage,
+        price: formatINR(getProductPrice(p)),
+        category: p.collectionType || p.categoryName || '',
+      });
+    });
   }
   suggestionListRef.current = suggestionList;
 

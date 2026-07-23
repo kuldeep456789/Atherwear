@@ -58,9 +58,9 @@ const ProductListPage = () => {
   let filteredProducts = productsData?.products || [];
 
   // Tab filtering
-  if (activeTab === 'MEN') {
+  if (!keyword && activeTab === 'MEN') {
     filteredProducts = filteredProducts.filter((p: any) => p.collectionType === 'Men');
-  } else if (activeTab === 'WOMEN') {
+  } else if (!keyword && activeTab === 'WOMEN') {
     filteredProducts = filteredProducts.filter((p: any) => p.collectionType === 'Women');
   }
 
