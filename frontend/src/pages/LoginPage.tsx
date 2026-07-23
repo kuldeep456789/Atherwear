@@ -514,15 +514,6 @@ const LoginPage = () => {
                     </div>
 
                     <div>
-                      <label className="mb-2 block text-[11px] font-semibold uppercase tracking-widest text-zinc-500">Mobile number (optional)</label>
-                      <div className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-[hsl(var(--card))] px-4 py-3.5 transition focus-within:border-zinc-500">
-                        <Phone size={17} className="shrink-0 text-zinc-400" />
-                        <span className="text-sm font-semibold text-zinc-500">+91</span>
-                        <input type="tel" placeholder="9876543210" value={registerPhone} onChange={(e) => setRegisterPhone(e.target.value.replace(/\D/g, '').slice(0, 10))} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-400" />
-                      </div>
-                    </div>
-
-                    <div>
                       <label className="mb-2 block text-[11px] font-semibold uppercase tracking-widest text-zinc-500">Password</label>
                       <div className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-[hsl(var(--card))] px-4 py-3.5 transition focus-within:border-zinc-500">
                         <Lock size={17} className="shrink-0 text-zinc-400" />
@@ -541,14 +532,6 @@ const LoginPage = () => {
                         <button type="button" onClick={() => setShowConfirmPassword((p) => !p)} className="text-zinc-400 hover:text-zinc-700 dark:hover:text-white cursor-pointer">
                           {showConfirmPassword ? <EyeOff size={17} /> : <Eye size={17} />}
                         </button>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="mb-2 block text-[11px] font-semibold uppercase tracking-widest text-zinc-500">Admin Secret Code (Optional)</label>
-                      <div className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-[hsl(var(--card))] px-4 py-3.5 transition focus-within:border-zinc-500">
-                        <Shield size={17} className="shrink-0 text-zinc-400" />
-                        <input type="text" placeholder="Admin Code" value={adminSecret} onChange={(e) => setAdminSecret(e.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-400" />
                       </div>
                     </div>
 
