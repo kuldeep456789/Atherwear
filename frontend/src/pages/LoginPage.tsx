@@ -584,29 +584,6 @@ const LoginPage = () => {
             <form onSubmit={handleAdminModalSubmit} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider mb-1.5">
-                  Admin Secret Code
-                </label>
-                <div className="relative">
-                  <Shield size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" />
-                  <input
-                    type="password"
-                    value={adminSecretCode}
-                    onChange={(e) => setAdminSecretCode(e.target.value)}
-                    placeholder="Enter Admin Secret Code"
-                    className="w-full h-12 pl-11 pr-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 text-sm font-medium focus:outline-none focus:border-zinc-900 dark:focus:border-white transition-colors"
-                  />
-                </div>
-                <p className="text-[11px] text-zinc-400 mt-1">Entering Secret Code grants Admin access without typing email or password.</p>
-              </div>
-
-              <div className="relative flex py-1 items-center">
-                <div className="flex-grow border-t border-zinc-200 dark:border-zinc-800"></div>
-                <span className="flex-shrink mx-3 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">OR Credentials</span>
-                <div className="flex-grow border-t border-zinc-200 dark:border-zinc-800"></div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider mb-1.5">
                   Admin Email ID
                 </label>
                 <div className="relative">
@@ -616,7 +593,8 @@ const LoginPage = () => {
                     value={adminEmail}
                     onChange={(e) => setAdminEmail(e.target.value)}
                     placeholder="admin@vastra.app"
-                    className="w-full h-12 pl-11 pr-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 text-sm font-medium focus:outline-none focus:border-zinc-900 dark:focus:border-white transition-colors"
+                    required
+                    className="w-full h-12 pl-11 pr-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 text-sm font-medium focus:outline-none focus:border-zinc-900 dark:focus:border-white transition-colors text-left normal-case"
                   />
                 </div>
               </div>
