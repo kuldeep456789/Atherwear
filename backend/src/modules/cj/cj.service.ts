@@ -445,8 +445,11 @@ export class CjService {
       }
       await Promise.all(catSwapOps);
 
+      // Automatically invalidate stale API response cache keys so GET /api/products returns fresh 137k warehouse data immediately
+      await this.clearApiCache();
+
       const durationMs = Date.now() - syncStart;
-      this.logger.log(`[Cron]  Redis Updated`);
+      this.logger.log(`[Cron]  Redis Updated & API Cache Cleared`);
       this.logger.log(`[Cron]  Execution Time: ${(durationMs / 1000).toFixed(1)}s`);
       this.logger.log(`[Cron]  API Calls Used: ~${this.apiCallsThisSync}`);
       this.logger.log(`[Cron]  Sync Completed Successfully`);
@@ -468,6 +471,15 @@ export class CjService {
   async getProductCount(): Promise<number> {
     const cached = await this.redisService.getJson<number>(PRODUCT_COUNT_CACHE_KEY);
     return cached ?? 0;
+  }
+
+  async clearApiCache(): Promise<{ cleared: number }> {
+    const keys = await this.redisService.keys('api:products:*');
+    if (keys && keys.length > 0) {
+      await this.redisService.delPattern('api:products:*');
+      this.logger.log(`[CJ] Cleared ${keys.length} stale API response cache keys`);
+    }
+    return { cleared: keys.length };
   }
 
   // ─── Private: catalog fetch logic ─────────────────────────────────────────

@@ -30,6 +30,11 @@ export class CjController {
     const count = await this.cjService.getProductCount();
     return { status: 'active', productCount: count };
   }
+  @Post('clear-cache')
+  clearCache() {
+    return this.cjService.clearApiCache();
+  }
+
   @Post('sync-now')
   triggerSync() {
     this.cjService.runCatalogSync().catch(err => {

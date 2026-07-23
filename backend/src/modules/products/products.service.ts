@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, OnModuleInit, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { CjService } from '../cj/cj.service';
 import { RedisService } from '../redis/redis.service';
@@ -31,7 +31,7 @@ type ProductQuery = {
 };
 
 @Injectable()
-export class ProductsService {
+export class ProductsService implements OnModuleInit {
   private readonly logger = new Logger(ProductsService.name);
   private readonly productTtlSeconds = 60 * 60 * 6;
   private readonly inFlightRequests = new Map<string, Promise<any>>();
@@ -44,6 +44,12 @@ export class ProductsService {
     @InjectModel(Review.name) private readonly reviewModel: Model<Review>,
     @InjectModel(Order.name) private readonly orderModel: Model<Order>,
   ) { }
+
+  async onModuleInit() {
+    // Clear stale API response cache keys on startup to immediately serve 137k warehouse products
+    await this.redisService.delPattern('api:products:*');
+    this.logger.log('[Products] Startup: Flushed stale api:products:* cache keys');
+  }
 
   async getProducts(query: ProductQuery = {}) {
     const cacheKey = this.buildCacheKey(query);
