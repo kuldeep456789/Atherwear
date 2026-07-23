@@ -371,7 +371,7 @@ export class CjService {
       const syncStart = Date.now();
       this.apiCallsThisSync = 0;
 
-      this.logger.log('[Cron] ✅ Sync Started');
+      this.logger.log('[Cron] Sync Started');
 
       const RETRY_DELAYS = [0, 30_000, 120_000]; // timer 0 sec , 30 sec , and 2 min 
       let lastError = '';
@@ -388,18 +388,18 @@ export class CjService {
           break; // success — exit retry loop
         } catch (e: any) {
           lastError = e?.message ?? String(e);
-          this.logger.error(`[Cron] ❌ Sync attempt ${attempt + 1} failed: ${lastError}`);
+          this.logger.error(`[Cron]  Sync attempt ${attempt + 1} failed: ${lastError}`);
         }
       }
 
       // ── All retries failed — keep existing cache ────────────────────────────
       if (!allProducts) {
-        this.logger.error('[Cron] ❌ All sync attempts failed. Existing warehouse cache preserved.');
+        this.logger.error('[Cron]  All sync attempts failed. Existing warehouse cache preserved.');
         return { success: false, count: 0 };
       }
 
       if (allProducts.length < 500) {
-        this.logger.warn(`[Cron] ⚠️ Fetch returned only ${allProducts.length} products — too few to be valid. Keeping existing cache.`);
+        this.logger.warn(`[Cron]  Fetch returned only ${allProducts.length} products — too few to be valid. Keeping existing cache.`);
         return { success: false, count: allProducts.length };
       }
 
@@ -414,7 +414,7 @@ export class CjService {
       const womenProducts = this.interleaveByCategory(rawWomen);
       const balancedAll = this.interleaveByCategory(allProducts);
 
-      this.logger.log(`[Cron] ✅ Products Fetched & Interleaved — Men: ${menProducts.length}, Women: ${womenProducts.length}, Total: ${allProducts.length}`);
+      this.logger.log(`[Cron] Products Fetched & Interleaved — Men: ${menProducts.length}, Women: ${womenProducts.length}, Total: ${allProducts.length}`);
 
       // Write to :next buffer without TTL to make it persistent
       await Promise.all([
@@ -629,22 +629,7 @@ export class CjService {
 
       const catDurationSec = ((Date.now() - catStart) / 1000).toFixed(1);
 
-      // // Print Detailed Category Sync Report
-      // this.logger.log(
-      //   `\n---------------------------------------------------------------------\n` +
-      //   ` CATEGORY SYNC REPORT: ${categoryName} (${gender.toUpperCase()})\n` +
-      //   `---------------------------------------------------------------------\n` +
-      //   `  Category Name:      ${categoryName}\n` +
-      //   `  Products Before:    ${productsBefore}\n` +
-      //   `  Products After:     ${productsAfter}\n` +
-      //   `  Pages Synced:       ${pagesSynced}\n` +
-      //   `  New Products:       ${newProductsCount}\n` +
-      //   `  Updated Products:   ${updatedProductsCount}\n` +
-      //   `  Duplicates Removed: ${duplicatesRemovedCount}\n` +
-      //   `  Duration:           ${catDurationSec}s\n` +
-      //   `  Total API Calls:    ${catApiCalls}\n` +
-      //   `---------------------------------------------------------------------`
-      // );
+
 
       // Append to global pool for top-level gender keys
       for (const p of mergedCatProducts) {
