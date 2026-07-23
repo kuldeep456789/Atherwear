@@ -52,7 +52,7 @@ const CollectionPage = () => {
   const { data: allProductsData, isLoading, error } = useGetProductsQuery({
     ...(isAllGender ? {} : { gender: normalizedGender }),
     pageNum: 1,
-    pageSize: 1000, // Fetch active warehouse pool for this gender to derive category tabs
+    pageSize: 50000, // Fetch active warehouse pool for this gender to derive category tabs & paginate
   });
 
   const productsPool = Array.isArray(allProductsData?.products) ? allProductsData.products : [];

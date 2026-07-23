@@ -154,7 +154,7 @@ export class ProductsService {
   private async fetchFromWarehouse(query: ProductQuery) {
     const gender = (query.gender ?? '').toLowerCase() as 'men' | 'women' | 'all' | '';
     const pageNum = Math.max(1, Number(query.pageNum || query.page || 1));
-    const pageSize = Math.min(Math.max(1, Number(query.pageSize || query.limit || 20)), 1000);
+    const pageSize = Math.min(Math.max(1, Number(query.pageSize || query.limit || 20)), 50000);
 
     // ── Search query: filter warehouse in-memory ───────────────────────────
     if (query.q) {

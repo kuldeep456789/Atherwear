@@ -755,49 +755,59 @@ const ProductDetailsPage = () => {
       {/* Size Guide Drawer */}
       <div className={`fixed inset-0 z-50 transition-opacity duration-300 ${sizeGuideOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSizeGuideOpen(false)} />
-        <div className={`absolute right-0 top-0 h-full w-full max-w-md bg-[hsl(var(--card))] text-[hsl(var(--foreground))] border-l-2 border-black dark:border-white p-8 sm:p-12 transition-transform duration-300 ease-out flex flex-col justify-between ${sizeGuideOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-          <div>
-            <div className="flex justify-between items-center mb-8 border-b-2 border-black dark:border-white pb-4">
-              <h2 className="text-xl font-black uppercase tracking-widest">SIZE GUIDE</h2>
-              <button onClick={() => setSizeGuideOpen(false)} className="cursor-pointer hover:text-red-600 transition-colors">
-                <span className="text-2xl font-black">✕</span>
+        <div className={`absolute right-0 top-0 h-full w-full max-w-md bg-white dark:bg-[#121212] text-zinc-900 dark:text-zinc-100 p-6 sm:p-8 transition-transform duration-300 ease-out flex flex-col justify-between shadow-2xl overflow-y-auto ${sizeGuideOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+          <div className="space-y-6">
+            {/* Header */}
+            <div className="flex justify-between items-center pb-4 border-b border-zinc-200 dark:border-zinc-800">
+              <h2 className="text-xl font-extrabold tracking-wider text-zinc-900 dark:text-white uppercase">SIZE GUIDE</h2>
+              <button 
+                onClick={() => setSizeGuideOpen(false)} 
+                className="w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white flex items-center justify-center transition-all cursor-pointer"
+              >
+                <X size={18} strokeWidth={2.5} />
               </button>
             </div>
 
-            <p className="text-xs font-bold text-zinc-500 tracking-wider mb-6">
-              ALL MEASUREMENTS ARE IN INCHES. FOR OVERSIZED ITEMS, WE RECOMMEND ORDERING YOUR TYPICAL SIZE FOR THE INTENDED FIT.
+            {/* Note */}
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium leading-relaxed uppercase tracking-wider">
+              All measurements are in inches. For oversized items, we recommend ordering your typical size for the intended fit.
             </p>
 
-            <div className="border-2 border-black dark:border-white divide-y-2 divide-black dark:divide-white font-mono text-xs">
-              <div className="grid grid-cols-4 font-black bg-[hsl(var(--foreground))] text-[hsl(var(--background))] p-2">
+            {/* Table */}
+            <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden bg-white dark:bg-[#161616]">
+              <div className="grid grid-cols-4 font-bold text-xs bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 py-3.5 px-4 tracking-wider uppercase">
                 <div>SIZE</div>
-                <div>CHEST</div>
-                <div>WAIST</div>
-                <div>LENGTH</div>
+                <div className="text-center">CHEST</div>
+                <div className="text-center">WAIST</div>
+                <div className="text-center">LENGTH</div>
               </div>
-              {[
-                ['XS', '34-36', '28-30', '27'],
-                ['S', '36-38', '30-32', '28'],
-                ['M', '38-40', '32-34', '29'],
-                ['L', '40-42', '34-36', '30'],
-                ['XL', '42-44', '36-38', '31']
-              ].map(([sz, ch, ws, len]) => (
-                <div key={sz} className="grid grid-cols-4 p-2 font-bold">
-                  <div>{sz}</div>
-                  <div>{ch}</div>
-                  <div>{ws}</div>
-                  <div>{len}</div>
-                </div>
-              ))}
+              <div className="divide-y divide-zinc-100 dark:divide-zinc-800/60 text-xs">
+                {[
+                  ['XS', '34-36', '28-30', '27'],
+                  ['S', '36-38', '30-32', '28'],
+                  ['M', '38-40', '32-34', '29'],
+                  ['L', '40-42', '34-36', '30'],
+                  ['XL', '42-44', '36-38', '31']
+                ].map(([sz, ch, ws, len]) => (
+                  <div key={sz} className="grid grid-cols-4 py-3.5 px-4 items-center font-semibold hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors">
+                    <div className="font-extrabold text-zinc-900 dark:text-white">{sz}</div>
+                    <div className="text-center font-medium text-zinc-600 dark:text-zinc-300">{ch}</div>
+                    <div className="text-center font-medium text-zinc-600 dark:text-zinc-300">{ws}</div>
+                    <div className="text-center font-medium text-zinc-600 dark:text-zinc-300">{len}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
-          <button
-            onClick={() => setSizeGuideOpen(false)}
-            className="w-full bg-[hsl(var(--foreground))] text-[hsl(var(--background))] py-4 text-xs font-black tracking-widest border-2 border-black dark:border-white hover:bg-red-600 hover:text-white hover:border-red-600 transition-colors"
-          >
-            CLOSE
-          </button>
+          <div className="pt-6 border-t border-zinc-200 dark:border-zinc-800 mt-6">
+            <button
+              onClick={() => setSizeGuideOpen(false)}
+              className="w-full py-3.5 px-6 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 font-extrabold text-xs uppercase tracking-widest transition-all cursor-pointer"
+            >
+              CLOSE
+            </button>
+          </div>
         </div>
       </div>
 

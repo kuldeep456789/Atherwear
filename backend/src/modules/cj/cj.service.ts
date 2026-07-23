@@ -511,7 +511,7 @@ export class CjService {
       }
 
       let pageNum = 1;
-      const pageSize = 200;
+      const pageSize = 50; // Match CJ API max page size limit (50) so pagination doesn't break on Page 1
       let pagesSynced = 0;
       let newProductsCount = 0;
       let updatedProductsCount = 0;
@@ -897,13 +897,7 @@ export class CjService {
     let subcategoryName = product._category || query?._category;
     let collectionType = product._collectionType || query?._collectionType;
 
-    // if (!gender || !subcategoryName) {
-    //   const info = getCategoryInfoById(categoryId);
-    //   if (!info) return null; // If category ID is totally unknown, reject the product
-    //   gender = info.gender;
-    //   subcategoryName = info.subcategoryName;
-    //   collectionType = info.collectionType;
-    // }
+
 
     const images = [
       product?.productImage, product?.image, product?.img, product?.primaryImage,
@@ -926,11 +920,7 @@ export class CjService {
     const name = product?.productNameEn ?? product?.productName ?? product?.nameEn ?? product?.name ?? '';
     const rawPrice = Number(product?.sellPrice ?? product?.price ?? 0) || 0;
     const price = Number((rawPrice * 93.45).toFixed(2));
-    // const sizes = Array.isArray(product?.sizes) && product.sizes.length ? product.sizes : DEFAULT_SIZES;
-    // const colors = Array.isArray(product?.colors) && product.colors.length ? product.colors : DEFAULT_COLORS;
-    // const variants = Array.isArray(product?.variants) && product.variants.length
-    //   ? product.variants
-    //   : colors.flatMap((color: string) => sizes.map((size: string) => ({ color, size, stock: 999 })));
+
 
     const categoryName = product?.categoryName ?? product?.categoryThirdName ?? product?.categorySecondName ?? product?.categoryFirstName ?? '';
 
